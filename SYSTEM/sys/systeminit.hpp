@@ -125,7 +125,7 @@ bool hwInit()
 
     GPIO usartGpio(GPIOA, GPIO_NUM_9 | GPIO_NUM_10, GPIO_MODE_AF_PP, GPIO_SPEED_MID, GPIO_PUPD_PU);
     usartGpio.setAF(0x7);
-    USART uart1(USART1, 115200, UART_MODE_TX_RX);
+    static USART uart1(USART1, 115200, UART_MODE_TX_RX);
     uart1.enableFIFO(true);
     uart1.enableErrIsr(true);
     uart1.enableRXFIFONotEmptyIsr(true);
@@ -144,9 +144,10 @@ bool hwInit()
     //IWDG::getInstance()->start(IWDG_PRE_DIVI_64,500);
     WWDG::getInstance()->start(0x7F, 0X7F, WWDG_TIME_BASE_DIVI_128);
     WWDG::getInstance()->registerInterruptCb([](WWDG* wdg){
+        //printf("timeout befor = %lu\r\n",WWDG::getInstance()->getTimeOutMs());
         wdg->feedDog();
-        printf("feed dog now\r\n");
+        //printf("timeout = %lu\r\n",WWDG::getInstance()->getTimeOutMs());
     });
-    WWDG::getInstance()->enableIsr(3,0);
+    WWDG::getInstance()->enableIsr(2,0);
     return true;
 }
