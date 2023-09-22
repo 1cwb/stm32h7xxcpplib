@@ -1753,7 +1753,9 @@ public:
     }
     uint32_t getHClkFreq()
     {
-        return getSysClkFreq() >>  D1CorePrescTable[READ_BIT(RCC->D1CFGR, RCC_D1CFGR_D1CPRE)>> RCC_D1CFGR_D1CPRE_Pos];
+        uint32_t hclk = getSysClkFreq() >>  D1CorePrescTable[READ_BIT(RCC->D1CFGR, RCC_D1CFGR_D1CPRE)>> RCC_D1CFGR_D1CPRE_Pos];
+        hclk >>= ((D1CorePrescTable[(RCC->D1CFGR & RCC_D1CFGR_HPRE)>> RCC_D1CFGR_HPRE_Pos]) & 0x1FU);
+        return hclk;
     }
     uint32_t getAPB1ClkFreq()
     {

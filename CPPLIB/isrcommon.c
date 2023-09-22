@@ -301,7 +301,31 @@ void EXTI15_10_IRQHandler()
 	}
 }
 
+typedef struct wwdgIsrSt
+{
+	WWDG_ISR_CB cb;
+	void* param;
+}wwdgIsrSt;
 
+static wwdgIsrSt wwdgIsrCallback = {NULL, NULL};
+void registerWwdgIsrCb(WWDG_ISR_CB cb, void* param)
+{
+	wwdgIsrCallback.cb = cb;
+	wwdgIsrCallback.param = param;
+}
+void unRegisterWwdgIsrCb()
+{
+	wwdgIsrCallback.cb = NULL;
+	wwdgIsrCallback.param = NULL;
+}
+
+void WWDG_IRQHandler(void)
+{
+	if(wwdgIsrCallback.cb)
+	{
+		wwdgIsrCallback.cb(wwdgIsrCallback.param);
+	}
+}
 
 
 /**

@@ -4,6 +4,8 @@
 #include "gpio.hpp"
 #include "delay.hpp"
 #include "mpu.hpp"
+#include "iwdg.hpp"
+#include "wwdg.hpp"
 
 void mpuMemoryProtection(void)
 {
@@ -96,6 +98,17 @@ eResult clockInit(uint32_t plln, uint32_t pllm, uint32_t pllp, uint32_t pllq, ui
     return E_RESULT_OK;
 }
 
+void printfSysMessage()
+{
+    printf("RCC INIT: \r\n");
+    printf("SYSCLK:  %lu \r\n",RCCControl::getInstance()->getSysClkFreq());
+    printf("AHBCLK:  %lu \r\n",RCCControl::getInstance()->getHClkFreq());
+    printf("APB1CLK: %lu \r\n",RCCControl::getInstance()->getAPB1ClkFreq());
+    printf("APB2CLK: %lu \r\n",RCCControl::getInstance()->getAPB2ClkFreq());
+    printf("APB3CLK: %lu \r\n",RCCControl::getInstance()->getAPB3ClkFreq());
+    printf("APB4CLK: %lu \r\n",RCCControl::getInstance()->getAPB4ClkFreq());
+}
+
 bool hwInit()
 {
     mpuMemoryProtection();
@@ -127,5 +140,13 @@ bool hwInit()
         if(errorstates)
         printf("xxxxxxxxx errorstates =%lu\n",errorstates);
     });
+    printfSysMessage();
+    //IWDG::getInstance()->start(IWDG_PRE_DIVI_64,500);
+    WWDG::getInstance()->start(0x7F, 0X7F, WWDG_TIME_BASE_DIVI_128);
+    WWDG::getInstance()->registerInterruptCb([](WWDG* wdg){
+        wdg->feedDog();
+        printf("feed dog now\r\n");
+    });
+    WWDG::getInstance()->enableIsr(3,0);
     return true;
 }

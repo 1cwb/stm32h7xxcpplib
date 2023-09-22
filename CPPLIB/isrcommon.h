@@ -27,6 +27,10 @@ typedef void (*GPIO_EXTI_ISR_CB)(GPIO_TypeDef *gpiox, uint32_t pin, void* param)
 void registerGpioIsrCb(GPIO_TypeDef *gpiox, uint32_t pinNum, GPIO_EXTI_ISR_CB cb, void* param);
 void unRegisterGpioIsrCb(GPIO_TypeDef *gpiox, uint32_t pinNum);
 
+typedef void (*WWDG_ISR_CB)(void* param);
+void registerWwdgIsrCb(WWDG_ISR_CB cb, void* param);
+void unRegisterWwdgIsrCb();
+
 int32_t initTick(uint32_t TickPriority);
 void incTick(void);
 uint32_t getTick(void);
