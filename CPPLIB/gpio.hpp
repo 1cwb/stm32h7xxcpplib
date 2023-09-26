@@ -170,8 +170,7 @@ public:
         {
             return false;
         }
-        uint32_t prioritygroup;
-        prioritygroup = NVIC_GetPriorityGrouping();
+
         RCCControl::getInstance()->enableSYSCFGPerClk(true);
         uint32_t offset = (((uint32_t)gpiox_ -  (uint32_t)GPIOA_BASE) / 0x400);
         for(uint16_t pos = 0; pos < 16; pos++)
@@ -193,7 +192,7 @@ public:
                             pgpio->exticb_(pgpio, (GPIONumBit)pin);
                         }
                     }, this);
-                    NVIC_SetPriority(getIrqType(pos), NVIC_EncodePriority(prioritygroup, PreemptPriority, SubPriority));
+                    NVIC_SetPriority(getIrqType(pos), NVIC_EncodePriority(NVIC_GetPriorityGrouping(), PreemptPriority, SubPriority));
                     NVIC_EnableIRQ(getIrqType(pos));
                 }
             }

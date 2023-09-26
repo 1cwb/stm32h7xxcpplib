@@ -424,6 +424,10 @@ public:
     {
         MODIFY_REG(RCC->CFGR, RCC_CFGR_MCO2,  src);
     }
+    void setD1CPREPreScaler(RCCD1CPREPrescaler div)
+    {
+        MODIFY_REG(RCC->D1CFGR, RCC_D1CFGR_D1CPRE, div);
+    }
     void setD1HPREPAHBreScaler(RCCD1HPREAHBPrescaler div)
     {
         MODIFY_REG(RCC->D1CFGR, RCC_D1CFGR_HPRE, div);
@@ -432,21 +436,33 @@ public:
     {
         MODIFY_REG(RCC->D1CFGR, RCC_D1CFGR_D1PPRE, div);
     }
-    void setD1CPREPreScaler(RCCD1CPREPrescaler div)
+    RCCD1PPREAPB3Prescaler getD1PPREAPB3PreScaler()
     {
-        MODIFY_REG(RCC->D1CFGR, RCC_D1CFGR_D1CPRE, div);
+        return (RCCD1PPREAPB3Prescaler)READ_BIT(RCC->D1CFGR, RCC_D1CFGR_D1PPRE);
     }
     void setD2PPRE1APB1PreScaler(RCCD2PPRE1APB1Prescaler div)
     {
         MODIFY_REG(RCC->D2CFGR, RCC_D2CFGR_D2PPRE1, div);
     }
+    RCCD2PPRE1APB1Prescaler getD2PPRE1APB1PreScaler()
+    {
+        return (RCCD2PPRE1APB1Prescaler)READ_BIT(RCC->D2CFGR, RCC_D2CFGR_D2PPRE1);
+    }
     void setD2PPRE2APB2PreScaler(RCCD2PPRE2APB2Prescaler div)
     {
         MODIFY_REG(RCC->D2CFGR, RCC_D2CFGR_D2PPRE2, div);
     }
+    RCCD2PPRE2APB2Prescaler getD2PPRE2APB2PreScale()
+    {
+        return (RCCD2PPRE2APB2Prescaler)READ_BIT(RCC->D2CFGR, RCC_D2CFGR_D2PPRE2);
+    }
     void setD3PPREAPB4PreScaler(RCCD3PPREAPB4Prescaler div)
     {
         MODIFY_REG(RCC->D3CFGR, RCC_D3CFGR_D3PPRE, div);
+    }
+    RCCD3PPREAPB4Prescaler getD3PPREAPB4PreScaler()
+    {
+        return (RCCD3PPREAPB4Prescaler)READ_BIT(RCC->D3CFGR, RCC_D3CFGR_D3PPRE);
     }
     bool selectPLLSrc(RCCPLLClkSrc src)
     {

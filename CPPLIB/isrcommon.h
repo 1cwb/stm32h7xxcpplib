@@ -31,6 +31,10 @@ typedef void (*WWDG_ISR_CB)(void* param);
 void registerWwdgIsrCb(WWDG_ISR_CB cb, void* param);
 void unRegisterWwdgIsrCb();
 
+typedef void (*TIM_ISR_CB)(void* param);
+void registerTimIsrCb(TIM_TypeDef* timx, TIM_ISR_CB cb, void* param);
+void unRegisterTimIsrCb(TIM_TypeDef* timx);
+
 int32_t initTick(uint32_t TickPriority);
 void incTick(void);
 uint32_t getTick(void);

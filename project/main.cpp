@@ -10,7 +10,7 @@
 #include "systeminit.hpp"
 #include "led.hpp"
 #include "iwdg.hpp"
-
+#include "timer.hpp"
 
 int main(void)
 {
@@ -30,11 +30,22 @@ int main(void)
     //     printf("a0 pin %d isr\r\n",p);
     // });
     // A0.enableIsr(GPIO_MODE_IT_FALLING,2,0);
+    COMMONTIMER timer1(TIM1);
+    timer1.init(5000-1, 24000-1);
+    timer1.registerInterruptCb([&led](COMMONTIMER* timer, TIMISRFlag isrflag){
+        if(isrflag == TIM_FLAG_UPDATE)
+        {
+            led.reverse();
+            printf("timer 1\n");
+        }
+    });
+    timer1.enableIsr(TIM_IT_UPDATE, 5,0);
+    timer1.start();
     while(1)
     {
-        led.on();
+        //led.on();
         delayTick(20);
-        led.off();
+        //led.off();
         delayTick(20);
     }
     return 0;

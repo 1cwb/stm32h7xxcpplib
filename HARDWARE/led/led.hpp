@@ -40,6 +40,17 @@ public:
             ledgpio_.setLevel(GPIO_LEVEL_L);
         }
     }
+    void reverse()
+    {
+        if(ledgpio_.getLevel() == GPIO_LEVEL_L)
+        {
+            ledgpio_.setLevel(GPIO_LEVEL_H);
+        }
+        else
+        {
+            ledgpio_.setLevel(GPIO_LEVEL_L);
+        }
+    }
 private:
     bool bLowLevelOn_;
     GPIO ledgpio_;

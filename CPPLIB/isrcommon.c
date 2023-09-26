@@ -327,6 +327,294 @@ void WWDG_IRQHandler(void)
 	}
 }
 
+typedef struct timIsrSt
+{
+	TIM_ISR_CB cb;
+	TIM_TypeDef *timx;
+	void* param;
+}timIsrSt;
+
+static timIsrSt timIsrCbBuff[14] = {0};
+
+void registerTimIsrCb(TIM_TypeDef* timx, TIM_ISR_CB cb, void* param)
+{
+	if(timx == TIM1)
+	{
+		timIsrCbBuff[0].timx = timx;
+		timIsrCbBuff[0].cb = cb;
+		timIsrCbBuff[0].param = param;
+	}
+	else if(timx == TIM2)
+	{
+		timIsrCbBuff[1].timx = timx;
+		timIsrCbBuff[1].cb = cb;
+		timIsrCbBuff[1].param = param;
+	}
+	else if(timx == TIM3)
+	{
+		timIsrCbBuff[2].timx = timx;
+		timIsrCbBuff[2].cb = cb;
+		timIsrCbBuff[2].param = param;
+	}
+	else if(timx == TIM4)
+	{
+		timIsrCbBuff[3].timx = timx;
+		timIsrCbBuff[3].cb = cb;
+		timIsrCbBuff[3].param = param;
+	}
+	else if(timx == TIM5)
+	{
+		timIsrCbBuff[4].timx = timx;
+		timIsrCbBuff[4].cb = cb;
+		timIsrCbBuff[4].param = param;
+	}
+	else if(timx == TIM6)
+	{
+		timIsrCbBuff[5].timx = timx;
+		timIsrCbBuff[5].cb = cb;
+		timIsrCbBuff[5].param = param;
+	}
+	else if(timx == TIM7)
+	{
+		timIsrCbBuff[6].timx = timx;
+		timIsrCbBuff[6].cb = cb;
+		timIsrCbBuff[6].param = param;
+	}
+	else if(timx == TIM8)
+	{
+		timIsrCbBuff[7].timx = timx;
+		timIsrCbBuff[7].cb = cb;
+		timIsrCbBuff[7].param = param;
+	}
+	else if(timx == TIM12)
+	{
+		timIsrCbBuff[8].timx = timx;
+		timIsrCbBuff[8].cb = cb;
+		timIsrCbBuff[8].param = param;
+	}
+	else if(timx == TIM13)
+	{
+		timIsrCbBuff[9].timx = timx;
+		timIsrCbBuff[9].cb = cb;
+		timIsrCbBuff[9].param = param;
+	}
+	else if(timx == TIM14)
+	{
+		timIsrCbBuff[10].timx = timx;
+		timIsrCbBuff[10].cb = cb;
+		timIsrCbBuff[10].param = param;
+	}
+	else if(timx == TIM15)
+	{
+		timIsrCbBuff[11].timx = timx;
+		timIsrCbBuff[11].cb = cb;
+		timIsrCbBuff[11].param = param;
+	}
+	else if(timx == TIM16)
+	{
+		timIsrCbBuff[12].timx = timx;
+		timIsrCbBuff[12].cb = cb;
+		timIsrCbBuff[12].param = param;
+	}
+	else if(timx == TIM17)
+	{
+		timIsrCbBuff[13].timx = timx;
+		timIsrCbBuff[13].cb = cb;
+		timIsrCbBuff[13].param = param;
+	}
+}
+void unRegisterTimIsrCb(TIM_TypeDef* timx)
+{
+	if(timx == TIM1)
+	{
+		timIsrCbBuff[0].timx = NULL;
+		timIsrCbBuff[0].cb = NULL;
+		timIsrCbBuff[0].param = NULL;
+	}
+	else if(timx == TIM2)
+	{
+		timIsrCbBuff[1].timx = NULL;
+		timIsrCbBuff[1].cb = NULL;
+		timIsrCbBuff[1].param = NULL;
+	}
+	else if(timx == TIM3)
+	{
+		timIsrCbBuff[2].timx = NULL;
+		timIsrCbBuff[2].cb = NULL;
+		timIsrCbBuff[2].param = NULL;
+	}
+	else if(timx == TIM4)
+	{
+		timIsrCbBuff[3].timx = NULL;
+		timIsrCbBuff[3].cb = NULL;
+		timIsrCbBuff[3].param = NULL;
+	}
+	else if(timx == TIM5)
+	{
+		timIsrCbBuff[4].timx = NULL;
+		timIsrCbBuff[4].cb = NULL;
+		timIsrCbBuff[4].param = NULL;
+	}
+	else if(timx == TIM6)
+	{
+		timIsrCbBuff[5].timx = NULL;
+		timIsrCbBuff[5].cb = NULL;
+		timIsrCbBuff[5].param = NULL;
+	}
+	else if(timx == TIM7)
+	{
+		timIsrCbBuff[6].timx = NULL;
+		timIsrCbBuff[6].cb = NULL;
+		timIsrCbBuff[6].param = NULL;
+	}
+	else if(timx == TIM8)
+	{
+		timIsrCbBuff[7].timx = NULL;
+		timIsrCbBuff[7].cb = NULL;
+		timIsrCbBuff[7].param = NULL;
+	}
+	else if(timx == TIM12)
+	{
+		timIsrCbBuff[8].timx = NULL;
+		timIsrCbBuff[8].cb = NULL;
+		timIsrCbBuff[8].param = NULL;
+	}
+	else if(timx == TIM13)
+	{
+		timIsrCbBuff[9].timx = NULL;
+		timIsrCbBuff[9].cb = NULL;
+		timIsrCbBuff[9].param = NULL;
+	}
+	else if(timx == TIM14)
+	{
+		timIsrCbBuff[10].timx = NULL;
+		timIsrCbBuff[10].cb = NULL;
+		timIsrCbBuff[10].param = NULL;
+	}
+	else if(timx == TIM15)
+	{
+		timIsrCbBuff[11].timx = NULL;
+		timIsrCbBuff[11].cb = NULL;
+		timIsrCbBuff[11].param = NULL;
+	}
+	else if(timx == TIM16)
+	{
+		timIsrCbBuff[12].timx = NULL;
+		timIsrCbBuff[12].cb = NULL;
+		timIsrCbBuff[12].param = NULL;
+	}
+	else if(timx == TIM17)
+	{
+		timIsrCbBuff[13].timx = NULL;
+		timIsrCbBuff[13].cb = NULL;
+		timIsrCbBuff[13].param = NULL;
+	}
+}
+void timxIsrCallback(TIM_TypeDef *timx)
+{
+	for(int i = 0; i < 13; i++)
+	{
+		if(timIsrCbBuff[i].timx == timx)
+		{
+			if(timIsrCbBuff[i].cb)
+			{
+				timIsrCbBuff[i].cb(timIsrCbBuff[i].param);
+				break;
+			}
+		}
+	}
+}
+
+void TIM1_BRK_IRQHandler(void)
+{
+	timxIsrCallback(TIM1);
+}
+void TIM1_UP_IRQHandler(void)
+{
+	timxIsrCallback(TIM1);
+}
+void TIM1_TRG_COM_IRQHandler(void)
+{
+	timxIsrCallback(TIM1);
+}
+void TIM1_CC_IRQHandler(void)
+{
+	timxIsrCallback(TIM1);
+}
+void TIM2_IRQHandler(void)
+{
+	timxIsrCallback(TIM2);
+}
+void TIM3_IRQHandler(void)
+{
+	timxIsrCallback(TIM3);
+}
+void TIM4_IRQHandler(void)
+{
+	timxIsrCallback(TIM4);
+}
+void TIM5_IRQHandler(void)
+{
+	timxIsrCallback(TIM5);
+}
+void TIM6_DAC_IRQHandler(void)
+{
+	timxIsrCallback(TIM6);
+}
+void TIM7_IRQHandler(void)
+{
+	timxIsrCallback(TIM7);
+}
+void TIM8_BRK_TIM12_IRQHandler(void)
+{
+	if(READ_BIT(TIM8->SR, TIM_SR_BIF) == TIM_SR_BIF)
+	{
+		timxIsrCallback(TIM8);
+	}
+	else
+	{
+		timxIsrCallback(TIM12);
+	}
+}
+void TIM8_UP_TIM13_IRQHandler(void)
+{
+	if(READ_BIT(TIM8->SR, TIM_SR_UIF) == TIM_SR_UIF)
+	{
+		timxIsrCallback(TIM8);
+	}
+	else
+	{
+		timxIsrCallback(TIM13);
+	}
+}
+void TIM8_TRG_COM_TIM14_IRQHandler(void)
+{
+	if(READ_BIT(TIM8->SR, TIM_SR_COMIF) == TIM_SR_COMIF || READ_BIT(TIM8->SR, TIM_SR_TIF) == TIM_SR_TIF)
+	{
+		timxIsrCallback(TIM8);
+	}
+	else
+	{
+		timxIsrCallback(TIM14);
+	}
+}
+void TIM8_CC_IRQHandler(void)
+{
+	timxIsrCallback(TIM8);
+}
+void TIM15_IRQHandler(void)
+{
+	timxIsrCallback(TIM15);
+}
+void TIM16_IRQHandler(void)
+{
+	timxIsrCallback(TIM16);
+}
+void TIM17_IRQHandler(void)
+{
+	timxIsrCallback(TIM17);
+}
+
 
 /**
   * @brief  This function handles SysTick Handler.
