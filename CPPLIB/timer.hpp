@@ -238,6 +238,10 @@ public:
         uint32_t period = READ_BIT(timer_->ARR, TIM_ARR_ARR)+1;
         return period*1000/getClk();
     }
+    TIMActiveChannel getActiveChannel() const
+    {
+        return activeChannel_;
+    }
 private:
     void handlerISREvent()
     {
@@ -559,8 +563,8 @@ private:
     }
 private:
     TIM_TypeDef* timer_;
-    TIMActiveChannel activeChannel_;
-    TIMChannelState  channelState_[6];   /*!< TIM channel operation state                       */
-    TIMChannelState  channelNState_[4];  /*!< TIM complementary channel operation state         */
+    __IO TIMActiveChannel activeChannel_;
+    __IO TIMChannelState  channelState_[6];   /*!< TIM channel operation state                       */
+    __IO TIMChannelState  channelNState_[4];  /*!< TIM complementary channel operation state         */
     TIMInterruptCb timcb_;
 };
