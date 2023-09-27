@@ -1,5 +1,6 @@
 #pragma once
 #include "common.hpp"
+#include "gpioex.h"
 #include "rcc.hpp"
 #include <functional>
 

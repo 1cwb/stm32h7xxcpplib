@@ -17,7 +17,9 @@ enum eResult
     E_RESULT_OK,
     E_RESULT_TIMEOUT,
     E_RESULT_BAD_INIT_FLOW,
-    E_RESULT_INVALID_PARAM
+    E_RESULT_INVALID_PARAM,
+    E_RESULT_OUT_OF_RANGE,
+    E_RESULT_WRONG_STATUS
 };
 #define CHECK_RETURN(param, result) \
     if(!(param))\

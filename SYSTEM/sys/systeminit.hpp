@@ -124,7 +124,7 @@ bool hwInit()
     delayInit(RCCControl::getInstance()->getSysClkFreq());
 
     GPIO usartGpio(GPIOA, GPIO_NUM_9 | GPIO_NUM_10, GPIO_MODE_AF_PP, GPIO_SPEED_MID, GPIO_PUPD_PU);
-    usartGpio.setAF(0x7);
+    usartGpio.setAF(GPIO_AF7_USART1);
     static USART uart1(USART1, 115200, UART_MODE_TX_RX);
     uart1.enableFIFO(true);
     uart1.enableErrIsr(true);
