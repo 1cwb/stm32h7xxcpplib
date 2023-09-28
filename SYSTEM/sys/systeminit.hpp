@@ -69,7 +69,7 @@ eResult clockInit(uint32_t plln, uint32_t pllm, uint32_t pllp, uint32_t pllq, ui
     CHECK_RETURN(rcc->setPLL2DIVP(pllp-1), E_RESULT_BAD_INIT_FLOW);
     CHECK_RETURN(rcc->setPLL2DIVQ(pllq-1), E_RESULT_BAD_INIT_FLOW);
     CHECK_RETURN(rcc->setPLL2DIVR(pllr-1), E_RESULT_BAD_INIT_FLOW);
-    CHECK_RETURN(rcc->setPLL2InputFreqRange(RCC_PLL2_INPUT_FREQ_RANGE_1MHZ_2MHZ),E_RESULT_BAD_INIT_FLOW);
+    CHECK_RETURN(rcc->setPLL2InputFreqRange(RCC_PLL2_INPUT_FREQ_RANGE_4MHZ_8MHZ),E_RESULT_BAD_INIT_FLOW);
     CHECK_RETURN(rcc->setPLL2VOCRange(RCC_PLL2_VOC_TYPE_192MHZ_TO_836MHZ),E_RESULT_BAD_INIT_FLOW);
     CHECK_RETURN(rcc->enablePLL2DIVPClk(true), E_RESULT_BAD_INIT_FLOW);
     CHECK_RETURN(rcc->enablePLL2DIVQClk(true), E_RESULT_BAD_INIT_FLOW);
@@ -115,7 +115,7 @@ bool hwInit()
     SCB_EnableICache();		// 使能ICache
 	SCB_EnableDCache();		// 使能DCache
     NVIC_SetPriorityGrouping(0x00000003);
-    if(clockInit(192, 5, 2, 4, 2) != E_RESULT_OK)//sysclk 480M
+    if(clockInit(PLLN_VALUE, PLLM_VALUE, PLLP_VALUE, PLLQ_VALUE, PLLR_VALUE) != E_RESULT_OK)//sysclk 480M
     {
         return false;
     }
