@@ -28,8 +28,8 @@
   */
 enum TIMCLKSrc
 {
-    TIM_CLOCKSOURCE_INTERNAL  =  TIM_SMCR_ETPS_0,      /*!< Internal clock source                                 */
     TIM_CLOCKSOURCE_ETRMODE1  =  TIM_TS_ETRF,          /*!< External clock source mode 1 (ETRF)                   */
+    TIM_CLOCKSOURCE_INTERNAL  =  TIM_SMCR_ETPS_0,      /*!< Internal clock source                                 */
     TIM_CLOCKSOURCE_ETRMODE2  =  TIM_SMCR_ETPS_1,      /*!< External clock source mode 2                          */
     TIM_CLOCKSOURCE_TI1ED     =  TIM_TS_TI1F_ED,       /*!< External clock source mode 1 (TTI1FP1 + edge detect.) */
     TIM_CLOCKSOURCE_TI1       =  TIM_TS_TI1FP1,        /*!< External clock source mode 1 (TTI1FP1)                */
@@ -221,7 +221,7 @@ class COMMONTIMER
 {
     using TIMInterruptCb = std::function<void(COMMONTIMER*, TIMISRFlag)>;
 public:
-    COMMONTIMER(TIM_TypeDef* timer) : timer_(timer), activeChannel_(TIM_ACTIVE_CHANNEL_CLEARED)
+    COMMONTIMER(TIM_TypeDef* timer) : timer_(timer), timarr_(0), activeChannel_(TIM_ACTIVE_CHANNEL_CLEARED)
     {
         enableClk();
     }
@@ -233,10 +233,71 @@ public:
     COMMONTIMER(COMMONTIMER&&) = delete;
     COMMONTIMER& operator=(const COMMONTIMER&) = delete;
     COMMONTIMER& operator=(COMMONTIMER&&) = delete;
-
+    eResult timInit(uint32_t freqHz, TIMXCR1CountMode countMode = TIM_COUNTERMODE_UP, uint32_t repetCount = 0, TIMCR1ClkDivi div = TIM_CLOCKDIVISION_DIV1, bool autoReload = true)
+    {
+        uint32_t period = 0;
+        uint32_t prescaler = 0;
+        uint32_t targetVal = 0;
+        if(READ_BIT(timer_->SMCR, TIM_SMCR_ECE) == TIM_SMCR_ECE)
+        {
+            return E_RESULT_WRONG_STATUS;//ONLY INTERNAL CLKSRC CAN DO THIS
+        }
+        if(freqHz < 100)
+        {
+            targetVal = getInputClk() / 10000;
+            prescaler = getInputClk() / targetVal;
+            period = (getInputClk() / prescaler) / freqHz;
+        }
+        else if(freqHz < 3000)
+        {
+            targetVal = getInputClk() / 100;
+            prescaler = getInputClk() / targetVal;
+            period = (getInputClk() / prescaler) / freqHz;
+        }
+        else
+        {
+            prescaler = 1;
+            period = getInputClk() / freqHz;
+        }
+        return timInit(period - 1, prescaler - 1, countMode, repetCount, div, autoReload);
+    }
+    eResult setTimFreq(uint32_t freqHz)
+    {
+        uint32_t period = 0;
+        uint32_t prescaler = 0;
+        uint32_t targetVal = 0;
+        if(READ_BIT(timer_->SMCR, TIM_SMCR_ECE) == TIM_SMCR_ECE)
+        {
+            return E_RESULT_WRONG_STATUS;//ONLY INTERNAL CLKSRC CAN DO THIS
+        }
+        if(freqHz < 100)
+        {
+            targetVal = getInputClk() / 10000;
+            prescaler = getInputClk() / targetVal;
+            period = (getInputClk() / prescaler) / freqHz;
+        }
+        else if(freqHz < 3000)
+        {
+            targetVal = getInputClk() / 100;
+            prescaler = getInputClk() / targetVal;
+            period = (getInputClk() / prescaler) / freqHz;
+        }
+        else
+        {
+            prescaler = 1;
+            period = getInputClk() / freqHz;
+        }
+        timarr_ = period;
+        /* Set the Prescaler value */
+        timer_->PSC = static_cast<uint32_t>(prescaler - 1);
+        timer_->ARR = static_cast<uint32_t>(period - 1);
+        timer_->EGR = TIM_EGR_UG;
+        return E_RESULT_OK;
+    }
     eResult timInit(uint32_t period, uint32_t prescaler, TIMXCR1CountMode countMode = TIM_COUNTERMODE_UP, uint32_t repetCount = 0, TIMCR1ClkDivi div = TIM_CLOCKDIVISION_DIV1, bool autoReload = true)
     {
         CHECK_RETURN(IS_TIM_INSTANCE(timer_), E_RESULT_INVALID_PARAM);
+        timarr_ = period + 1;
         uint32_t tmpcr1 = timer_->CR1;
         if(IS_TIM_COUNTER_MODE_SELECT_INSTANCE(timer_))
         {
@@ -342,11 +403,10 @@ public:
             timcb_ = TIMInterruptCb();
         }
     }
-    uint32_t getClk()
+    uint32_t getInputClk()
     {
         uint32_t clk = 0;
         RCCControl* rcc = RCCControl::getInstance();
-        uint32_t prescaler = READ_BIT(timer_->PSC,TIM_PSC_PSC);
         switch(reinterpret_cast<uint32_t>(timer_))
         {
             case TIM1_BASE:
@@ -384,12 +444,19 @@ public:
             default:
                 break;
         }
-        return clk/(prescaler+1);
+        return clk;
     }
-    uint32_t getTimeoutTimer()
+    uint32_t getTimeoutTimerMs()
     {
         uint32_t period = READ_BIT(timer_->ARR, TIM_ARR_ARR)+1;
-        return period*1000/getClk();
+        uint32_t prescaler = READ_BIT(timer_->PSC,TIM_PSC_PSC)+1;
+        return period*1000/(getInputClk()/prescaler);
+    }
+    uint32_t getTimFreq()
+    {
+        uint32_t period = READ_BIT(timer_->ARR, TIM_ARR_ARR)+1;
+        uint32_t prescaler = READ_BIT(timer_->PSC,TIM_PSC_PSC)+1;
+        return (getInputClk()/prescaler)/(period);
     }
     TIMActiveChannel getActiveChannel() const
     {
@@ -613,9 +680,17 @@ public:
         }
         return status;
     }
-
-    eResult pwmConfig(TIMCCChannel ch, uint32_t pulse, TIMOCPWMMode pwmMode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState, TIMOCFast fast)
+    eResult pwmConfig(TIMCCChannel ch, uint32_t duty, TIMOCPWMMode pwmMode, TIMOCPolarity polarity = TIM_OCPOLARITY_HIGH, TIMOCNPolarity npolarity = TIM_OCNPOLARITY_LOW,  TIMOCIDLEState idleState = TIM_OCIDLESTATE_RESET, TIMOCNIDLEState nidleState = TIM_OCNIDLESTATE_RESET, TIMOCFast fast = TIM_OCFAST_DISABLE)
     {
+        if(duty < 1)
+        {
+            duty = 1;
+        }
+        if(duty > 100)
+        {
+            duty = 100;
+        }
+        uint32_t pulse = ((timarr_ * duty) / 100) - 1;
         eResult result = E_RESULT_OK;
         switch (ch)
         {
@@ -816,6 +891,42 @@ public:
         setChannelState(ch, TIM_CHANNEL_STATE_READY);
 
         /* Return function status */
+        return E_RESULT_OK;
+    }
+    eResult pwmSetDuty(TIMCCChannel ch, uint32_t duty)
+    {
+        if(duty < 1)
+        {
+            duty = 1;
+        }
+        if(duty > 100)
+        {
+            duty = 100;
+        }
+        uint32_t pulse = ((timarr_ * duty) / 100) - 1;
+        switch(ch)
+        {
+            case TIM_CHANNEL_1:
+                timer_->CCR1 = pulse;
+                break;
+            case TIM_CHANNEL_2:
+                timer_->CCR2 = pulse;
+                break;
+            case TIM_CHANNEL_3:
+                timer_->CCR3 = pulse;
+                break;
+            case TIM_CHANNEL_4:
+                timer_->CCR4 = pulse;
+                break;
+            case TIM_CHANNEL_5:
+                timer_->CCR5 = pulse;
+                break;
+            case TIM_CHANNEL_6:
+                timer_->CCR6 = pulse;
+                break;
+            default:
+                break;
+        }
         return E_RESULT_OK;
     }
 private:
@@ -1514,6 +1625,7 @@ private:
     }
 private:
     TIM_TypeDef* timer_;
+    __IO uint32_t timarr_;
     __IO TIMActiveChannel activeChannel_;
     __IO TIMChannelState  channelState_[6];   /*!< TIM channel operation state                       */
     __IO TIMChannelState  channelNState_[4];  /*!< TIM complementary channel operation state         */
