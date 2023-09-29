@@ -216,7 +216,18 @@ enum TIMOCFast
     TIM_OCFAST_DISABLE       =       0x00000000U,                          /*!< Output Compare fast disable */
     TIM_OCFAST_ENABLE        =       TIM_CCMR1_OC1FE                      /*!< Output Compare fast enable  */
 };
-
+enum TIMEventGenerat
+{
+    TIM_EVENT_GEN_UG = TIM_EGR_UG,
+    TIM_EVENT_GEN_CC1G = TIM_EGR_CC1G,
+    TIM_EVENT_GEN_CC2G = TIM_EGR_CC2G,
+    TIM_EVENT_GEN_CC3G = TIM_EGR_CC3G,
+    TIM_EVENT_GEN_CC4G = TIM_EGR_CC4G,
+    TIM_EVENT_GEN_COMG = TIM_EGR_COMG,
+    TIM_EVENT_GEN_TG = TIM_EGR_TG,
+    TIM_EVENT_GEN_BG = TIM_EGR_BG,
+    TIM_EVENT_GEN_BG2 = TIM_EGR_B2G
+};
 class COMMONTIMER
 {
     using TIMInterruptCb = std::function<void(COMMONTIMER*, TIMISRFlag)>;
@@ -291,7 +302,7 @@ public:
         /* Set the Prescaler value */
         timer_->PSC = static_cast<uint32_t>(prescaler - 1);
         timer_->ARR = static_cast<uint32_t>(period - 1);
-        timer_->EGR = TIM_EGR_UG;
+        generateEvent(TIM_EVENT_GEN_UG);
         return E_RESULT_OK;
     }
     eResult timInit(uint32_t period, uint32_t prescaler, TIMXCR1CountMode countMode = TIM_COUNTERMODE_UP, uint32_t repetCount = 0, TIMCR1ClkDivi div = TIM_CLOCKDIVISION_DIV1, bool autoReload = true)
@@ -855,7 +866,7 @@ public:
             {
                 if(READ_BIT(timer_->CR1, TIM_CR1_CEN) == TIM_CR1_CEN)
                 {
-                    return E_RESULT_WRONG_STATUS;
+                    //return E_RESULT_WRONG_STATUS;
                 }
             }
         }
@@ -863,7 +874,7 @@ public:
         {
             if(READ_BIT(timer_->CR1, TIM_CR1_CEN) == TIM_CR1_CEN)
             {
-                return E_RESULT_WRONG_STATUS;
+                //return E_RESULT_WRONG_STATUS;
             }
         }
 
@@ -928,6 +939,20 @@ public:
                 break;
         }
         return E_RESULT_OK;
+    }
+    void generateEvent(TIMEventGenerat EventSource)
+    {
+        /* Set the event sources */
+        timer_->EGR = EventSource;
+    }
+    void setRepetCount(uint32_t repetCount)
+    {
+        if (IS_TIM_REPETITION_COUNTER_INSTANCE(timer_))
+        {
+            /* Set the Repetition Counter value */
+            timer_->RCR = repetCount;
+            generateEvent(TIM_EVENT_GEN_UG);
+        }
     }
 private:
     void handlerISREvent()

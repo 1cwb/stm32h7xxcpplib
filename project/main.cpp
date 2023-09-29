@@ -46,10 +46,11 @@ int main(void)
             //printf("cc isr\n");
         }
     });
-    timer1.pwmStart(TIM_CHANNEL_1);
-    timer1.enableIsr(TIM_IT_UPDATE, 5,0);
-    timer1.enableIsr(TIM_IT_CC1, 5,0);
+        timer1.enableIsr(TIM_IT_UPDATE, 5,0);
+    //timer1.enableIsr(TIM_IT_CC1, 5,0);
     timer1.start();
+    delayTick(3000);
+    timer1.pwmStart(TIM_CHANNEL_1);
     printf("get greq = %lu\r\n",timer1.getTimFreq());
     //delayTick(5000);
     //timer1.setTimFreq(10);
@@ -83,6 +84,7 @@ int main(void)
 
         delayTick(30);
         timer4.pwmSetDuty(TIM_CHANNEL_4, i++);
+        timer1.pwmSetDuty(TIM_CHANNEL_1, i++);
         if(i > 100) i = 0;
 
     }
