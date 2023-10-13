@@ -145,7 +145,7 @@ bool hwInit()
     WWDG::getInstance()->start(0x7F, 0X7F, WWDG_TIME_BASE_DIVI_128);
     WWDG::getInstance()->registerInterruptCb([](WWDG* wdg){
         //printf("timeout befor = %lu\r\n",WWDG::getInstance()->getTimeOutMs());
-        wdg->feedDog();
+    wdg->feedDog();
         //printf("timeout = %lu\r\n",WWDG::getInstance()->getTimeOutMs());
     });
     WWDG::getInstance()->enableIsr(2,0);

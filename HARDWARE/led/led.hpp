@@ -7,7 +7,7 @@ public:
     LED(GPIO_TypeDef* GPIOx, uint32_t ioNum, bool bLowLevelOn = true)
     : bLowLevelOn_(bLowLevelOn), ledgpio_(GPIOx, ioNum, GPIO_MODE_OUTPUT_PP, GPIO_SPEED_HIGH, bLowLevelOn_ ? GPIO_PUPD_PU : GPIO_PUPD_PD)
     {
-
+        off();
     }
     ~LED()
     {

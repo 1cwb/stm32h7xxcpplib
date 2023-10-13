@@ -11,7 +11,7 @@
 #include "led.hpp"
 #include "iwdg.hpp"
 #include "timer.hpp"
-
+#if 0
 int main(void)
 {
     if(!hwInit())
@@ -38,7 +38,7 @@ int main(void)
     timer1.registerInterruptCb([&led](COMMONTIMER* timer, TIMISRFlag isrflag){
         if(isrflag == TIM_FLAG_UPDATE)
         {
-            led.reverse();
+            //led.reverse();
             //printf("timer 1\n");
         }
         if(isrflag == TIM_FLAG_CC1)
@@ -73,6 +73,7 @@ int main(void)
         {
             //printf("cc isr\n");
         }
+        //printf("xxxxxxxx\r\n");
     });
     timer4.pwmStart(TIM_CHANNEL_4);
     timer4.enableIsr(TIM_IT_UPDATE, 5,0);
@@ -87,6 +88,60 @@ int main(void)
         timer1.pwmSetDuty(TIM_CHANNEL_1, i++);
         if(i > 100) i = 0;
 
+    }
+    return 0;
+}
+#endif
+int main(void)
+{
+    if(!hwInit())
+    {
+        while(1);
+    }
+    LED led(GPIOC, GPIO_NUM_13);
+     GPIO d0(GPIOB, GPIO_NUM_0|GPIO_NUM_1|GPIO_NUM_3, GPIO_MODE_INPUT, GPIO_SPEED_FAST, GPIO_PUPD_PU);
+     d0.registerInterruptCb([](GPIO* g, GPIONumBit p){
+         printf("d0 pin %d isr\r\n",p);
+     });
+     d0.enableIsr(GPIO_MODE_IT_FALLING,2,0);
+    
+    // GPIO A0(GPIOA, GPIO_NUM_0|GPIO_NUM_1|GPIO_NUM_3|GPIO_NUM_11|GPIO_NUM_12, GPIO_MODE_INPUT, GPIO_SPEED_FAST, GPIO_PUPD_PU);
+    //     A0.registerInterruptCb([](GPIO* g, GPIONumBit p){
+    //     printf("a0 pin %d isr\r\n",p);
+    // });
+    // A0.enableIsr(GPIO_MODE_IT_FALLING,2,0);
+    GPIO tim2ch1(GPIOA, GPIO_NUM_0, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PU);
+    tim2ch1.setAF(GPIO_AF1_TIM2);
+    COMMONTIMER timer2(TIM2);
+    timer2.timInit(50);
+    timer2.ocConfig(TIM_CHANNEL_1, 50, TIM_OCMODE_TOGGLE);
+    timer2.registerInterruptCb([&led](COMMONTIMER* timer, TIMISRFlag isrflag){
+        if(isrflag == TIM_FLAG_UPDATE)
+        {
+            //led.reverse();
+            //printf("timer 1\n");
+        }
+        if(isrflag == TIM_FLAG_CC1)
+        {
+            //printf("cc isr\n");
+            //led.reverse();
+        }
+    });
+        timer2.enableIsr(TIM_IT_UPDATE, 5,0);
+        timer2.enableIsr(TIM_IT_CC1, 5,0);
+    timer2.start();
+    delayTick(3000);
+    timer2.ocStart(TIM_CHANNEL_1);
+    printf("get greq = %lu\r\n",timer2.getTimFreq());
+    //delayTick(5000);
+    //timer1.setTimFreq(10);
+    printf("get greq = %lu\r\n",timer2.getTimFreq());
+    printf("get time = %lu\r\n",timer2.getTimeoutTimerMs());
+
+    uint32_t i = 0;
+    while(1)
+    {
+        delayTick(30);
     }
     return 0;
 }

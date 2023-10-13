@@ -1,6 +1,6 @@
 #pragma once
 #include "common.hpp"
-
+#include <cmath>
 /** @defgroup TIM_Trigger_Selection TIM Trigger Selection
   * @{
   */
@@ -176,6 +176,17 @@ enum TIMOCPWMMode
     TIM_OCMODE_ASSYMETRIC_PWM1    =      (TIM_CCMR1_OC1M_3 | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2),  /*!< Asymmetric PWM mode 1                  */
     TIM_OCMODE_ASSYMETRIC_PWM2    =      TIM_CCMR1_OC1M                                            /*!< Asymmetric PWM mode 2                  */
 };
+enum TIMOCMode
+{
+    TIM_OCMODE_TIMING              =     0x00000000U,                                              /*!< Frozen                                 */
+    TIM_OCMODE_ACTIVE              =     TIM_CCMR1_OC1M_0,                                         /*!< Set channel to active level on match   */
+    TIM_OCMODE_INACTIVE            =     TIM_CCMR1_OC1M_1,                                         /*!< Set channel to inactive level on match */
+    TIM_OCMODE_TOGGLE              =     (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_0),                    /*!< Toggle                                 */
+    TIM_OCMODE_FORCED_ACTIVE       =     (TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_0),                   /*!< Force active level                     */
+    TIM_OCMODE_FORCED_INACTIVE     =     TIM_CCMR1_OC1M_2,                                         /*!< Force inactive level                   */
+    TIM_OCMODE_RETRIGERRABLE_OPM1  =    TIM_CCMR1_OC1M_3,                                          /*!< Retrigerrable OPM mode 1               */
+    TIM_OCMODE_RETRIGERRABLE_OPM2  =    (TIM_CCMR1_OC1M_3 | TIM_CCMR1_OC1M_0)                     /*!< Retrigerrable OPM mode 2               */                                       /*!< Asymmetric PWM mode 2                  */
+};
 /** @defgroup TIM_Output_Compare_Polarity TIM Output Compare Polarity
   * @{
   */
@@ -228,6 +239,89 @@ enum TIMEventGenerat
     TIM_EVENT_GEN_BG = TIM_EGR_BG,
     TIM_EVENT_GEN_BG2 = TIM_EGR_B2G
 };
+
+/** @defgroup TIM_OSSR_Off_State_Selection_for_Run_mode_state TIM OSSR OffState Selection for Run mode state
+  * @{
+  */
+enum TIMOSSRStatus
+{
+    TIM_OSSR_ENABLE   =        TIM_BDTR_OSSR,                  /*!< When inactive, OC/OCN outputs are enabled (still controlled by the timer)           */
+    TIM_OSSR_DISABLE  =        0x00000000U                     /*!< When inactive, OC/OCN outputs are disabled (not controlled any longer by the timer) */
+};
+/** @defgroup TIM_OSSI_Off_State_Selection_for_Idle_mode_state TIM OSSI OffState Selection for Idle mode state
+  * @{
+  */
+enum TIMOSSIStatus
+{
+    TIM_OSSI_ENABLE       =        TIM_BDTR_OSSI,                  /*!< When inactive, OC/OCN outputs are enabled (still controlled by the timer)           */
+    TIM_OSSI_DISABLE      =        0x00000000U                     /*!< When inactive, OC/OCN outputs are disabled (not controlled any longer by the timer) */
+};
+/** @defgroup TIM_Lock_level  TIM Lock level
+  * @{
+  */
+enum TIMLockLevel
+{
+    TIM_LOCKLEVEL_OFF      =          0x00000000U,                          /*!< LOCK OFF     */
+    TIM_LOCKLEVEL_1        =          TIM_BDTR_LOCK_0,                      /*!< LOCK Level 1 */
+    TIM_LOCKLEVEL_2        =          TIM_BDTR_LOCK_1,                      /*!< LOCK Level 2 */
+    TIM_LOCKLEVEL_3        =          TIM_BDTR_LOCK                         /*!< LOCK Level 3 */
+};
+/** @defgroup TIM_Break_Input_enable_disable TIM Break Input Enable
+  * @{
+  */
+enum TIMBreakStatus
+{
+    TIM_BREAK_ENABLE      =        TIM_BDTR_BKE,                         /*!< Break input BRK is enabled  */
+    TIM_BREAK_DISABLE     =        0x00000000U                           /*!< Break input BRK is disabled */
+};
+/** @defgroup TIM_Break_Polarity TIM Break Input Polarity
+  * @{
+  */
+enum TIMBreakPolarity
+{
+    TIM_BREAKPOLARITY_LOW       =       0x00000000U,                          /*!< Break input BRK is active low  */
+    TIM_BREAKPOLARITY_HIGH      =       TIM_BDTR_BKP                          /*!< Break input BRK is active high */
+};
+/** @defgroup TIM_Break2_Input_enable_disable TIM Break input 2 Enable
+  * @{
+  */
+enum TIMBreak2Status
+{
+    TIM_BREAK2_DISABLE        =         0x00000000U,                          /*!< Break input BRK2 is disabled  */
+    TIM_BREAK2_ENABLE         =         TIM_BDTR_BK2E                         /*!< Break input BRK2 is enabled  */
+};
+/** @defgroup TIM_Break2_Polarity TIM Break Input 2 Polarity
+  * @{
+  */
+enum TIMBreak2Polarity
+{
+    TIM_BREAK2POLARITY_LOW      =       0x00000000U,                          /*!< Break input BRK2 is active low   */
+    TIM_BREAK2POLARITY_HIGH     =       TIM_BDTR_BK2P                        /*!< Break input BRK2 is active high  */
+};
+/** @defgroup TIM_AOE_Bit_Set_Reset TIM Automatic Output Enable
+  * @{
+  */
+enum TIMAutomaticOutputStatus
+{
+    TIM_AUTOMATICOUTPUT_DISABLE    =    0x00000000U,                          /*!< MOE can be set only by software */
+    TIM_AUTOMATICOUTPUT_ENABLE     =    TIM_BDTR_AOE                          /*!< MOE can be set by software or automatically at the next update event (if none of the break inputs BRK and BRK2 is active) */
+};
+
+struct PWMBreakDeadTimeConfig
+{
+  TIMOSSRStatus             offStateRunMode;      /*!< TIM off state in run mode, This parameter can be a value of @ref TIM_OSSR_Off_State_Selection_for_Run_mode_state */
+  TIMOSSIStatus             offStateIDLEMode;     /*!< TIM off state in IDLE mode, This parameter can be a value of @ref TIM_OSSI_Off_State_Selection_for_Idle_mode_state */
+  TIMLockLevel              lockLevel;            /*!< TIM Lock level, This parameter can be a value of @ref TIM_Lock_level */
+  uint32_t                  deadTime;             /*!< TIM dead Time, This parameter can be a number between Min_Data = 0x00 and Max_Data = 0xFF */
+  TIMBreakStatus            breakState;           /*!< TIM Break State, This parameter can be a value of @ref TIM_Break_Input_enable_disable */
+  TIMBreakPolarity          breakPolarity;        /*!< TIM Break input polarity, This parameter can be a value of @ref TIM_Break_Polarity */
+  uint32_t                  breakFilter;          /*!< Specifies the break input filter.This parameter can be a number between Min_Data = 0x0 and Max_Data = 0xF */
+  TIMBreak2Status           break2State;          /*!< TIM Break2 State, This parameter can be a value of @ref TIM_Break2_Input_enable_disable */
+  TIMBreak2Polarity         break2Polarity;       /*!< TIM Break2 input polarity, This parameter can be a value of @ref TIM_Break2_Polarity */
+  uint32_t                  break2Filter;         /*!< TIM break2 input filter.This parameter can be a number between Min_Data = 0x0 and Max_Data = 0xF */
+  TIMAutomaticOutputStatus  automaticOutput;      /*!< TIM Automatic Output Enable state, This parameter can be a value of @ref TIM_AOE_Bit_Set_Reset */
+};
+
 class COMMONTIMER
 {
     using TIMInterruptCb = std::function<void(COMMONTIMER*, TIMISRFlag)>;
@@ -714,7 +808,7 @@ public:
                     break;
                 }
                 /* Configure the Channel 1 in PWM mode */
-                timOC1SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState, fast);
+                timOC1SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState);
                 /* Set the Preload enable bit for channel1 */
                 timer_->CCMR1 |= TIM_CCMR1_OC1PE;
 
@@ -732,7 +826,7 @@ public:
                     break;
                 }
                 /* Configure the Channel 2 in PWM mode */
-                timOC2SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState, fast);
+                timOC2SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState);
 
                 /* Set the Preload enable bit for channel2 */
                 timer_->CCMR1 |= TIM_CCMR1_OC2PE;
@@ -752,7 +846,7 @@ public:
                 }
 
                 /* Configure the Channel 3 in PWM mode */
-                timOC3SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState, fast);
+                timOC3SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState);
 
                 /* Set the Preload enable bit for channel3 */
                 timer_->CCMR2 |= TIM_CCMR2_OC3PE;
@@ -772,7 +866,7 @@ public:
                     break;
                 }
                 /* Configure the Channel 4 in PWM mode */
-                timOC4SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState, fast);
+                timOC4SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState);
 
                 /* Set the Preload enable bit for channel4 */
                 timer_->CCMR2 |= TIM_CCMR2_OC4PE;
@@ -792,7 +886,7 @@ public:
                     break;
                 }
                 /* Configure the Channel 5 in PWM mode */
-                timOC5SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState, fast);
+                timOC5SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState);
 
                 /* Set the Preload enable bit for channel5*/
                 timer_->CCMR3 |= TIM_CCMR3_OC5PE;
@@ -813,7 +907,7 @@ public:
                 }
                 
                 /* Configure the Channel 6 in PWM mode */
-                timOC6SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState, fast);
+                timOC6SetConfig(pulse, pwmMode, polarity, npolarity, idleState, nidleState);
 
                 /* Set the Preload enable bit for channel6 */
                 timer_->CCMR3 |= TIM_CCMR3_OC6PE;
@@ -939,6 +1033,284 @@ public:
                 break;
         }
         return E_RESULT_OK;
+    }
+    void setCompare(TIMCCChannel ch, uint32_t pulse)
+    {
+        switch(ch)
+        {
+            case TIM_CHANNEL_1:
+                timer_->CCR1 = pulse;
+                break;
+            case TIM_CHANNEL_2:
+                timer_->CCR2 = pulse;
+                break;
+            case TIM_CHANNEL_3:
+                timer_->CCR3 = pulse;
+                break;
+            case TIM_CHANNEL_4:
+                timer_->CCR4 = pulse;
+                break;
+            case TIM_CHANNEL_5:
+                timer_->CCR5 = pulse;
+                break;
+            case TIM_CHANNEL_6:
+                timer_->CCR6 = pulse;
+                break;
+            default:
+                break;
+        }
+    }
+    eResult ocConfig(TIMCCChannel ch, uint32_t pulse, TIMOCMode ocMode, TIMOCPolarity polarity = TIM_OCPOLARITY_HIGH, TIMOCNPolarity npolarity = TIM_OCNPOLARITY_LOW,  TIMOCIDLEState idleState = TIM_OCIDLESTATE_RESET, TIMOCNIDLEState nidleState = TIM_OCNIDLESTATE_RESET)
+    {
+       eResult result = E_RESULT_OK;
+        switch (ch)
+        {
+            case TIM_CHANNEL_1:
+            {
+                /* Check the parameters */
+                if(!IS_TIM_CC1_INSTANCE(timer_))
+                {
+                    result = E_RESULT_INVALID_PARAM;
+                    break;
+                }
+                 /* Configure the TIM Channel 1 in Output Compare */
+                timOC1SetConfig(pulse, ocMode, polarity, npolarity, idleState, nidleState);
+                /* Set the Preload enable bit for channel1 */
+                timer_->CCMR1 |= TIM_CCMR1_OC1PE;
+                break;
+            }
+            case TIM_CHANNEL_2:
+            {
+                /* Check the parameters */
+                if(!IS_TIM_CC2_INSTANCE(timer_))
+                {
+                    result = E_RESULT_INVALID_PARAM;
+                    break;
+                }
+                /* Configure the TIM Channel 2 in Output Compare */
+                timOC2SetConfig(pulse, ocMode, polarity, npolarity, idleState, nidleState);
+                /* Set the Preload enable bit for channel2 */
+                timer_->CCMR1 |= TIM_CCMR1_OC2PE;
+                break;
+            }
+            case TIM_CHANNEL_3:
+            {
+                /* Check the parameters */
+                if(!IS_TIM_CC3_INSTANCE(timer_))
+                {
+                    result = E_RESULT_INVALID_PARAM;
+                    break;
+                }
+
+                /* Configure the TIM Channel 3 in Output Compare */
+                timOC3SetConfig(pulse, ocMode, polarity, npolarity, idleState, nidleState);
+                /* Set the Preload enable bit for channel3 */
+                timer_->CCMR2 |= TIM_CCMR2_OC3PE;
+                break;
+            }
+
+            case TIM_CHANNEL_4:
+            {
+                /* Check the parameters */
+                if(!IS_TIM_CC4_INSTANCE(timer_))
+                {
+                    result = E_RESULT_INVALID_PARAM;
+                    break;
+                }
+                /* Configure the TIM Channel 4 in Output Compare */
+                timOC4SetConfig(pulse, ocMode, polarity, npolarity, idleState, nidleState);
+                /* Set the Preload enable bit for channel4 */
+                timer_->CCMR2 |= TIM_CCMR2_OC4PE;
+                break;
+            }
+
+            case TIM_CHANNEL_5:
+            {
+                /* Check the parameters */
+                if(!IS_TIM_CC5_INSTANCE(timer_))
+                {
+                    result = E_RESULT_INVALID_PARAM;
+                    break;
+                }
+                /* Configure the TIM Channel 5 in Output Compare */
+                timOC5SetConfig(pulse, ocMode, polarity, npolarity, idleState, nidleState);
+                /* Set the Preload enable bit for channel5*/
+                timer_->CCMR3 |= TIM_CCMR3_OC5PE;
+                break;
+            }
+
+            case TIM_CHANNEL_6:
+            {
+                /* Check the parameters */
+                if(!IS_TIM_CC6_INSTANCE(timer_))
+                {
+                    result = E_RESULT_INVALID_PARAM;
+                    break;
+                }
+                
+                /* Configure the TIM Channel 6 in Output Compare */
+                timOC6SetConfig(pulse, ocMode, polarity, npolarity, idleState, nidleState);
+                /* Set the Preload enable bit for channel6 */
+                timer_->CCMR3 |= TIM_CCMR3_OC6PE;
+                break;
+            }
+
+            default:
+                result = E_RESULT_ERROR;
+            break;
+        }
+        return result;
+    }
+    eResult ocStart(TIMCCChannel ch)
+    {
+        uint32_t tmpsmcr;
+        if(!IS_TIM_CCX_INSTANCE(timer_, ch))
+        {
+            return E_RESULT_INVALID_PARAM;
+        }
+        if(getChannelState(ch) != TIM_CHANNEL_STATE_READY)
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+        setChannelState(ch, TIM_CHANNEL_STATE_BUSY);
+
+        /* Enable the Capture compare channel */
+        enabletimCCxChannel(ch, TIM_CCx_ENABLE);
+
+        if (IS_TIM_BREAK_INSTANCE(timer_) != RESET)
+        {
+            /* Enable the main output */
+            timer_->BDTR|=(TIM_BDTR_MOE);
+        }
+
+        /* Enable the Peripheral, except in trigger mode where enable is automatically done with trigger */
+        if (IS_TIM_SLAVE_INSTANCE(timer_))
+        {
+            tmpsmcr = timer_->SMCR & TIM_SMCR_SMS;
+            if (!(tmpsmcr == TIM_SLAVEMODE_TRIGGER || tmpsmcr == TIM_SLAVEMODE_COMBINED_RESETTRIGGER))
+            {
+                if(READ_BIT(timer_->CR1, TIM_CR1_CEN) == TIM_CR1_CEN)
+                {
+                    //enable timer in timer start();
+                }
+            }
+        }
+        else
+        {
+            if(READ_BIT(timer_->CR1, TIM_CR1_CEN) == TIM_CR1_CEN)
+            {
+                //enable timer in timer start();
+            }
+        }
+        return E_RESULT_OK;
+    }
+    eResult ocStop(TIMCCChannel ch)
+    {
+        /* Check the parameters */
+        if(!IS_TIM_CCX_INSTANCE(timer_, ch))
+        {
+            return E_RESULT_INVALID_PARAM;
+        }
+
+        /* Disable the Capture compare channel */
+        enabletimCCxChannel(ch, TIM_CCx_DISABLE);
+
+        if (IS_TIM_BREAK_INSTANCE(timer_) != RESET)
+        {
+            /* Disable the Main Output */
+            timer_->BDTR&=(~TIM_BDTR_MOE);
+        }
+
+        /* Set the TIM channel state */
+        setChannelState(ch, TIM_CHANNEL_STATE_READY);
+
+        /* Return function status */
+        return E_RESULT_OK;
+    }
+    eResult pwmConfigBreakDeadTime(PWMBreakDeadTimeConfig* pconfig)
+    {
+        if(!IS_TIM_BREAK_INSTANCE(timer_) || !pconfig || pconfig->breakFilter > 0xFUL || pconfig->deadTime > 0xFFUL)
+        {
+            return E_RESULT_INVALID_PARAM;
+        }
+        /* Keep this variable initialized to 0 as it is used to configure BDTR register */
+        uint32_t tmpbdtr = 0U;
+        /* Set the BDTR bits */
+        MODIFY_REG(tmpbdtr, TIM_BDTR_DTG, pconfig->deadTime);
+        MODIFY_REG(tmpbdtr, TIM_BDTR_LOCK, pconfig->lockLevel);
+        MODIFY_REG(tmpbdtr, TIM_BDTR_OSSI, pconfig->offStateIDLEMode);
+        MODIFY_REG(tmpbdtr, TIM_BDTR_OSSR, pconfig->offStateRunMode);
+        MODIFY_REG(tmpbdtr, TIM_BDTR_BKE, pconfig->breakState);
+        MODIFY_REG(tmpbdtr, TIM_BDTR_BKP, pconfig->breakPolarity);
+        MODIFY_REG(tmpbdtr, TIM_BDTR_AOE, pconfig->automaticOutput);
+        MODIFY_REG(tmpbdtr, TIM_BDTR_BKF, (pconfig->breakFilter << TIM_BDTR_BKF_Pos));
+
+        if (IS_TIM_BKIN2_INSTANCE(timer_))
+        {
+            /* Check the parameters */
+            if(pconfig->break2Filter > 0xFUL)
+            {
+                return E_RESULT_INVALID_PARAM;
+            }
+            /* Set the BREAK2 input related BDTR bits */
+            MODIFY_REG(tmpbdtr, TIM_BDTR_BK2F, (pconfig->break2Filter << TIM_BDTR_BK2F_Pos));
+            MODIFY_REG(tmpbdtr, TIM_BDTR_BK2E, pconfig->break2State);
+            MODIFY_REG(tmpbdtr, TIM_BDTR_BK2P, pconfig->break2Polarity);
+        }
+
+        /* Set TIMx_BDTR */
+        timer_->BDTR = tmpbdtr;
+        return E_RESULT_OK;
+    } 
+    uint32_t calcuDTGns(uint32_t deadTime)
+    {
+        uint32_t fclk = getInputClk();
+        float Tdtsns = 0.0;
+        float timeRange[8] = {0.0f};
+        float result = 0;
+        uint32_t dtgVal = 0;
+        if(READ_BIT(timer_->CR1, TIM_CR1_CKD) == TIM_CLOCKDIVISION_DIV1)
+        {
+            Tdtsns = 1000000000.0f / (float)fclk;
+        }
+        else if(READ_BIT(timer_->CR1, TIM_CR1_CKD) == TIM_CLOCKDIVISION_DIV2)
+        {
+            Tdtsns = 2000000000.0f / (float)fclk;
+        }
+        else if(READ_BIT(timer_->CR1, TIM_CR1_CKD) == TIM_CLOCKDIVISION_DIV4)
+        {
+            Tdtsns = 4000000000.0f / (float)fclk;
+        }
+        timeRange[0] = Tdtsns * 0.0f;
+        timeRange[1] = Tdtsns * 127.0f;
+        timeRange[2] = 64.0f*2.0f*Tdtsns;//(64+DTG[5:0])xtdtg，其中 Tdtg=2xtDTS。
+        timeRange[3] = 127.0f*2.0f*Tdtsns;
+        timeRange[4] = 32.0f*8.0f*Tdtsns;
+        timeRange[5] = 63.0f*8.0f*Tdtsns;
+        timeRange[6] = 32.0f*16.0f*Tdtsns;
+        timeRange[7] = 63.0f*16.0f*Tdtsns;
+
+        if(deadTime > timeRange[0] && deadTime < timeRange[1])
+        {
+            result = deadTime / Tdtsns;
+        }
+        else if(deadTime > timeRange[2] && deadTime < timeRange[3])
+        {
+            result = deadTime / (Tdtsns*2) - 64;
+            dtgVal |= 2 << 6;
+        }
+        else if(deadTime > timeRange[4] && deadTime < timeRange[5])
+        {
+            result = deadTime / (Tdtsns*8) - 32;
+            dtgVal |= 6 << 4;
+        }
+        else if(deadTime > timeRange[6] && deadTime < timeRange[7])
+        {
+            result = deadTime / (Tdtsns*16) - 32;
+            dtgVal |= 7 << 4;
+        }
+        dtgVal |= ::lroundf(result);
+        return dtgVal;
     }
     void generateEvent(TIMEventGenerat EventSource)
     {
@@ -1305,7 +1677,7 @@ private:
         }
         return type;
     }
-    void timOC1SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState, TIMOCFast fast)
+    void timOC1SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState)
     {
         uint32_t tmpccmrx;
         uint32_t tmpccer;
@@ -1366,7 +1738,7 @@ private:
         timer_->CCER = tmpccer;
     }
 
-    void timOC2SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState, TIMOCFast fast)
+    void timOC2SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState)
     {
         uint32_t tmpccmrx;
         uint32_t tmpccer;
@@ -1428,7 +1800,7 @@ private:
         /* Write to TIMx CCER */
         timer_->CCER = tmpccer;
     }
-    void timOC3SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState, TIMOCFast fast)
+    void timOC3SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState)
     {
         uint32_t tmpccmrx;
         uint32_t tmpccer;
@@ -1489,7 +1861,7 @@ private:
         /* Write to TIMx CCER */
         timer_->CCER = tmpccer;
     }
-    void timOC4SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState, TIMOCFast fast)
+    void timOC4SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState)
     {
         uint32_t tmpccmrx;
         uint32_t tmpccer;
@@ -1539,7 +1911,7 @@ private:
         /* Write to TIMx CCER */
         timer_->CCER = tmpccer;
     }
-    void timOC5SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState, TIMOCFast fast)
+    void timOC5SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState)
     {
         uint32_t tmpccmrx;
         uint32_t tmpccer;
@@ -1584,7 +1956,7 @@ private:
         /* Write to TIMx CCER */
         timer_->CCER = tmpccer;
     }
-    void timOC6SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState, TIMOCFast fast)
+    void timOC6SetConfig(uint32_t pulse, uint32_t mode, TIMOCPolarity polarity, TIMOCNPolarity npolarity,  TIMOCIDLEState idleState, TIMOCNIDLEState nidleState)
     {
         uint32_t tmpccmrx;
         uint32_t tmpccer;
