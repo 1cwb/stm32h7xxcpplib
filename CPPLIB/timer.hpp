@@ -23,6 +23,14 @@
 #define TIM_TS_TI2FP2        (TIM_SMCR_TS_1 | TIM_SMCR_TS_2)                                   /*!< Filtered Timer Input 2 (TI2FP2)        */
 #define TIM_TS_ETRF          (TIM_SMCR_TS_0 | TIM_SMCR_TS_1 | TIM_SMCR_TS_2)                   /*!< Filtered External Trigger input (ETRF) */
 #define TIM_TS_NONE          0x0000FFFFU                                                       /*!< No trigger selected                    */
+
+/** @defgroup TIM_Input_Channel_Polarity TIM Input Channel polarity
+  * @{
+  */
+#define  TIM_INPUTCHANNELPOLARITY_RISING      0x00000000U                       /*!< Polarity for TIx source */
+#define  TIM_INPUTCHANNELPOLARITY_FALLING     TIM_CCER_CC1P                     /*!< Polarity for TIx source */
+#define  TIM_INPUTCHANNELPOLARITY_BOTHEDGE    (TIM_CCER_CC1P | TIM_CCER_CC1NP)  /*!< Polarity for TIx source */
+
 /** @defgroup TIM_Clock_Source TIM Clock Source
   * @{
   */
@@ -163,7 +171,10 @@ enum TIMCCChannel
 enum TIMCCChannelStatus
 {
     TIM_CCx_ENABLE         =          0x00000001U,                            /*!< Input or output channel is enabled */
-    TIM_CCx_DISABLE        =          0x00000000U,                            /*!< Input or output channel is disabled */
+    TIM_CCx_DISABLE        =          0x00000000U                             /*!< Input or output channel is disabled */
+};
+enum TIMCCNChannelStatus
+{
     TIM_CCxN_ENABLE        =          0x00000004U,                            /*!< Complementary output channel is enabled */
     TIM_CCxN_DISABLE       =          0x00000000U                             /*!< Complementary output channel is enabled */
 };
@@ -306,6 +317,51 @@ enum TIMAutomaticOutputStatus
     TIM_AUTOMATICOUTPUT_DISABLE    =    0x00000000U,                          /*!< MOE can be set only by software */
     TIM_AUTOMATICOUTPUT_ENABLE     =    TIM_BDTR_AOE                          /*!< MOE can be set by software or automatically at the next update event (if none of the break inputs BRK and BRK2 is active) */
 };
+/** @defgroup TIM_Input_Capture_Polarity TIM Input Capture Polarity
+  * @{
+  */
+enum TIMICPolarity
+{
+    TIM_ICPOLARITY_RISING       =      TIM_INPUTCHANNELPOLARITY_RISING,      /*!< Capture triggered by rising edge on timer input                  */
+    TIM_ICPOLARITY_FALLING      =      TIM_INPUTCHANNELPOLARITY_FALLING,     /*!< Capture triggered by falling edge on timer input                 */
+    TIM_ICPOLARITY_BOTHEDGE     =      TIM_INPUTCHANNELPOLARITY_BOTHEDGE     /*!< Capture triggered by both rising and falling edges on timer input*/
+};
+/** @defgroup TIM_Encoder_Input_Polarity TIM Encoder Input Polarity
+  * @{
+  */
+enum TIMEncoderInputPolarity
+{
+    TIM_ENCODERINPUTPOLARITY_RISING  =  TIM_INPUTCHANNELPOLARITY_RISING,      /*!< Encoder input with rising edge polarity  */
+    TIM_ENCODERINPUTPOLARITY_FALLING =  TIM_INPUTCHANNELPOLARITY_FALLING     /*!< Encoder input with falling edge polarity */
+};
+/** @defgroup TIM_Input_Capture_Selection TIM Input Capture Selection
+  * @{
+  */
+enum TIMICSelection
+{
+    TIM_ICSELECTION_DIRECTTI      =     TIM_CCMR1_CC1S_0,                     /*!< TIM Input 1, 2, 3 or 4 is selected to be connected to IC1, IC2, IC3 or IC4, respectively */
+    TIM_ICSELECTION_INDIRECTTI    =     TIM_CCMR1_CC1S_1,                     /*!< TIM Input 1, 2, 3 or 4 is selected to be connected to IC2, IC1, IC4 or IC3, respectively */
+    TIM_ICSELECTION_TRC           =     TIM_CCMR1_CC1S                        /*!< TIM Input 1, 2, 3 or 4 is selected to be connected to TRC */
+};
+/** @defgroup TIM_Input_Capture_Prescaler TIM Input Capture Prescaler
+  * @{
+  */
+enum TIMICPrescaler
+{
+    TIM_ICPSC_DIV1          =        0x00000000U,                          /*!< Capture performed each time an edge is detected on the capture input */
+    TIM_ICPSC_DIV2          =        TIM_CCMR1_IC1PSC_0,                   /*!< Capture performed once every 2 events                                */
+    TIM_ICPSC_DIV4          =        TIM_CCMR1_IC1PSC_1,                   /*!< Capture performed once every 4 events                                */
+    TIM_ICPSC_DIV8          =        TIM_CCMR1_IC1PSC                      /*!< Capture performed once every 8 events                                */
+};
+/** @defgroup TIM_Encoder_Mode TIM Encoder Mode
+  * @{
+  */
+enum TIMEncoderMode
+{
+    TIM_ENCODERMODE_TI1     =       TIM_SMCR_SMS_0,                      /*!< Quadrature encoder mode 1, x2 mode, counts up/down on TI1FP1 edge depending on TI2FP2 level  */
+    TIM_ENCODERMODE_TI2     =       TIM_SMCR_SMS_1,                      /*!< Quadrature encoder mode 2, x2 mode, counts up/down on TI2FP2 edge depending on TI1FP1 level. */
+    TIM_ENCODERMODE_TI12    =       (TIM_SMCR_SMS_1 | TIM_SMCR_SMS_0)   /*!< Quadrature encoder mode 3, x4 mode, counts up/down on both TI1FP1 and TI2FP2 edges depending on the level of the other input. */
+};
 
 struct PWMBreakDeadTimeConfig
 {
@@ -329,6 +385,8 @@ public:
     COMMONTIMER(TIM_TypeDef* timer) : timer_(timer), timarr_(0), activeChannel_(TIM_ACTIVE_CHANNEL_CLEARED)
     {
         enableClk();
+        setAllChannelState(TIM_CHANNEL_STATE_RESET);
+        setAllChannelNState(TIM_CHANNEL_STATE_RESET);
     }
     ~COMMONTIMER()
     {
@@ -353,7 +411,7 @@ public:
             prescaler = getInputClk() / targetVal;
             period = (getInputClk() / prescaler) / freqHz;
         }
-        else if(freqHz < 3000)
+        else if(freqHz < 4000)
         {
             targetVal = getInputClk() / 100;
             prescaler = getInputClk() / targetVal;
@@ -446,8 +504,8 @@ public:
         stop();
         disableIsr(TIM_IT_DISABLE_ALL);
         unregisterInterruptCb();
-        setAllChannelState(TIM_CHANNEL_STATE_READY);
-        setAllChannelNState(TIM_CHANNEL_STATE_READY);
+        setAllChannelState(TIM_CHANNEL_STATE_RESET);
+        setAllChannelNState(TIM_CHANNEL_STATE_RESET);
         enableClk(false);
     }
     eResult start()
@@ -551,11 +609,13 @@ public:
         }
         return clk;
     }
-    uint32_t getTimeoutTimerMs()
+    uint32_t getTimeoutTimerNs()
     {
         uint32_t period = READ_BIT(timer_->ARR, TIM_ARR_ARR)+1;
+        printf("period = %lu\r\n",period);
         uint32_t prescaler = READ_BIT(timer_->PSC,TIM_PSC_PSC)+1;
-        return period*1000/(getInputClk()/prescaler);
+        printf("prescaler = %lu\r\n",prescaler);
+        return period*1000000000/(getInputClk()/prescaler);
     }
     uint32_t getTimFreq()
     {
@@ -785,7 +845,7 @@ public:
         }
         return status;
     }
-    eResult pwmConfig(TIMCCChannel ch, uint32_t duty, TIMOCPWMMode pwmMode, TIMOCPolarity polarity = TIM_OCPOLARITY_HIGH, TIMOCNPolarity npolarity = TIM_OCNPOLARITY_LOW,  TIMOCIDLEState idleState = TIM_OCIDLESTATE_RESET, TIMOCNIDLEState nidleState = TIM_OCNIDLESTATE_RESET, TIMOCFast fast = TIM_OCFAST_DISABLE)
+    eResult pwmConfig(TIMCCChannel ch, uint32_t duty, TIMOCPWMMode pwmMode, TIMOCPolarity polarity = TIM_OCPOLARITY_HIGH, TIMOCNPolarity npolarity = TIM_OCNPOLARITY_HIGH,  TIMOCIDLEState idleState = TIM_OCIDLESTATE_RESET, TIMOCNIDLEState nidleState = TIM_OCNIDLESTATE_RESET, TIMOCFast fast = TIM_OCFAST_DISABLE)
     {
         if(duty < 1)
         {
@@ -1261,7 +1321,56 @@ public:
         /* Set TIMx_BDTR */
         timer_->BDTR = tmpbdtr;
         return E_RESULT_OK;
-    } 
+    }
+    eResult pwmNstart(TIMCCChannel ch)
+    {
+        uint32_t tmpsmcr;
+
+        /* Check the parameters */
+        CHECK_RETURN(IS_TIM_CCXN_INSTANCE(timer_, ch), E_RESULT_INVALID_PARAM);
+        /* Check the TIM complementary channel state */
+        CHECK_RETURN(getChannelNState(ch) == TIM_CHANNEL_STATE_READY, E_RESULT_WRONG_STATUS);
+
+        /* Set the TIM complementary channel state */
+        setChannelNState(ch, TIM_CHANNEL_STATE_BUSY);
+
+        /* Enable the complementary PWM output  */
+        enabletimCCxNChannel(ch, TIM_CCxN_ENABLE);
+
+        /* Enable the Main Output */
+        timer_->BDTR|=(TIM_BDTR_MOE);
+
+        /* Enable the Peripheral, except in trigger mode where enable is automatically done with trigger */
+        if (IS_TIM_SLAVE_INSTANCE(timer_))
+        {
+            tmpsmcr = timer_->SMCR & TIM_SMCR_SMS;
+            if (!(tmpsmcr == TIM_SLAVEMODE_TRIGGER || tmpsmcr == TIM_SLAVEMODE_COMBINED_RESETTRIGGER))
+            {
+            //__HAL_TIM_ENABLE(htim);
+            }
+        }
+        else
+        {
+           // __HAL_TIM_ENABLE(htim);
+        }
+        /* Return function status */
+        return E_RESULT_OK;
+    }
+    eResult pwmNstop(TIMCCChannel ch)
+    {
+        /* Check the parameters */
+        CHECK_RETURN(IS_TIM_CCXN_INSTANCE(timer_, ch), E_RESULT_INVALID_PARAM);
+
+        /* Disable the complementary PWM output  */
+        enabletimCCxNChannel(ch, TIM_CCxN_DISABLE);
+
+        /* Disable the Main Output */
+        timer_->BDTR&=~(TIM_BDTR_MOE);
+
+        /* Set the TIM complementary channel state */
+        setChannelNState(ch, TIM_CHANNEL_STATE_READY);
+        return E_RESULT_OK;
+    }
     uint32_t calcuDTGns(uint32_t deadTime)
     {
         uint32_t fclk = getInputClk();
@@ -1292,21 +1401,21 @@ public:
 
         if(deadTime > timeRange[0] && deadTime < timeRange[1])
         {
-            result = deadTime / Tdtsns;
+            result = (float)deadTime / Tdtsns;
         }
         else if(deadTime > timeRange[2] && deadTime < timeRange[3])
         {
-            result = deadTime / (Tdtsns*2) - 64;
+            result = (float)deadTime / (Tdtsns*2) - 64;
             dtgVal |= 2 << 6;
         }
         else if(deadTime > timeRange[4] && deadTime < timeRange[5])
         {
-            result = deadTime / (Tdtsns*8) - 32;
+            result = (float)deadTime / (Tdtsns*8) - 32;
             dtgVal |= 6 << 4;
         }
         else if(deadTime > timeRange[6] && deadTime < timeRange[7])
         {
-            result = deadTime / (Tdtsns*16) - 32;
+            result = (float)deadTime / (Tdtsns*16) - 32;
             dtgVal |= 7 << 4;
         }
         dtgVal |= ::lroundf(result);
@@ -1326,6 +1435,80 @@ public:
             generateEvent(TIM_EVENT_GEN_UG);
         }
     }
+    #if 0
+    eResult icConfig(TIMCCChannel ch, TIMICPolarity polarity, TIMICSelection selection, TIMICPrescaler prescaler, uint32_t filter = 0x00)
+    {
+        CHECK_RETURN(filter <= 0x0f, E_RESULT_INVALID_PARAM);
+        CHECK_RETURN(IS_TIM_CC1_INSTANCE(timer_), E_RESULT_INVALID_PARAM);
+
+        eResult status = E_RESULT_OK;
+
+        if (ch == TIM_CHANNEL_1)
+        {
+            /* TI1 Configuration */
+            ti1SetConfig(polarity, selection, filter);
+
+            /* Reset the IC1PSC Bits */
+            htim->Instance->CCMR1 &= ~TIM_CCMR1_IC1PSC;
+
+            /* Set the IC1PSC value */
+            htim->Instance->CCMR1 |= sConfig->ICPrescaler;
+        }
+        else if (Channel == TIM_CHANNEL_2)
+        {
+            /* TI2 Configuration */
+            assert_param(IS_TIM_CC2_INSTANCE(htim->Instance));
+
+            TIM_TI2_SetConfig(htim->Instance,
+                            sConfig->ICPolarity,
+                            sConfig->ICSelection,
+                            sConfig->ICFilter);
+
+            /* Reset the IC2PSC Bits */
+            htim->Instance->CCMR1 &= ~TIM_CCMR1_IC2PSC;
+
+            /* Set the IC2PSC value */
+            htim->Instance->CCMR1 |= (sConfig->ICPrescaler << 8U);
+        }
+        else if (Channel == TIM_CHANNEL_3)
+        {
+            /* TI3 Configuration */
+            assert_param(IS_TIM_CC3_INSTANCE(htim->Instance));
+
+            TIM_TI3_SetConfig(htim->Instance,
+                            sConfig->ICPolarity,
+                            sConfig->ICSelection,
+                            sConfig->ICFilter);
+
+            /* Reset the IC3PSC Bits */
+            htim->Instance->CCMR2 &= ~TIM_CCMR2_IC3PSC;
+
+            /* Set the IC3PSC value */
+            htim->Instance->CCMR2 |= sConfig->ICPrescaler;
+        }
+        else if (Channel == TIM_CHANNEL_4)
+        {
+            /* TI4 Configuration */
+            assert_param(IS_TIM_CC4_INSTANCE(htim->Instance));
+
+            TIM_TI4_SetConfig(htim->Instance,
+                            sConfig->ICPolarity,
+                            sConfig->ICSelection,
+                            sConfig->ICFilter);
+
+            /* Reset the IC4PSC Bits */
+            htim->Instance->CCMR2 &= ~TIM_CCMR2_IC4PSC;
+
+            /* Set the IC4PSC value */
+            htim->Instance->CCMR2 |= (sConfig->ICPrescaler << 8U);
+        }
+        else
+        {
+            status = E_RESULT_ERROR;
+        }
+        return status;
+    }
+    #endif
 private:
     void handlerISREvent()
     {
@@ -2019,6 +2202,51 @@ private:
         /* Set or reset the CCxE Bit */
         timer_->CCER |= (uint32_t)(channelState << (ch & 0x1FU)); /* 0x1FU = 31 bits max shift */
         return E_RESULT_OK;
+    }
+    void enabletimCCxNChannel(TIMCCChannel ch, TIMCCNChannelStatus ChannelNState)
+    {
+        uint32_t tmp;
+
+        tmp = TIM_CCER_CC1NE << (ch & 0x1FU); /* 0x1FU = 31 bits max shift */
+
+        /* Reset the CCxNE Bit */
+        timer_->CCER &=  ~tmp;
+
+        /* Set or reset the CCxNE Bit */
+        timer_->CCER |= (uint32_t)(ChannelNState << (ch & 0x1FU)); /* 0x1FU = 31 bits max shift */
+    }
+    void ti1SetConfig(TIMICPolarity polarity, TIMICSelection selection, uint32_t filter)
+    {
+        uint32_t tmpccmr1;
+        uint32_t tmpccer;
+
+        /* Disable the Channel 1: Reset the CC1E Bit */
+        timer_->CCER &= ~TIM_CCER_CC1E;
+        tmpccmr1 = timer_->CCMR1;
+        tmpccer = timer_->CCER;
+
+        /* Select the Input */
+        if (IS_TIM_CC2_INSTANCE(timer_) != RESET)
+        {
+            tmpccmr1 &= ~TIM_CCMR1_CC1S;
+            tmpccmr1 |= selection;
+        }
+        else
+        {
+            tmpccmr1 |= TIM_CCMR1_CC1S_0;
+        }
+
+        /* Set the filter */
+        tmpccmr1 &= ~TIM_CCMR1_IC1F;
+        tmpccmr1 |= ((filter << 4U) & TIM_CCMR1_IC1F);
+
+        /* Select the Polarity and set the CC1E Bit */
+        tmpccer &= ~(TIM_CCER_CC1P | TIM_CCER_CC1NP);
+        tmpccer |= (polarity & (TIM_CCER_CC1P | TIM_CCER_CC1NP));
+
+        /* Write to TIMx CCMR1 and CCER registers */
+        timer_->CCMR1 = tmpccmr1;
+        timer_->CCER = tmpccer;
     }
 private:
     TIM_TypeDef* timer_;

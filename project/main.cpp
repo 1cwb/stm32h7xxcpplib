@@ -33,7 +33,7 @@ int main(void)
     GPIO tim2ch1(GPIOA, GPIO_NUM_0, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PU);
     tim2ch1.setAF(GPIO_AF1_TIM2);
     COMMONTIMER timer1(TIM2);
-    timer1.timInit(50);
+    timer1.timInit(20000000);
     timer1.pwmConfig(TIM_CHANNEL_1, 50, TIM_OCMODE_PWM1);
     timer1.registerInterruptCb([&led](COMMONTIMER* timer, TIMISRFlag isrflag){
         if(isrflag == TIM_FLAG_UPDATE)
@@ -46,7 +46,7 @@ int main(void)
             //printf("cc isr\n");
         }
     });
-        timer1.enableIsr(TIM_IT_UPDATE, 5,0);
+        //timer1.enableIsr(TIM_IT_UPDATE, 5,0);
     //timer1.enableIsr(TIM_IT_CC1, 5,0);
     timer1.start();
     delayTick(3000);
@@ -56,7 +56,7 @@ int main(void)
     //timer1.setTimFreq(10);
     timer1.pwmSetDuty(TIM_CHANNEL_1, 30);
     printf("get greq = %lu\r\n",timer1.getTimFreq());
-    printf("get time = %lu\r\n",timer1.getTimeoutTimerMs());
+    printf("get time = %lu NS\r\n",timer1.getTimeoutTimerNs());
 
    GPIO tim4ch4(GPIOD, GPIO_NUM_15, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PU);
     tim4ch4.setAF(GPIO_AF2_TIM4);
@@ -84,14 +84,15 @@ int main(void)
     {
 
         delayTick(30);
-        timer4.pwmSetDuty(TIM_CHANNEL_4, i++);
-        timer1.pwmSetDuty(TIM_CHANNEL_1, i++);
+        //timer4.pwmSetDuty(TIM_CHANNEL_4, i++);
+        //timer1.pwmSetDuty(TIM_CHANNEL_1, i++);
         if(i > 100) i = 0;
 
     }
     return 0;
 }
 #endif
+#if 0
 int main(void)
 {
     if(!hwInit())
@@ -121,8 +122,8 @@ int main(void)
             //led.reverse();
             //printf("timer 1\n");
         }
-        if(isrflag == TIM_FLAG_CC1)
-        {
+        if(isrflag == TIM_FLAG_CC1)  
+        {  
             //printf("cc isr\n");
             //led.reverse();
         }
@@ -145,3 +146,65 @@ int main(void)
     }
     return 0;
 }
+#endif
+#if 1
+int main(void)
+{
+    if(!hwInit())
+    {
+        while(1);
+    }
+    LED led(GPIOC, GPIO_NUM_13);
+
+    GPIO tim1ch1(GPIOA, GPIO_NUM_8, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PU);
+    tim1ch1.setAF(GPIO_AF1_TIM1);
+    GPIO tim1ch1n(GPIOB, GPIO_NUM_13, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PU);
+    tim1ch1n.setAF(GPIO_AF1_TIM1);
+    GPIO tim1brk(GPIOB, GPIO_NUM_12, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    tim1brk.setAF(GPIO_AF1_TIM1);
+    COMMONTIMER timer1(TIM1);
+    timer1.timInit(10000);
+    timer1.pwmConfig(TIM_CHANNEL_1, 50, TIM_OCMODE_PWM1,TIM_OCPOLARITY_HIGH,TIM_OCNPOLARITY_HIGH, TIM_OCIDLESTATE_SET/*空闲时的电平*/, TIM_OCNIDLESTATE_RESET);
+    PWMBreakDeadTimeConfig pconfig = {TIM_OSSR_ENABLE,
+                                        TIM_OSSI_ENABLE,
+                                        TIM_LOCKLEVEL_1,
+                                        timer1.calcuDTGns(3000),
+                                        TIM_BREAK_ENABLE,
+                                        TIM_BREAKPOLARITY_HIGH,
+                                        0,
+                                        TIM_BREAK2_DISABLE,
+                                        TIM_BREAK2POLARITY_LOW,
+                                        0,
+                                        TIM_AUTOMATICOUTPUT_ENABLE
+    };
+
+    timer1.pwmConfigBreakDeadTime(&pconfig);
+    timer1.registerInterruptCb([&led](COMMONTIMER* timer, TIMISRFlag isrflag){
+        if(isrflag == TIM_FLAG_UPDATE)
+        {
+            //led.reverse();
+            //printf("timer 1\n");
+        }
+        if(isrflag == TIM_FLAG_CC1)
+        {
+            //printf("cc isr\n");
+        }
+        if(isrflag == TIM_FLAG_BREAK)
+        {
+            printf("BREAK FLAG\r\n");
+        }
+    });
+    //timer1.enableIsr(TIM_IT_UPDATE, 5,0);
+    //timer1.enableIsr(TIM_IT_CC1, 5,0);
+    //timer1.enableIsr(TIM_IT_BREAK, 5,0);
+    timer1.start();
+    timer1.pwmStart(TIM_CHANNEL_1);
+    timer1.pwmNstart(TIM_CHANNEL_1);
+
+    while(1)
+    {
+        delayTick(3000);
+    }
+    return 0;
+}
+#endif
