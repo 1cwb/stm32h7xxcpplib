@@ -147,7 +147,7 @@ int main(void)
     return 0;
 }
 #endif
-#if 1
+#if 0
 int main(void)
 {
     if(!hwInit())
@@ -204,6 +204,90 @@ int main(void)
     while(1)
     {
         delayTick(3000);
+    }
+    return 0;
+}
+#endif
+#if 1
+int main(void)
+{
+    /* Captured Values */
+    uint32_t               uwIC2Value1 = 0;
+    uint32_t               uwIC2Value2 = 0;
+    uint32_t               uwDiffCapture = 0;
+
+    /* Capture index */
+    uint16_t               uhCaptureIndex = 0;
+
+    /* Frequency Value */
+    uint32_t               uwFrequency = 0;
+
+    if(!hwInit())
+    {
+        while(1);
+    }
+    LED led(GPIOC, GPIO_NUM_13);
+
+    //TIM2 PWM OUT
+    GPIO tim2ch1(GPIOA, GPIO_NUM_3, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PU);
+    tim2ch1.setAF(GPIO_AF1_TIM2);
+    COMMONTIMER timer2(TIM2);
+    timer2.timInit(20000000);
+    timer2.pwmConfig(TIM_CHANNEL_4, 50, TIM_OCMODE_PWM1);
+    timer2.pwmStart(TIM_CHANNEL_4);
+    timer2.start();
+
+
+    //TIM5 INPUT
+    GPIO tim5ch1(GPIOA, GPIO_NUM_0, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    tim5ch1.setAF(GPIO_AF2_TIM5);
+    COMMONTIMER timer5(TIM5);
+    timer5.timInit(1);
+    //CHECK_RETURN_WITH_INFO(timer5.timInit(0xFFFFFFFF - 1, 240-1), " init fail");
+    //timer4.pwmConfig(TIM_CHANNEL_4, 50, TIM_OCMODE_PWM1);
+    CHECK_RETURN_WITH_INFO(timer5.icConfig(TIM_CHANNEL_1, TIM_ICPOLARITY_RISING, TIM_ICSELECTION_DIRECTTI, TIM_ICPSC_DIV1), "icConfig fail");
+    timer5.registerInterruptCb([&](COMMONTIMER* timer, TIMISRFlag isrflag){
+        if(isrflag == TIM_FLAG_UPDATE)
+        {
+            //led.reverse();
+            //printf("timer 2\n");
+        }
+        if(isrflag == TIM_FLAG_CC1)
+        {
+            if(uhCaptureIndex == 0)
+            {
+                /* Get the 1st Input Capture value */
+                uwIC2Value1 = timer5.readCapturedValue(TIM_CHANNEL_1);
+                uhCaptureIndex = 1;
+            }
+            else if(uhCaptureIndex == 1)
+            {
+                uwIC2Value2 = timer5.readCapturedValue(TIM_CHANNEL_1);
+                /* Capture computation */
+                if (uwIC2Value2 > uwIC2Value1)
+                {
+                    uwDiffCapture = (uwIC2Value2 - uwIC2Value1); 
+                }
+                else if (uwIC2Value2 < uwIC2Value1)
+                {
+                    /* 0xFFFF is max TIM1_CCRx value */
+                    uwDiffCapture = ((timer5.getPeriod() - uwIC2Value1) + uwIC2Value2) + 1;
+                }
+                uwFrequency = timer5.getInputClk() / uwDiffCapture;
+                uhCaptureIndex = 0;
+                //printf("freq = %lu\r\n",uwFrequency);
+            }
+        }
+    });
+    timer5.enableIsr(TIM_IT_UPDATE, 5,0);
+    timer5.enableIsr(TIM_IT_CC1, 5,0);
+    CHECK_RETURN_WITH_INFO(timer5.icStart(TIM_CHANNEL_1), "icStart fail");
+    timer5.start();
+
+    while(1)
+    {
+        delayTick(500);
+        led.reverse();
     }
     return 0;
 }

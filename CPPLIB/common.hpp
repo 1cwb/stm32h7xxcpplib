@@ -26,6 +26,17 @@ enum eResult
     {\
         return (result);\
     }
+
+#define CHECK_RETURN_WITH_INFO(param, str) \
+{\
+    eResult result =  (param);\
+    if((result != E_RESULT_OK))\
+    {\
+        printf("%s()%d ErrID:(%d) Error Reasion: %s\r\n",__FUNCTION__,__LINE__,result, str);\
+        return (result);\
+    }\
+}
+
 // #define SET_BIT(add, bit)  ((add) |= BIT(bit))
 // #define CLEAR_BIT(add, bit) ((add) &= (~BIT(bit)))
 // #define GET_BIT(add, bit) ((add) & BIT(bit))
