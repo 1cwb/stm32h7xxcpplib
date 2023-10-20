@@ -1600,6 +1600,178 @@ public:
     {
         return timarr_;
     }
+    eResult encoderConfig(TIMEncoderMode encoderMode, TIMEncoderInputPolarity ic1Polarity, TIMICSelection ic1Selection, TIMICPrescaler ic1Prescaler, uint32_t ic1Filter, TIMEncoderInputPolarity ic2Polarity, TIMICSelection ic2Selection, TIMICPrescaler ic2Prescaler, uint32_t ic2Filter)
+    {
+        uint32_t tmpsmcr;
+        uint32_t tmpccmr1;
+        uint32_t tmpccer;
+
+        CHECK_RETURN(ic1Filter <= 0xFU, E_RESULT_INVALID_PARAM);
+        CHECK_RETURN(ic2Filter <= 0xFU, E_RESULT_INVALID_PARAM);
+
+          /* Reset the SMS and ECE bits */
+        timer_->SMCR &= ~(TIM_SMCR_SMS | TIM_SMCR_ECE);
+
+        /* Get the TIMx SMCR register value */
+        tmpsmcr = timer_->SMCR;
+
+        /* Get the TIMx CCMR1 register value */
+        tmpccmr1 = timer_->CCMR1;
+
+        /* Get the TIMx CCER register value */
+        tmpccer = timer_->CCER;
+
+        /* Set the encoder Mode */
+        tmpsmcr |= encoderMode;
+
+        /* Select the Capture Compare 1 and the Capture Compare 2 as input */
+        tmpccmr1 &= ~(TIM_CCMR1_CC1S | TIM_CCMR1_CC2S);
+        tmpccmr1 |= (ic1Selection | (ic2Selection << 8U));
+
+        /* Set the Capture Compare 1 and the Capture Compare 2 prescalers and filters */
+        tmpccmr1 &= ~(TIM_CCMR1_IC1PSC | TIM_CCMR1_IC2PSC);
+        tmpccmr1 &= ~(TIM_CCMR1_IC1F | TIM_CCMR1_IC2F);
+        tmpccmr1 |= ic1Prescaler | (ic2Prescaler << 8U);
+        tmpccmr1 |= (ic1Filter << 4U) | (ic2Filter << 12U);
+
+        /* Set the TI1 and the TI2 Polarities */
+        tmpccer &= ~(TIM_CCER_CC1P | TIM_CCER_CC2P);
+        tmpccer &= ~(TIM_CCER_CC1NP | TIM_CCER_CC2NP);
+        tmpccer |= ic1Polarity | (ic2Polarity << 4U);
+
+        /* Write to TIMx SMCR */
+        timer_->SMCR = tmpsmcr;
+
+        /* Write to TIMx CCMR1 */
+        timer_->CCMR1 = tmpccmr1;
+
+        /* Write to TIMx CCER */
+        timer_->CCER = tmpccer;
+
+        return E_RESULT_OK;
+    }
+    eResult encoderStart(TIMCCChannel ch)
+    {
+        TIMChannelState channel1State = getChannelState(TIM_CHANNEL_1);
+        TIMChannelState channel2State = getChannelState(TIM_CHANNEL_2);
+        TIMChannelState complementaryChannel1State = getChannelNState(TIM_CHANNEL_1);
+        TIMChannelState complementaryChannel2State = getChannelNState(TIM_CHANNEL_2);
+
+        /* Check the parameters */
+        CHECK_RETURN(IS_TIM_ENCODER_INTERFACE_INSTANCE(timer_), E_RESULT_INVALID_PARAM);
+
+        /* Set the TIM channel(s) state */
+        if (ch == TIM_CHANNEL_1)
+        {
+            if ((channel1State != TIM_CHANNEL_STATE_READY)
+                || (complementaryChannel1State != TIM_CHANNEL_STATE_READY))
+            {
+                return E_RESULT_WRONG_STATUS;
+            }
+            else
+            {
+                setChannelState(TIM_CHANNEL_1, TIM_CHANNEL_STATE_BUSY);
+                setChannelNState(TIM_CHANNEL_1, TIM_CHANNEL_STATE_BUSY);
+            }
+        }
+        else if (ch == TIM_CHANNEL_2)
+        {
+            if ((channel2State != TIM_CHANNEL_STATE_READY)
+                || (complementaryChannel2State != TIM_CHANNEL_STATE_READY))
+            {
+                return E_RESULT_WRONG_STATUS;
+            }
+            else
+            {
+                setChannelState(TIM_CHANNEL_2, TIM_CHANNEL_STATE_BUSY);
+                setChannelNState(TIM_CHANNEL_2, TIM_CHANNEL_STATE_BUSY);
+            }
+        }
+        else
+        {
+            if ((channel1State != TIM_CHANNEL_STATE_READY)
+                || (channel2State != TIM_CHANNEL_STATE_READY)
+                || (complementaryChannel1State != TIM_CHANNEL_STATE_READY)
+                || (complementaryChannel2State != TIM_CHANNEL_STATE_READY))
+            {
+                return E_RESULT_WRONG_STATUS;
+            }
+            else
+            {
+                setChannelState(TIM_CHANNEL_1, TIM_CHANNEL_STATE_BUSY);
+                setChannelState(TIM_CHANNEL_2, TIM_CHANNEL_STATE_BUSY);
+                setChannelNState(TIM_CHANNEL_1, TIM_CHANNEL_STATE_BUSY);
+                setChannelNState(TIM_CHANNEL_2, TIM_CHANNEL_STATE_BUSY);
+            }
+        }
+        /* Enable the encoder interface channels */
+        switch (ch)
+        {
+            case TIM_CHANNEL_1:
+            {
+                enabletimCCxChannel(TIM_CHANNEL_1, TIM_CCx_ENABLE);
+                break;
+            }
+            case TIM_CHANNEL_2:
+            {
+                enabletimCCxChannel(TIM_CHANNEL_2, TIM_CCx_ENABLE);
+                break;
+            }
+            default :
+            {
+                enabletimCCxChannel(TIM_CHANNEL_1, TIM_CCx_ENABLE);
+                enabletimCCxChannel(TIM_CHANNEL_2, TIM_CCx_ENABLE);
+                break;
+            }
+        }
+        /* Return function status */
+        return E_RESULT_OK;
+    }
+    eResult encoderStop(TIMCCChannel ch)
+    {
+        /* Check the parameters */
+        CHECK_RETURN(IS_TIM_ENCODER_INTERFACE_INSTANCE(timer_), E_RESULT_INVALID_PARAM);
+
+        /* Disable the Input Capture channels 1 and 2
+            (in the EncoderInterface the two possible channels that can be used are TIM_CHANNEL_1 and TIM_CHANNEL_2) */
+        switch (ch)
+        {
+            case TIM_CHANNEL_1:
+            {
+                enabletimCCxChannel(TIM_CHANNEL_1, TIM_CCx_DISABLE);
+                break;
+            }
+
+            case TIM_CHANNEL_2:
+            {
+                enabletimCCxChannel(TIM_CHANNEL_2, TIM_CCx_DISABLE);
+                break;
+            }
+
+            default :
+            {
+                enabletimCCxChannel(TIM_CHANNEL_1, TIM_CCx_DISABLE);
+                enabletimCCxChannel(TIM_CHANNEL_2, TIM_CCx_DISABLE);
+                break;
+            }
+        }
+        /* Set the TIM channel(s) state */
+        if ((ch == TIM_CHANNEL_1) || (ch == TIM_CHANNEL_2))
+        {
+            setChannelState(ch, TIM_CHANNEL_STATE_READY);
+            setChannelNState(ch, TIM_CHANNEL_STATE_READY);
+        }
+        else
+        {
+            setChannelState(TIM_CHANNEL_1, TIM_CHANNEL_STATE_READY);
+            setChannelState(TIM_CHANNEL_2, TIM_CHANNEL_STATE_READY);
+            setChannelNState(TIM_CHANNEL_1, TIM_CHANNEL_STATE_READY);
+            setChannelNState(TIM_CHANNEL_2, TIM_CHANNEL_STATE_READY);
+        }
+
+        /* Return function status */
+        return E_RESULT_OK;
+    }
 private:
     void handlerISREvent()
     {
