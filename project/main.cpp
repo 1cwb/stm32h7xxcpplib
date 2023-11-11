@@ -11,6 +11,7 @@
 #include "led.hpp"
 #include "iwdg.hpp"
 #include "timer.hpp"
+#include "dma.hpp"
 #if 0
 int main(void)
 {
@@ -226,8 +227,8 @@ int main(void)
     {
         while(1);
     }
-    LED led(GPIOC, GPIO_NUM_13);
-
+    LED led(GPIOE, GPIO_NUM_9);
+#if 0
     //TIM2 PWM OUT
     GPIO tim2ch1(GPIOA, GPIO_NUM_3, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PU);
     tim2ch1.setAF(GPIO_AF1_TIM2);
@@ -283,11 +284,13 @@ int main(void)
     timer5.enableIsr(TIM_IT_CC1, 5,0);
     CHECK_RETURN_WITH_INFO(timer5.icStart(TIM_CHANNEL_1), "icStart fail");
     timer5.start();
-
+#endif
+    uint32_t i = 0;
     while(1)
     {
         delayTick(500);
         led.reverse();
+        printf("hellow world i = %lu\r\n",i++);
     }
     return 0;
 }

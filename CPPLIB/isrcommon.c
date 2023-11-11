@@ -192,7 +192,6 @@ void unRegisterGpioIsrCb(GPIO_TypeDef *gpiox, uint32_t pinNum)
 
 void gpioxIsrCallback(uint32_t pinNum)
 {
-	printf("pin = %lu\r\n",pinNum);
 	if(gpioIsrCbBuff[pinNum].cb && gpioIsrCbBuff[pinNum].gpiox && gpioIsrCbBuff[pinNum].pin == BIT(pinNum))
 	{
 		gpioIsrCbBuff[pinNum].cb(gpioIsrCbBuff[pinNum].gpiox, gpioIsrCbBuff[pinNum].pin, gpioIsrCbBuff[pinNum].param);
@@ -613,6 +612,407 @@ void TIM16_IRQHandler(void)
 void TIM17_IRQHandler(void)
 {
 	timxIsrCallback(TIM17);
+}
+
+typedef struct DMAIsrSt
+{
+	DMA_ISR_CB cb;
+	DMA_Stream_TypeDef *stream;
+	void* param;
+}DMAIsrSt;
+typedef struct BDMAIsrSt
+{
+	DMA_ISR_CB cb;
+	BDMA_Channel_TypeDef *channel;
+	void* param;
+}BDMAIsrSt;
+static DMAIsrSt DMAIsrCbBuff[16] = {0};
+static BDMAIsrSt BDMAIsrCbBuff[8] = {0};
+
+void registerDMAIsrCb(DMA_Stream_TypeDef* stream, DMA_ISR_CB cb, void* param)
+{
+	switch((uint32_t)stream)
+	{
+		case (uint32_t)DMA1_Stream0:
+			DMAIsrCbBuff[0].cb = cb;
+			DMAIsrCbBuff[0].stream = stream;
+			DMAIsrCbBuff[0].param = param;
+			break;
+		case (uint32_t)DMA1_Stream1:
+			DMAIsrCbBuff[1].cb = cb;
+			DMAIsrCbBuff[1].stream = stream;
+			DMAIsrCbBuff[1].param = param;
+			break;
+		case (uint32_t)DMA1_Stream2:
+			DMAIsrCbBuff[2].cb = cb;
+			DMAIsrCbBuff[2].stream = stream;
+			DMAIsrCbBuff[2].param = param;
+			break;
+		case (uint32_t)DMA1_Stream3:
+			DMAIsrCbBuff[3].cb = cb;
+			DMAIsrCbBuff[3].stream = stream;
+			DMAIsrCbBuff[3].param = param;
+			break;
+		case (uint32_t)DMA1_Stream4:
+	    	DMAIsrCbBuff[4].cb = cb;
+			DMAIsrCbBuff[4].stream = stream;
+			DMAIsrCbBuff[4].param = param;
+			break;
+		case (uint32_t)DMA1_Stream5:
+			DMAIsrCbBuff[5].cb = cb;
+			DMAIsrCbBuff[5].stream = stream;
+			DMAIsrCbBuff[5].param = param;
+			break;
+		case (uint32_t)DMA1_Stream6:
+			DMAIsrCbBuff[6].cb = cb;
+			DMAIsrCbBuff[6].stream = stream;
+			DMAIsrCbBuff[6].param = param;
+			break;
+		case (uint32_t)DMA1_Stream7:
+			DMAIsrCbBuff[7].cb = cb;
+			DMAIsrCbBuff[7].stream = stream;
+			DMAIsrCbBuff[7].param = param;
+			break;
+		case (uint32_t)DMA2_Stream0:
+			DMAIsrCbBuff[8].cb = cb;
+			DMAIsrCbBuff[8].stream = stream;
+			DMAIsrCbBuff[8].param = param;
+			break;
+		case (uint32_t)DMA2_Stream1:
+			DMAIsrCbBuff[9].cb = cb;
+			DMAIsrCbBuff[9].stream = stream;
+			DMAIsrCbBuff[9].param = param;
+			break;
+		case (uint32_t)DMA2_Stream2:
+			DMAIsrCbBuff[10].cb = cb;
+			DMAIsrCbBuff[10].stream = stream;
+			DMAIsrCbBuff[10].param = param;
+			break;
+		case (uint32_t)DMA2_Stream3:
+			DMAIsrCbBuff[11].cb = cb;
+			DMAIsrCbBuff[11].stream = stream;
+			DMAIsrCbBuff[11].param = param;
+			break;
+		case (uint32_t)DMA2_Stream4:
+			DMAIsrCbBuff[12].cb = cb;
+			DMAIsrCbBuff[12].stream = stream;
+			DMAIsrCbBuff[12].param = param;
+			break;
+		case (uint32_t)DMA2_Stream5:
+			DMAIsrCbBuff[13].cb = cb;
+			DMAIsrCbBuff[13].stream = stream;
+			DMAIsrCbBuff[13].param = param;
+			break;
+		case (uint32_t)DMA2_Stream6:
+			DMAIsrCbBuff[14].cb = cb;
+			DMAIsrCbBuff[14].stream = stream;
+			DMAIsrCbBuff[14].param = param;
+			break;
+		case (uint32_t)DMA2_Stream7:
+			DMAIsrCbBuff[15].cb = cb;
+			DMAIsrCbBuff[15].stream = stream;
+			DMAIsrCbBuff[15].param = param;
+			break;
+		default:
+			break;
+	}
+}
+void unRegisterDMAIsrCb(DMA_Stream_TypeDef* stream)
+{
+	for(int i = 0; i < 16; i++)
+	{
+		if(((uint32_t)stream) == ((uint32_t)DMAIsrCbBuff[i].stream))
+		{
+			DMAIsrCbBuff[i].cb = NULL;
+			DMAIsrCbBuff[i].stream = NULL;
+			DMAIsrCbBuff[i].param = NULL;
+			break;
+		}
+	}
+}
+
+void registerBDMAIsrCb(BDMA_Channel_TypeDef* channel, DMA_ISR_CB cb, void* param)
+{
+	switch ((uint32_t) channel)
+	{
+	case (uint32_t)BDMA_Channel0:
+		BDMAIsrCbBuff[0].cb = cb;
+		BDMAIsrCbBuff[0].channel = channel;
+		BDMAIsrCbBuff[0].param = param;
+		break;
+	case (uint32_t)BDMA_Channel1:
+		BDMAIsrCbBuff[1].cb = cb;
+		BDMAIsrCbBuff[1].channel = channel;
+		BDMAIsrCbBuff[1].param = param;
+		break;
+	case (uint32_t)BDMA_Channel2:
+		BDMAIsrCbBuff[2].cb = cb;
+		BDMAIsrCbBuff[2].channel = channel;
+		BDMAIsrCbBuff[2].param = param;
+		break;
+	case (uint32_t)BDMA_Channel3:
+		BDMAIsrCbBuff[3].cb = cb;
+		BDMAIsrCbBuff[3].channel = channel;
+		BDMAIsrCbBuff[3].param = param;
+		break;
+	case (uint32_t)BDMA_Channel4:
+		BDMAIsrCbBuff[4].cb = cb;
+		BDMAIsrCbBuff[4].channel = channel;
+		BDMAIsrCbBuff[4].param = param;
+		break;
+	case (uint32_t)BDMA_Channel5:
+		BDMAIsrCbBuff[5].cb = cb;
+		BDMAIsrCbBuff[5].channel = channel;
+		BDMAIsrCbBuff[5].param = param;
+		break;
+	case (uint32_t)BDMA_Channel6:
+		BDMAIsrCbBuff[6].cb = cb;
+		BDMAIsrCbBuff[6].channel = channel;
+		BDMAIsrCbBuff[6].param = param;
+		break;
+	case (uint32_t)BDMA_Channel7:
+		BDMAIsrCbBuff[7].cb = cb;
+		BDMAIsrCbBuff[7].channel = channel;
+		BDMAIsrCbBuff[7].param = param;
+		break;
+	default:
+		break;
+	}
+}
+void unRegisterBDMAIsrCb(BDMA_Channel_TypeDef* channel)
+{
+	for(int i = 0; i < 8; i++)
+	{
+		if(((uint32_t)channel) == ((uint32_t)BDMAIsrCbBuff[i].channel))
+		{
+			BDMAIsrCbBuff[i].cb = NULL;
+			BDMAIsrCbBuff[i].channel = NULL;
+			BDMAIsrCbBuff[i].param = NULL;
+			break;
+		}
+	}
+}
+void DMA1_Stream0_IRQHandler()
+{
+	if(DMAIsrCbBuff[0].cb)
+	{
+		DMAIsrCbBuff[0].cb(DMAIsrCbBuff[0].param, 0);
+	}
+}
+void DMA1_Stream1_IRQHandler()
+{
+	if(DMAIsrCbBuff[1].cb)
+	{
+		DMAIsrCbBuff[1].cb(DMAIsrCbBuff[1].param, 0);
+	}
+}
+void DMA1_Stream2_IRQHandler()
+{
+	if(DMAIsrCbBuff[2].cb)
+	{
+		DMAIsrCbBuff[2].cb(DMAIsrCbBuff[2].param, 0);
+	}
+}
+void DMA1_Stream3_IRQHandler()
+{
+	if(DMAIsrCbBuff[3].cb)
+	{
+		DMAIsrCbBuff[3].cb(DMAIsrCbBuff[3].param, 0);
+	}
+}
+void DMA1_Stream4_IRQHandler()
+{
+	if(DMAIsrCbBuff[4].cb)
+	{
+		DMAIsrCbBuff[4].cb(DMAIsrCbBuff[4].param, 0);
+	}
+}
+void DMA1_Stream5_IRQHandler()
+{
+	if(DMAIsrCbBuff[5].cb)
+	{
+		DMAIsrCbBuff[5].cb(DMAIsrCbBuff[5].param, 0);
+	}
+}
+void DMA1_Stream6_IRQHandler()
+{
+	if(DMAIsrCbBuff[6].cb)
+	{
+		DMAIsrCbBuff[6].cb(DMAIsrCbBuff[6].param, 0);
+	}
+}
+void DMA1_Stream7_IRQHandler()
+{
+		if(DMAIsrCbBuff[7].cb)
+	{
+		DMAIsrCbBuff[7].cb(DMAIsrCbBuff[7].param, 0);
+	}
+}
+void DMA2_Stream0_IRQHandler()
+{
+	if(DMAIsrCbBuff[8].cb)
+	{
+		DMAIsrCbBuff[8].cb(DMAIsrCbBuff[8].param, 0);
+	}
+}
+void DMA2_Stream1_IRQHandler()
+{
+	if(DMAIsrCbBuff[9].cb)
+	{
+		DMAIsrCbBuff[9].cb(DMAIsrCbBuff[9].param, 0);
+	}
+}
+void DMA2_Stream2_IRQHandler()
+{
+	if(DMAIsrCbBuff[10].cb)
+	{
+		DMAIsrCbBuff[10].cb(DMAIsrCbBuff[10].param, 0);
+	}
+}
+void DMA2_Stream3_IRQHandler()
+{
+	if(DMAIsrCbBuff[11].cb)
+	{
+		DMAIsrCbBuff[11].cb(DMAIsrCbBuff[11].param, 0);
+	}
+}
+void DMA2_Stream4_IRQHandler()
+{
+	if(DMAIsrCbBuff[12].cb)
+	{
+		DMAIsrCbBuff[12].cb(DMAIsrCbBuff[12].param, 0);
+	}
+}
+void DMA2_Stream5_IRQHandler()
+{
+	if(DMAIsrCbBuff[13].cb)
+	{
+		DMAIsrCbBuff[13].cb(DMAIsrCbBuff[13].param, 0);
+	}
+}
+void DMA2_Stream6_IRQHandler()
+{
+	if(DMAIsrCbBuff[14].cb)
+	{
+		DMAIsrCbBuff[14].cb(DMAIsrCbBuff[14].param, 0);
+	}
+}
+void DMA2_Stream7_IRQHandler()
+{
+	if(DMAIsrCbBuff[15].cb)
+	{
+		DMAIsrCbBuff[15].cb(DMAIsrCbBuff[15].param, 0);
+	}
+}
+void BDMA_Channel0_IRQHandler()
+{
+	if(BDMAIsrCbBuff[0].cb)
+	{
+		BDMAIsrCbBuff[0].cb(BDMAIsrCbBuff[0].param, 0);
+	}
+}
+void BDMA_Channel1_IRQHandler()
+{
+	if(BDMAIsrCbBuff[1].cb)
+	{
+		BDMAIsrCbBuff[1].cb(BDMAIsrCbBuff[1].param, 0);
+	}
+}
+void BDMA_Channel2_IRQHandler()
+{
+	if(BDMAIsrCbBuff[2].cb)
+	{
+		BDMAIsrCbBuff[2].cb(BDMAIsrCbBuff[2].param, 0);
+	}
+}
+void BDMA_Channel3_IRQHandler()
+{
+	if(BDMAIsrCbBuff[3].cb)
+	{
+		BDMAIsrCbBuff[3].cb(BDMAIsrCbBuff[3].param, 0);
+	}
+}
+void BDMA_Channel4_IRQHandler()
+{
+	if(BDMAIsrCbBuff[4].cb)
+	{
+		BDMAIsrCbBuff[4].cb(BDMAIsrCbBuff[4].param, 0);
+	}
+}
+void BDMA_Channel5_IRQHandler()
+{
+	if(BDMAIsrCbBuff[5].cb)
+	{
+		BDMAIsrCbBuff[5].cb(BDMAIsrCbBuff[5].param, 0);
+	}
+}
+void BDMA_Channel6_IRQHandler()
+{
+	if(BDMAIsrCbBuff[6].cb)
+	{
+		BDMAIsrCbBuff[6].cb(BDMAIsrCbBuff[6].param, 0);
+	}
+}
+void BDMA_Channel7_IRQHandler()
+{
+	if(BDMAIsrCbBuff[7].cb)
+	{
+		BDMAIsrCbBuff[7].cb(BDMAIsrCbBuff[7].param, 0);
+	}
+}
+/*
+typedef struct DMAMUXIsrSt
+{
+	DMAMUX_ISR_CB cb;
+	void* param;
+}DMAMUXIsrSt;
+static DMAMUXIsrSt DMAMUXIsrCbBuff[2] = {0};
+
+void registerDMAMUX1IsrCb(DMAMUX_ISR_CB cb, void* param)
+{
+	DMAMUXIsrCbBuff[0].cb = cb;
+	DMAMUXIsrCbBuff[0].param = param;
+}
+void unRegisterDMAMUX1IsrCb()
+{
+	if(DMAMUXIsrCbBuff[0].cb)
+	{
+		DMAMUXIsrCbBuff[0].cb = NULL;
+		DMAMUXIsrCbBuff[0].param = NULL;
+	}
+}
+void registerDMAMUX2IsrCb(DMAMUX_ISR_CB cb, void* param)
+{
+	DMAMUXIsrCbBuff[1].cb = cb;
+	DMAMUXIsrCbBuff[1].param = param;
+}
+void unRegisterDMAMUX2IsrCb()
+{
+	if(DMAMUXIsrCbBuff[1].cb)
+	{
+		DMAMUXIsrCbBuff[1].cb = NULL;
+		DMAMUXIsrCbBuff[1].param = NULL;
+	}
+}*/
+void DMAMUX1_OVR_IRQHandler()
+{
+	for(int i = 0; i < 16; i++)
+	{
+		if(DMAIsrCbBuff[i].cb)
+		{
+			DMAIsrCbBuff[i].cb(DMAIsrCbBuff[i].param, 1);
+		}
+	}
+}
+void DMAMUX2_OVR_IRQHandler()
+{
+	for(int i = 0; i < 8; i++)
+	{
+		if(BDMAIsrCbBuff[i].cb)
+		{
+			BDMAIsrCbBuff[i].cb(BDMAIsrCbBuff[i].param, 1);
+		}
+	}
 }
 
 
