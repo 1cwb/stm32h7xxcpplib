@@ -42,13 +42,6 @@ void unRegisterDMAIsrCb(DMA_Stream_TypeDef* stream);
 void registerBDMAIsrCb(BDMA_Channel_TypeDef* channel, DMA_ISR_CB cb, void* param);
 void unRegisterBDMAIsrCb(BDMA_Channel_TypeDef* channel);
 
-/*typedef void (*DMAMUX_ISR_CB)(void* param);
-void registerDMAMUX1IsrCb(DMAMUX_ISR_CB cb, void* param);
-void unRegisterDMAMUX1IsrCb();
-
-void registerDMAMUX2IsrCb(DMAMUX_ISR_CB cb, void* param);
-void unRegisterDMAMUX2IsrCb();*/
-
 int32_t initTick(uint32_t TickPriority);
 void incTick(void);
 uint32_t getTick(void);

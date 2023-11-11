@@ -960,40 +960,6 @@ void BDMA_Channel7_IRQHandler()
 		BDMAIsrCbBuff[7].cb(BDMAIsrCbBuff[7].param, 0);
 	}
 }
-/*
-typedef struct DMAMUXIsrSt
-{
-	DMAMUX_ISR_CB cb;
-	void* param;
-}DMAMUXIsrSt;
-static DMAMUXIsrSt DMAMUXIsrCbBuff[2] = {0};
-
-void registerDMAMUX1IsrCb(DMAMUX_ISR_CB cb, void* param)
-{
-	DMAMUXIsrCbBuff[0].cb = cb;
-	DMAMUXIsrCbBuff[0].param = param;
-}
-void unRegisterDMAMUX1IsrCb()
-{
-	if(DMAMUXIsrCbBuff[0].cb)
-	{
-		DMAMUXIsrCbBuff[0].cb = NULL;
-		DMAMUXIsrCbBuff[0].param = NULL;
-	}
-}
-void registerDMAMUX2IsrCb(DMAMUX_ISR_CB cb, void* param)
-{
-	DMAMUXIsrCbBuff[1].cb = cb;
-	DMAMUXIsrCbBuff[1].param = param;
-}
-void unRegisterDMAMUX2IsrCb()
-{
-	if(DMAMUXIsrCbBuff[1].cb)
-	{
-		DMAMUXIsrCbBuff[1].cb = NULL;
-		DMAMUXIsrCbBuff[1].param = NULL;
-	}
-}*/
 void DMAMUX1_OVR_IRQHandler()
 {
 	for(int i = 0; i < 16; i++)
