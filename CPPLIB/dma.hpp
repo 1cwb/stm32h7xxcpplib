@@ -2,7 +2,29 @@
 #include "common.hpp"
 #include "rcc.hpp"
 
-
+/* Array used to get the DMA stream register offset versus stream index dmaSTREAM_x */
+constexpr static const uint8_t DMA_STR_OFFSET_TAB[] =
+{
+    (uint8_t)(DMA1_Stream0_BASE - DMA1_BASE),
+    (uint8_t)(DMA1_Stream1_BASE - DMA1_BASE),
+    (uint8_t)(DMA1_Stream2_BASE - DMA1_BASE),
+    (uint8_t)(DMA1_Stream3_BASE - DMA1_BASE),
+    (uint8_t)(DMA1_Stream4_BASE - DMA1_BASE),
+    (uint8_t)(DMA1_Stream5_BASE - DMA1_BASE),
+    (uint8_t)(DMA1_Stream6_BASE - DMA1_BASE),
+    (uint8_t)(DMA1_Stream7_BASE - DMA1_BASE)
+};
+constexpr static const uint8_t BDMA_CH_OFFSET_TAB[] =
+{
+    (uint8_t)(BDMA_Channel0_BASE - BDMA_BASE),
+    (uint8_t)(BDMA_Channel1_BASE - BDMA_BASE),
+    (uint8_t)(BDMA_Channel2_BASE - BDMA_BASE),
+    (uint8_t)(BDMA_Channel3_BASE - BDMA_BASE),
+    (uint8_t)(BDMA_Channel4_BASE - BDMA_BASE),
+    (uint8_t)(BDMA_Channel5_BASE - BDMA_BASE),
+    (uint8_t)(BDMA_Channel6_BASE - BDMA_BASE),
+    (uint8_t)(BDMA_Channel7_BASE - BDMA_BASE)
+};
 /** @defgroup 
   * @brief    write these reg to clean flag
   * @{
@@ -565,6 +587,84 @@ enum DMACurrentTargetMemory
     DMA_CURRENTTARGETMEM1     =     DMA_SxCR_CT                              /*!< Set CurrentTarget Memory to Memory 1  */
 };
 
+enum DMATransferIsrType
+{
+    DMA_TRANSFER_HALF,
+    DMA_TRANSFER_COMPLETE,
+    DMA_TRANSFER_ERROR,
+    DMA_DIRECTOR_MODE_ERROR,
+    DMA_FIFO_ERROR,
+    DMA_ISR_ERROR
+};
+enum DMAMUXOverRunType
+{
+    DMAMUX_OVERRUN_TYPE_SYNC,
+    DMAMUX_OVERRUN_TYPE_GEN
+};
+
+enum BDMAChannelNum
+{
+    BDMA_CHANNEL_0        =          0x00000000U, /*!< DMA Channel 0  */
+    BDMA_CHANNEL_1        =          0x00000001U, /*!< BDMA Channel 1 */
+    BDMA_CHANNEL_2        =          0x00000002U, /*!< BDMA Channel 2 */
+    BDMA_CHANNEL_3        =          0x00000003U, /*!< BDMA Channel 3 */
+    BDMA_CHANNEL_4        =          0x00000004U, /*!< BDMA Channel 4 */
+    BDMA_CHANNEL_5        =          0x00000005U, /*!< BDMA Channel 5 */
+    BDMA_CHANNEL_6        =          0x00000006U, /*!< BDMA Channel 6 */
+    BDMA_CHANNEL_7        =          0x00000007U, /*!< BDMA Channel 7 */
+    BDMA_CHANNEL_ALL      =          0xFFFF0000U  /*!< BDMA Channel all (used only for function @ref bdmaDeInit(). */
+};
+
+enum BDMADirection
+{
+    BDMA_DIRECTION_PERIPH_TO_MEMORY    =     0x00000000U,              /*!< Peripheral to memory direction       */
+    BDMA_DIRECTION_MEMORY_TO_PERIPH    =     BDMA_CCR_DIR,             /*!< Memory to peripheral direction       */
+    BDMA_DIRECTION_MEMORY_TO_MEMORY    =     BDMA_CCR_MEM2MEM          /*!< Memory to memory direction           */
+};
+enum BDMAMode
+{
+    BDMA_MODE_NORMAL        =        0x00000000U,              /*!< Normal Mode                          */
+    BDMA_MODE_CIRCULAR      =        BDMA_CCR_CIRC             /*!< Circular Mode                        */
+};
+enum BDMADoubleBufferMode
+{
+    BDMA_DOUBLEBUFFER_MODE_DISABLE      =   0x00000000U,              /*!< Disable double buffering mode        */
+    BDMA_DOUBLEBUFFER_MODE_ENABLE       =   BDMA_CCR_DBM              /*!< Enable double buffering mode         */
+};
+enum BDMAPeriphIncMode
+{
+    BDMA_PERIPH_INCREMENT       =     BDMA_CCR_PINC,            /*!< Peripheral increment mode Enable     */
+    BDMA_PERIPH_NOINCREMENT     =     0x00000000U               /*!< Peripheral increment mode Disable    */
+};
+enum BDMAMemoryIncMode
+{
+    BDMA_MEMORY_INCREMENT      =     BDMA_CCR_MINC,            /*!< Memory increment mode Enable         */
+    BDMA_MEMORY_NOINCREMENT    =     0x00000000U               /*!< Memory increment mode Disable        */
+};
+enum BDMAPeriphDataAlign
+{
+    BDMA_PDATAALIGN_BYTE        =      0x00000000U,              /*!< Peripheral data alignment : Byte     */
+    BDMA_PDATAALIGN_HALFWORD    =      BDMA_CCR_PSIZE_0,         /*!< Peripheral data alignment : HalfWord */
+    BDMA_PDATAALIGN_WORD        =      BDMA_CCR_PSIZE_1          /*!< Peripheral data alignment : Word     */
+};
+enum BDMAMemoryDataAlign
+{
+    BDMA_MDATAALIGN_BYTE       =     0x00000000U,              /*!< Memory data alignment : Byte         */
+    BDMA_MDATAALIGN_HALFWORD   =     BDMA_CCR_MSIZE_0,         /*!< Memory data alignment : HalfWord     */
+    BDMA_MDATAALIGN_WORD       =     BDMA_CCR_MSIZE_1          /*!< Memory data alignment : Word         */
+};
+enum BDMAPriority
+{
+    BDMA_PRIORITY_LOW          =     0x00000000U,              /*!< Priority level : Low                 */
+    BDMA_PRIORITY_MEDIUM       =     BDMA_CCR_PL_0,            /*!< Priority level : Medium              */
+    BDMA_PRIORITY_HIGH         =     BDMA_CCR_PL_1,            /*!< Priority level : High                */
+    BDMA_PRIORITY_VERYHIGH     =     BDMA_CCR_PL               /*!< Priority level : Very_High           */
+};
+enum BDMACurrentTargetMemory
+{
+    BDMA_CURRENTTARGETMEM0       =      0x00000000U,              /*!< Set CurrentTarget Memory to Memory 0 */
+    BDMA_CURRENTTARGETMEM1       =      BDMA_CCR_CT               /*!< Set CurrentTarget Memory to Memory 1 */
+};
 struct DMA_InitTypeDef
 {
     uint32_t             PeriphOrM2MSrcAddress;  
@@ -583,34 +683,395 @@ struct DMA_InitTypeDef
     DMAMemoryBurst       MemBurst;               
     DMAPeriphBurst       PeriphBurst;          
 };
+struct BDMAInitTypeDef
+{
+    uint32_t                PeriphOrM2MSrcAddress;
+    uint32_t                MemoryOrM2MDstAddress;
+    BDMADirection           Direction;
+    BDMAMode                Mode;
+    BDMAPeriphIncMode       PeriphOrM2MSrcIncMode;
+    BDMAMemoryIncMode       MemoryOrM2MDstIncMode;
+    BDMAPeriphDataAlign     PeriphOrM2MSrcDataSize; 
+    BDMAMemoryDataAlign     MemoryOrM2MDstDataSize; 
+    uint32_t                NbData;                 
+    DMAMUX2Requests         PeriphRequest;          
+    BDMAPriority            Priority;
+};
 
-enum DMATransferIsrType
+class DMAMUX
 {
-    DMA_TRANSFER_HALF,
-    DMA_TRANSFER_COMPLETE,
-    DMA_TRANSFER_ERROR,
-    DMA_DIRECTOR_MODE_ERROR,
-    DMA_FIFO_ERROR,
-    DMA_ISR_ERROR
+public:
+    DMAMUX(DMAMUX_Channel_TypeDef *dmamux, DMA_TypeDef* dmax, DMAStreamNum streamNum)
+    {
+        dmaMuxBase_ = dmamux;
+        dmaMuxChannelNum_ = (DMAMUXChannel)(streamNum + DMARemapToDMAMUXChannel(dmax));
+        dmaMuxChannel_ = ((DMAMUX_Channel_TypeDef *)(uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (streamNum)) + (uint32_t)(DMAMUX_CCR_SIZE * DMARemapToDMAMUXChannel(dmax))));
+        printf("tony dmaMuxChannelNum_ = %u, dmaMuxChannel_ = %p\r\n",dmaMuxChannelNum_, dmaMuxChannel_);
+    }
+    DMAMUX(DMAMUX_Channel_TypeDef *dmamux, BDMAChannelNum channelNum)
+    {
+        dmaMuxBase_ = dmamux;
+        dmaMuxChannelNum_ = (DMAMUXChannel)(channelNum);
+        dmaMuxChannel_ = ((DMAMUX_Channel_TypeDef *)(uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (channelNum))));
+        printf("tony dmaMuxChannelNum_ = %u, dmaMuxChannel_ = %p\r\n",dmaMuxChannelNum_, dmaMuxChannel_);
+    }
+    ~DMAMUX()
+    {
+
+    }
+    DMAMUX(const DMAMUX&) = delete;
+    DMAMUX(DMAMUX&&) = delete;
+    DMAMUX& operator=(const DMAMUX&) = delete;
+    DMAMUX& operator=(DMAMUX&&) = delete;
+    void initDmaMuxReqGenChannelNum(DMAMUXReqGenChannel channelNum)
+    {
+        dmaMuxRequestGenChannelNum_ = channelNum;
+    }
+    DMAMUX_Channel_TypeDef * getDmaMuxChannel()
+    {
+        return dmaMuxChannel_;
+    }
+    inline void dmaMuxSetSyncRequestNb(uint32_t RequestNb)
+    {
+        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_NBREQ, (RequestNb - 1U) << DMAMUX_CxCR_NBREQ_Pos);
+    }
+    inline uint32_t dmaMuxGetSyncRequestNb()
+    {
+      return (uint32_t)((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_NBREQ) >> DMAMUX_CxCR_NBREQ_Pos) + 1U);
+    }
+    inline void dmaMuxSetSyncPolarity(DMAMUXSyncSignalPolarity Polarity)
+    {
+        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_SPOL, Polarity);
+    }
+    inline DMAMUXSyncSignalPolarity dmaMuxGetSyncPolarity()
+    {
+        return (DMAMUXSyncSignalPolarity)(READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SPOL));
+    }
+    inline void dmaMuxEnableEventGeneration()
+    {
+        SET_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_EGE);
+    }
+    inline void dmaMuxDisableEventGeneration()
+    {
+        CLEAR_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_EGE);
+    }
+    inline bool dmaMuxIsEnabledEventGeneration()
+    {
+        return ((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_EGE) == (DMAMUX_CxCR_EGE)) ? true : false);
+    }
+    inline void dmaMuxEnableSync()
+    {
+        SET_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE);
+    }
+    inline void dmaMuxDisableSync()
+    {
+        CLEAR_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE);
+    }
+    inline bool dmaMuxIsEnabledSync()
+    {
+      return ((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE) == (DMAMUX_CxCR_SE)) ? true : false);
+    }
+    inline void dmaMuxSetSyncID(DMAMUX1SyncSignalEventID SyncID)
+    {
+        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_SYNC_ID, SyncID);
+    }
+    inline DMAMUX1SyncSignalEventID dmaMuxGetSyncID()
+    {
+        return (DMAMUX1SyncSignalEventID)(READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SYNC_ID));
+    }
+    inline void dmaMuxEnableRequestGen()
+    {
+        SET_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * (dmaMuxRequestGenChannelNum_))))->RGCR, DMAMUX_RGxCR_GE);
+    }
+    inline void dmaMuxDisableRequestGen()
+    {
+        CLEAR_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * (dmaMuxRequestGenChannelNum_))))->RGCR, DMAMUX_RGxCR_GE);
+    }
+    inline bool dmaMuxIsEnabledRequestGen()
+    {
+        return ((READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GE) == (DMAMUX_RGxCR_GE)) ? true : false);
+    }
+    inline void dmaMuxSetRequestGenPolarity(DMAMUXReqSignalGenPolarity Polarity)
+    {
+        MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GPOL, Polarity);
+    }
+    inline DMAMUXReqSignalGenPolarity dmaMuxGetRequestGenPolarity()
+    {
+        return (DMAMUXReqSignalGenPolarity)(READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GPOL));
+    }
+    inline void dmaMuxSetGenRequestNb(uint32_t RequestNb)
+    {
+        MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GNBREQ, (RequestNb - 1U) << DMAMUX_RGxCR_GNBREQ_Pos);
+    }
+    inline uint32_t dmaMuxGetGenRequestNb()
+    {
+        return (uint32_t)((READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GNBREQ) >> DMAMUX_RGxCR_GNBREQ_Pos) + 1U);
+    }
+    inline void dmaMuxSetRequestSignalID(DMAMUX1ExtReqSignalGenID RequestSignalID)
+    {
+        MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID, RequestSignalID);
+    }
+    inline DMAMUX1SyncSignalEventID dmaMuxGetRequestSignalID()
+    {
+        return (DMAMUX1SyncSignalEventID)(READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID));
+    }
+    inline bool dmaMuxIsActiveFlagSyncEventOverrun()
+    {
+        bool bFlag = false;
+        switch (dmaMuxChannelNum_)
+        {
+            case DMAMUX_CHANNEL_0:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF0) == (DMAMUX_CSR_SOF0)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_1:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF1) == (DMAMUX_CSR_SOF1)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_2:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF2) == (DMAMUX_CSR_SOF2)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_3:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF3) == (DMAMUX_CSR_SOF3)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_4:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF4) == (DMAMUX_CSR_SOF4)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_5:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF5) == (DMAMUX_CSR_SOF5)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_6:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF6) == (DMAMUX_CSR_SOF6)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_7:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF7) == (DMAMUX_CSR_SOF7)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_8:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF8) == (DMAMUX_CSR_SOF8)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_9:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF9) == (DMAMUX_CSR_SOF9)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_10:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF10) == (DMAMUX_CSR_SOF10)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_11:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF11) == (DMAMUX_CSR_SOF11)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_12:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF12) == (DMAMUX_CSR_SOF12)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_13:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF13) == (DMAMUX_CSR_SOF13)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_14:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF14) == (DMAMUX_CSR_SOF14)) ? true : false);
+                break;
+            case DMAMUX_CHANNEL_15:
+                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF15) == (DMAMUX_CSR_SOF15)) ? true : false);
+                break;
+            default:
+                bFlag = false;
+                break;
+        }
+        return bFlag;
+    }
+    inline bool dmaMuxIsActiveFlagReqGenTrigEventOverrun()
+    {
+        bool bFlag = false;
+        switch (dmaMuxRequestGenChannelNum_)
+        {
+        case DMAMUX_REQ_GEN_0:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF0) == (DMAMUX_RGSR_OF0)) ? true : false);
+            break;
+        case DMAMUX_REQ_GEN_1:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF1) == (DMAMUX_RGSR_OF1)) ? true : false);
+            break;
+        case DMAMUX_REQ_GEN_2:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF2) == (DMAMUX_RGSR_OF2)) ? true : false);
+            break;
+        case DMAMUX_REQ_GEN_3:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF3) == (DMAMUX_RGSR_OF3)) ? true : false);
+            break;
+        case DMAMUX_REQ_GEN_4:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF4) == (DMAMUX_RGSR_OF4)) ? true : false);
+            break;
+        case DMAMUX_REQ_GEN_5:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF5) == (DMAMUX_RGSR_OF5)) ? true : false);
+            break;
+        case DMAMUX_REQ_GEN_6:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF6) == (DMAMUX_RGSR_OF6)) ? true : false);
+            break;
+        case DMAMUX_REQ_GEN_7:
+            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF7) == (DMAMUX_RGSR_OF7)) ? 1UL : 0UL);
+            break;
+          break;
+        
+        default:
+          bFlag = false;
+          break;
+        }
+        return bFlag;
+    }
+ 
+
+/**
+  * @brief  Clear Synchronization Event Overrun Flag Channel 0.
+  * @rmtoll CFR          CSOF0         dmaMuxClearFlag_SO0
+  * @param  DMAMUXx DMAMUXx DMAMUXx Instance
+  * @retval None
+  */
+    inline void dmaMuxClearFlagSyncEventOverrun()
+    {
+        switch (dmaMuxChannelNum_)
+        {
+            case DMAMUX_CHANNEL_0:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF0);
+                break;
+            case DMAMUX_CHANNEL_1:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF1);
+                break;
+            case DMAMUX_CHANNEL_2:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF2);
+                break;
+            case DMAMUX_CHANNEL_3:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF3);
+                break;
+            case DMAMUX_CHANNEL_4:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF4);
+                break;
+            case DMAMUX_CHANNEL_5:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF5);
+                break;
+            case DMAMUX_CHANNEL_6:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF6);
+                break;
+            case DMAMUX_CHANNEL_7:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF7);
+                break;
+            case DMAMUX_CHANNEL_8:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF8);
+                break;
+            case DMAMUX_CHANNEL_9:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF9);
+                break;
+            case DMAMUX_CHANNEL_10:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF10);
+                break;
+            case DMAMUX_CHANNEL_11:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF11);
+                break;
+            case DMAMUX_CHANNEL_12:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF12);
+                break;
+            case DMAMUX_CHANNEL_13:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF13);
+                break;
+            case DMAMUX_CHANNEL_14:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF14);
+                break;
+            case DMAMUX_CHANNEL_15:
+                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF15);
+                break;
+            default:
+                break;
+        }
+    }
+    inline void dmaMuxClearFlagReqGenTrigEventOverrun()
+    {
+        switch (dmaMuxRequestGenChannelNum_)
+        {
+        case DMAMUX_REQ_GEN_0:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF0);
+            break;
+        case DMAMUX_REQ_GEN_1:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF1);
+            break;
+        case DMAMUX_REQ_GEN_2:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF2);
+            break;
+        case DMAMUX_REQ_GEN_3:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF3);
+            break;
+        case DMAMUX_REQ_GEN_4:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF4);
+            break;
+        case DMAMUX_REQ_GEN_5:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF5);
+            break;
+        case DMAMUX_REQ_GEN_6:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF6);
+            break;
+        case DMAMUX_REQ_GEN_7:
+            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF7);
+            break;
+          break;
+
+        default:
+          break;
+        }
+    }
+    inline void dmaMuxEnableITSyncEventOverrun()
+    {
+        SET_BIT(((DMAMUX_Channel_TypeDef *)((uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (dmaMuxChannelNum_)))))->CCR, DMAMUX_CxCR_SOIE);
+    }
+    inline void dmaMuxDisableITSyncEventOverrun()
+    {
+        CLEAR_BIT(((DMAMUX_Channel_TypeDef *)((uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (dmaMuxChannelNum_)))))->CCR, DMAMUX_CxCR_SOIE);
+    }
+    inline bool dmaMuxIsEnabledITSyncEventOverrun()
+    {
+        return (READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SOIE) & DMAMUX_CxCR_SOIE ? true : false);
+    }
+    inline void dmaMuxEnableITReqGenTrigEventOverrun()
+    {
+        SET_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_OIE);
+    }
+    inline void dmaMuxDisableITReqGenTrigEventOverrun()
+    {
+        CLEAR_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_OIE);
+    }
+    inline bool dmaMuxIsEnabledITReqGenTrigEventOverrun()
+    {
+        return ((READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_OIE) == (DMAMUX_RGxCR_OIE)) ? true : false);
+    }
+private:
+    /**
+     * @brief  Helper macro to convert DMA Instance DMAx into DMAMUX channel
+     * @note   DMAMUX channel 0 to 7 are mapped to DMA1 stream 0 to 7.
+     *         DMAMUX channel 8 to 15 are mapped to DMA2 stream 0 to 7.
+     * @param  dma DMAx
+     * @retval Channel_Offset (dmaMuxCHANNEL_8 or 0).
+     */
+    inline uint32_t DMARemapToDMAMUXChannel(DMA_TypeDef* dma) const
+    {
+        return (((uint32_t)(dma) == ((uint32_t)DMA1)) ? 0UL : 8UL);
+    }
+private:
+    /* Define used to get DMAMUX CCR register size */
+    constexpr static const uint32_t DMAMUX_CCR_SIZE                =  0x00000004U;
+    /* Define used to get DMAMUX RGCR register size */
+    constexpr static const uint32_t DMAMUX_RGCR_SIZE               =    0x00000004U;
+    /* Define used to get DMAMUX RequestGenerator offset */
+    constexpr static const uint32_t DMAMUX_REQ_GEN_OFFSET          =   (DMAMUX1_RequestGenerator0_BASE - DMAMUX1_BASE);
+    /* Define used to get DMAMUX Channel Status offset */
+    constexpr static const uint32_t DMAMUX_CH_STATUS_OFFSET        =    (DMAMUX1_ChannelStatus_BASE - DMAMUX1_BASE);
+    /* Define used to get DMAMUX RequestGenerator status offset */
+    constexpr static const uint32_t DMAMUX_REQ_GEN_STATUS_OFFSET   =  (DMAMUX1_RequestGenStatus_BASE - DMAMUX1_BASE);
+
+    DMAMUX_Channel_TypeDef *dmaMuxChannel_;
+    DMAMUX_Channel_TypeDef *dmaMuxBase_;
+    DMAMUXChannel dmaMuxChannelNum_;
+    DMAMUXReqGenChannel dmaMuxRequestGenChannelNum_;
 };
-enum DMAMUXOverRunType
-{
-    DMAMUX_OVERRUN_TYPE_SYNC,
-    DMAMUX_OVERRUN_TYPE_GEN
-};
-class DMA
+class DMA : public DMAMUX
 {
     using DMAInterruptCb = std::function<void(DMA*, DMATransferIsrType)>;
     using DMAMUXInterruptCb = std::function<void(DMA*, DMAMUXOverRunType)>;
 public:
-    DMA(DMA_TypeDef* dmax, DMAStreamNum streamNum)
+    DMA(DMA_TypeDef* dmax, DMAStreamNum streamNum):DMAMUX(DMAMUX1, dmax, streamNum)
     {
         dmax_ = dmax;
         streamNum_ = streamNum;
-        dmaMuxBase_ = DMAMUX1;
         dmaStreamAddr_ = (DMA_Stream_TypeDef*)((uint32_t)(dmax_) + DMA_STR_OFFSET_TAB[streamNum_]);
-        dmaMuxChannelNum_ = (DMAMUXChannel)(streamNum_ + DMARemapToDMAMUXChannel(dmax_));
-        dmaMuxChannel_ = ((DMAMUX_Channel_TypeDef *)(uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (streamNum_)) + (uint32_t)(DMAMUX_CCR_SIZE * DMARemapToDMAMUXChannel(dmax_))));
         if(dmax_ == DMA1)
         {
             RCCControl::getInstance()->enableDMA1Clk(true);
@@ -652,7 +1113,7 @@ public:
         dmaMuxSetPeriphRequest(DMA_InitStruct->PeriphRequest);
         if(DMA_InitStruct->PeriphRequest >= DMAMUX1_REQ_GENERATOR0 && DMA_InitStruct->PeriphRequest <= DMAMUX1_REQ_GENERATOR7)
         {
-            dmaMuxRequestGenChannelNum_ = (DMAMUXReqGenChannel)DMA_InitStruct->PeriphRequest;
+            initDmaMuxReqGenChannelNum((DMAMUXReqGenChannel)(DMA_InitStruct->PeriphRequest - 1));
         }
         registerDMAIsrCb(dmaStreamAddr_, [](void* param, uint8_t bDMAMuxISR){
             DMA* pdmax = reinterpret_cast<DMA*>(param);
@@ -846,11 +1307,11 @@ public:
     }
     inline void dmaMuxSetPeriphRequest(DMAMUX1Requests Request)
     {
-        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_DMAREQ_ID, Request);
+        MODIFY_REG(getDmaMuxChannel()->CCR, DMAMUX_CxCR_DMAREQ_ID, Request);
     }
     inline DMAMUX1Requests dmaGetPeriphRequest()
     {
-        return (DMAMUX1Requests)(READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_DMAREQ_ID));
+        return (DMAMUX1Requests)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_DMAREQ_ID));
     }
     inline void dmaSetMemoryBurstxfer(DMAMemoryBurst Mburst)
     {
@@ -1358,308 +1819,6 @@ public:
     {
         return ((READ_BIT(dmaStreamAddr_->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) ? true : false);
     }
-    inline void dmaMuxSetSyncRequestNb(uint32_t RequestNb)
-    {
-        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_NBREQ, (RequestNb - 1U) << DMAMUX_CxCR_NBREQ_Pos);
-    }
-    inline uint32_t dmaMuxGetSyncRequestNb()
-    {
-      return (uint32_t)((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_NBREQ) >> DMAMUX_CxCR_NBREQ_Pos) + 1U);
-    }
-    inline void dmaMuxSetSyncPolarity(DMAMUXSyncSignalPolarity Polarity)
-    {
-        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_SPOL, Polarity);
-    }
-    inline DMAMUXSyncSignalPolarity dmaMuxGetSyncPolarity()
-    {
-        return (DMAMUXSyncSignalPolarity)(READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SPOL));
-    }
-    inline void dmaMuxEnableEventGeneration()
-    {
-        SET_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_EGE);
-    }
-    inline void dmaMuxDisableEventGeneration()
-    {
-        CLEAR_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_EGE);
-    }
-    inline bool dmaMuxIsEnabledEventGeneration()
-    {
-        return ((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_EGE) == (DMAMUX_CxCR_EGE)) ? true : false);
-    }
-    inline void dmaMuxEnableSync()
-    {
-        SET_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE);
-    }
-    inline void dmaMuxDisableSync()
-    {
-        CLEAR_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE);
-    }
-    inline bool dmaMuxIsEnabledSync()
-    {
-      return ((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE) == (DMAMUX_CxCR_SE)) ? true : false);
-    }
-    inline void dmaMuxSetSyncID(DMAMUX1SyncSignalEventID SyncID)
-    {
-        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_SYNC_ID, SyncID);
-    }
-    inline DMAMUX1SyncSignalEventID dmaMuxGetSyncID()
-    {
-        return (DMAMUX1SyncSignalEventID)(READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SYNC_ID));
-    }
-    inline void dmaMuxEnableRequestGen()
-    {
-        SET_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * (dmaMuxRequestGenChannelNum_))))->RGCR, DMAMUX_RGxCR_GE);
-    }
-    inline void dmaMuxDisableRequestGen()
-    {
-        CLEAR_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * (dmaMuxRequestGenChannelNum_))))->RGCR, DMAMUX_RGxCR_GE);
-    }
-    inline bool dmaMuxIsEnabledRequestGen()
-    {
-        return ((READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GE) == (DMAMUX_RGxCR_GE)) ? true : false);
-    }
-    inline void dmaMuxSetRequestGenPolarity(DMAMUXReqSignalGenPolarity Polarity)
-    {
-        MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GPOL, Polarity);
-    }
-    inline DMAMUXReqSignalGenPolarity dmaMuxGetRequestGenPolarity()
-    {
-        return (DMAMUXReqSignalGenPolarity)(READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GPOL));
-    }
-    inline void dmaMuxSetGenRequestNb(uint32_t RequestNb)
-    {
-        MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GNBREQ, (RequestNb - 1U) << DMAMUX_RGxCR_GNBREQ_Pos);
-    }
-    inline uint32_t dmaMuxGetGenRequestNb()
-    {
-        return (uint32_t)((READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GNBREQ) >> DMAMUX_RGxCR_GNBREQ_Pos) + 1U);
-    }
-    inline void dmaMuxSetRequestSignalID(DMAMUX1ExtReqSignalGenID RequestSignalID)
-    {
-        MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID, RequestSignalID);
-    }
-    inline DMAMUX1SyncSignalEventID dmaMuxGetRequestSignalID()
-    {
-        return (DMAMUX1SyncSignalEventID)(READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID));
-    }
-    inline bool dmaMuxIsActiveFlagSyncEventOverrun()
-    {
-        bool bFlag = false;
-        switch (dmaMuxChannelNum_)
-        {
-            case DMAMUX_CHANNEL_0:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF0) == (DMAMUX_CSR_SOF0)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_1:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF1) == (DMAMUX_CSR_SOF1)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_2:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF2) == (DMAMUX_CSR_SOF2)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_3:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF3) == (DMAMUX_CSR_SOF3)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_4:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF4) == (DMAMUX_CSR_SOF4)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_5:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF5) == (DMAMUX_CSR_SOF5)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_6:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF6) == (DMAMUX_CSR_SOF6)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_7:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF7) == (DMAMUX_CSR_SOF7)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_8:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF8) == (DMAMUX_CSR_SOF8)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_9:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF9) == (DMAMUX_CSR_SOF9)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_10:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF10) == (DMAMUX_CSR_SOF10)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_11:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF11) == (DMAMUX_CSR_SOF11)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_12:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF12) == (DMAMUX_CSR_SOF12)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_13:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF13) == (DMAMUX_CSR_SOF13)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_14:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF14) == (DMAMUX_CSR_SOF14)) ? true : false);
-                break;
-            case DMAMUX_CHANNEL_15:
-                bFlag = ((READ_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CSR, DMAMUX_CSR_SOF15) == (DMAMUX_CSR_SOF15)) ? true : false);
-                break;
-            default:
-                bFlag = false;
-                break;
-        }
-        return bFlag;
-    }
-    inline bool dmaMuxIsActiveFlagReqGenTrigEventOverrun()
-    {
-        bool bFlag = false;
-        switch (dmaMuxRequestGenChannelNum_)
-        {
-        case DMAMUX_REQ_GEN_0:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF0) == (DMAMUX_RGSR_OF0)) ? true : false);
-            break;
-        case DMAMUX_REQ_GEN_1:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF1) == (DMAMUX_RGSR_OF1)) ? true : false);
-            break;
-        case DMAMUX_REQ_GEN_2:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF2) == (DMAMUX_RGSR_OF2)) ? true : false);
-            break;
-        case DMAMUX_REQ_GEN_3:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF3) == (DMAMUX_RGSR_OF3)) ? true : false);
-            break;
-        case DMAMUX_REQ_GEN_4:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF4) == (DMAMUX_RGSR_OF4)) ? true : false);
-            break;
-        case DMAMUX_REQ_GEN_5:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF5) == (DMAMUX_RGSR_OF5)) ? true : false);
-            break;
-        case DMAMUX_REQ_GEN_6:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF6) == (DMAMUX_RGSR_OF6)) ? true : false);
-            break;
-        case DMAMUX_REQ_GEN_7:
-            bFlag = ((READ_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGSR, DMAMUX_RGSR_OF7) == (DMAMUX_RGSR_OF7)) ? 1UL : 0UL);
-            break;
-          break;
-        
-        default:
-          bFlag = false;
-          break;
-        }
-        return bFlag;
-    }
- 
-
-/**
-  * @brief  Clear Synchronization Event Overrun Flag Channel 0.
-  * @rmtoll CFR          CSOF0         dmaMuxClearFlag_SO0
-  * @param  DMAMUXx DMAMUXx DMAMUXx Instance
-  * @retval None
-  */
-    inline void dmaMuxClearFlagSyncEventOverrun()
-    {
-        switch (dmaMuxChannelNum_)
-        {
-            case DMAMUX_CHANNEL_0:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF0);
-                break;
-            case DMAMUX_CHANNEL_1:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF1);
-                break;
-            case DMAMUX_CHANNEL_2:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF2);
-                break;
-            case DMAMUX_CHANNEL_3:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF3);
-                break;
-            case DMAMUX_CHANNEL_4:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF4);
-                break;
-            case DMAMUX_CHANNEL_5:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF5);
-                break;
-            case DMAMUX_CHANNEL_6:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF6);
-                break;
-            case DMAMUX_CHANNEL_7:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF7);
-                break;
-            case DMAMUX_CHANNEL_8:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF8);
-                break;
-            case DMAMUX_CHANNEL_9:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF9);
-                break;
-            case DMAMUX_CHANNEL_10:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF10);
-                break;
-            case DMAMUX_CHANNEL_11:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF11);
-                break;
-            case DMAMUX_CHANNEL_12:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF12);
-                break;
-            case DMAMUX_CHANNEL_13:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF13);
-                break;
-            case DMAMUX_CHANNEL_14:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF14);
-                break;
-            case DMAMUX_CHANNEL_15:
-                SET_BIT(((DMAMUX_ChannelStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_CH_STATUS_OFFSET))->CFR, DMAMUX_CFR_CSOF15);
-                break;
-            default:
-                break;
-        }
-    }
-    inline void dmaMuxClearFlagReqGenTrigEventOverrun()
-    {
-        switch (dmaMuxRequestGenChannelNum_)
-        {
-        case DMAMUX_REQ_GEN_0:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF0);
-            break;
-        case DMAMUX_REQ_GEN_1:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF1);
-            break;
-        case DMAMUX_REQ_GEN_2:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF2);
-            break;
-        case DMAMUX_REQ_GEN_3:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF3);
-            break;
-        case DMAMUX_REQ_GEN_4:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF4);
-            break;
-        case DMAMUX_REQ_GEN_5:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF5);
-            break;
-        case DMAMUX_REQ_GEN_6:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF6);
-            break;
-        case DMAMUX_REQ_GEN_7:
-            SET_BIT(((DMAMUX_RequestGenStatus_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_STATUS_OFFSET))->RGCFR, DMAMUX_RGCFR_COF7);
-            break;
-          break;
-
-        default:
-          break;
-        }
-    }
-    inline void dmaMuxEnableITSyncEventOverrun()
-    {
-        SET_BIT(((DMAMUX_Channel_TypeDef *)((uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (dmaMuxChannelNum_)))))->CCR, DMAMUX_CxCR_SOIE);
-    }
-    inline void dmaMuxDisableITSyncEventOverrun()
-    {
-        CLEAR_BIT(((DMAMUX_Channel_TypeDef *)((uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (dmaMuxChannelNum_)))))->CCR, DMAMUX_CxCR_SOIE);
-    }
-    inline bool dmaMuxIsEnabledITSyncEventOverrun()
-    {
-        return (READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SOIE) & DMAMUX_CxCR_SOIE ? true : false);
-    }
-    inline void dmaMuxEnableITReqGenTrigEventOverrun()
-    {
-        SET_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_OIE);
-    }
-    inline void dmaMuxDisableITReqGenTrigEventOverrun()
-    {
-        CLEAR_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_OIE);
-    }
-    inline bool dmaMuxIsEnabledITReqGenTrigEventOverrun()
-    {
-        return ((READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_OIE) == (DMAMUX_RGxCR_OIE)) ? true : false);
-    }
     void enableDmaIsr(uint32_t PreemptPriority, uint32_t SubPriority)
     {
         if(NVIC_GetEnableIRQ(getIrqType()) == 0U)
@@ -1707,17 +1866,6 @@ public:
         }
     }
 private:
-    /**
-     * @brief  Helper macro to convert DMA Instance DMAx into DMAMUX channel
-     * @note   DMAMUX channel 0 to 7 are mapped to DMA1 stream 0 to 7.
-     *         DMAMUX channel 8 to 15 are mapped to DMA2 stream 0 to 7.
-     * @param  dma DMAx
-     * @retval Channel_Offset (dmaMuxCHANNEL_8 or 0).
-     */
-    inline uint32_t DMARemapToDMAMUXChannel(DMA_TypeDef* dma) const
-    {
-        return (((uint32_t)(dma) == ((uint32_t)DMA1)) ? 0UL : 8UL);
-    }
     inline DMA_TypeDef* DMAGetInstance(DMA_Stream_TypeDef* stream)
     {
         return (((uint32_t)(stream) > ((uint32_t)DMA1_Stream7)) ?  DMA2 : DMA1);
@@ -1875,40 +2023,560 @@ private:
         }
     }
 private:
-
-    /* Array used to get the DMA stream register offset versus stream index dmaSTREAM_x */
-    constexpr static const uint8_t DMA_STR_OFFSET_TAB[] =
-    {
-        (uint8_t)(DMA1_Stream0_BASE - DMA1_BASE),
-        (uint8_t)(DMA1_Stream1_BASE - DMA1_BASE),
-        (uint8_t)(DMA1_Stream2_BASE - DMA1_BASE),
-        (uint8_t)(DMA1_Stream3_BASE - DMA1_BASE),
-        (uint8_t)(DMA1_Stream4_BASE - DMA1_BASE),
-        (uint8_t)(DMA1_Stream5_BASE - DMA1_BASE),
-        (uint8_t)(DMA1_Stream6_BASE - DMA1_BASE),
-        (uint8_t)(DMA1_Stream7_BASE - DMA1_BASE)
-    };
-
-    /* Define used to get DMAMUX CCR register size */
-    constexpr static const uint32_t DMAMUX_CCR_SIZE                =  0x00000004U;
-    /* Define used to get DMAMUX RGCR register size */
-    constexpr static const uint32_t DMAMUX_RGCR_SIZE               =    0x00000004U;
-    /* Define used to get DMAMUX RequestGenerator offset */
-    constexpr static const uint32_t DMAMUX_REQ_GEN_OFFSET          =   (DMAMUX1_RequestGenerator0_BASE - DMAMUX1_BASE);
-    /* Define used to get DMAMUX Channel Status offset */
-    constexpr static const uint32_t DMAMUX_CH_STATUS_OFFSET        =    (DMAMUX1_ChannelStatus_BASE - DMAMUX1_BASE);
-    /* Define used to get DMAMUX RequestGenerator status offset */
-    constexpr static const uint32_t DMAMUX_REQ_GEN_STATUS_OFFSET   =  (DMAMUX1_RequestGenStatus_BASE - DMAMUX1_BASE);
-
-private:
     DMA_TypeDef *dmax_;
     DMA_Stream_TypeDef * dmaStreamAddr_;
     DMAStreamNum streamNum_;
-    DMAMUX_Channel_TypeDef *dmaMuxChannel_;
-    DMAMUX_Channel_TypeDef *dmaMuxBase_;
-    DMAMUXChannel dmaMuxChannelNum_;
-    DMAMUXReqGenChannel dmaMuxRequestGenChannelNum_;
     DMA_InitTypeDef handle_;
     DMAInterruptCb dmacb_;
     DMAMUXInterruptCb dmamuxcb_;
+};
+
+class BDMAX : public DMAMUX
+{
+public:
+    //tony
+    BDMAX(BDMA_TypeDef* bdmax, BDMAChannelNum channelNum) : DMAMUX(DMAMUX2, channelNum)
+    {
+        bdmax_ = bdmax;
+        channelNum_ = channelNum;
+        bdmaChannelAddr_ = ((BDMA_Channel_TypeDef *)((uint32_t)(bdmax_) + BDMA_CH_OFFSET_TAB[channelNum_]));
+        RCCControl::getInstance()->enableBDMAClk(true);
+    }
+    ~BDMAX()
+    {
+    }
+    BDMAX(const BDMAX&) = delete;
+    BDMAX(DMA&&) = delete;
+    BDMAX& operator=(const BDMAX&) = delete;
+    BDMAX& operator=(BDMAX&&) = delete;
+
+    inline void bdmaEnableChannel()
+    {
+        SET_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_EN);
+    }
+    inline void bdmaDisableChannel()
+    {
+        CLEAR_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_EN);
+    }
+    inline bool bdmaIsEnabledChannel()
+    {
+    return ((READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_EN) == (BDMA_CCR_EN)) ? true : false);
+    }
+    inline void bdmaConfigTransfer(uint32_t Configuration)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR,
+                    BDMA_CCR_DIR | BDMA_CCR_MEM2MEM | BDMA_CCR_CIRC | BDMA_CCR_PINC | BDMA_CCR_MINC | BDMA_CCR_PSIZE | BDMA_CCR_MSIZE | BDMA_CCR_PL,
+                    Configuration);
+    }
+    inline void bdmaSetDataTransferDirection(BDMADirection Direction)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_DIR | BDMA_CCR_MEM2MEM, Direction);
+    }
+    inline BDMADirection bdmaGetDataTransferDirection()
+    {
+        return (BDMADirection)(READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_DIR | BDMA_CCR_MEM2MEM));
+    }
+    inline void bdmaSetMode(BDMAMode Mode)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_CIRC, Mode);
+    }
+    inline BDMAMode bdmaGetMode()
+    {
+        return (BDMAMode)(READ_BIT(bdmaChannelAddr_->CCR,  BDMA_CCR_CIRC));
+    }
+    inline void bdmaSetPeriphIncMode(BDMAPeriphIncMode PeriphOrM2MSrcIncMode)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_PINC, PeriphOrM2MSrcIncMode);
+    }
+    inline BDMAPeriphIncMode bdmaGetPeriphIncMode()
+    {
+        return (BDMAPeriphIncMode)(READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_PINC));
+    }
+    inline void bdmaSetMemoryIncMode(BDMAMemoryIncMode MemoryOrM2MDstIncMode)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_MINC,  MemoryOrM2MDstIncMode);
+    }
+    inline BDMAMemoryIncMode bdmaGetMemoryIncMode()
+    {
+        return (BDMAMemoryIncMode)(READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_MINC));
+    }
+    inline void bdmaSetPeriphSize(BDMAPeriphDataAlign PeriphOrM2MSrcDataSize)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_PSIZE, PeriphOrM2MSrcDataSize);
+    }
+    inline BDMAPeriphDataAlign bdmaGetPeriphSize()
+    {
+        return (BDMAPeriphDataAlign)(READ_BIT(bdmaChannelAddr_->CCR,  BDMA_CCR_PSIZE));
+    }
+    inline void bdmaSetMemorySize(BDMAMemoryDataAlign MemoryOrM2MDstDataSize)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_MSIZE, MemoryOrM2MDstDataSize);
+    }
+    inline BDMAMemoryDataAlign bdmaGetMemorySize()
+    {
+        return (BDMAMemoryDataAlign)(READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_MSIZE));
+    }
+    inline void bdmaSetChannelPriorityLevel(BDMAPriority Priority)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_PL, Priority);
+    }
+    inline BDMAPriority bdmaGetChannelPriorityLevel()
+    {
+        return (BDMAPriority)(READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_PL));
+    }
+    inline void bdmaSetDataLength(uint32_t NbData)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CNDTR, BDMA_CNDTR_NDT, NbData);
+    }
+    inline uint32_t bdmaGetDataLength()
+    {
+        return (READ_BIT(bdmaChannelAddr_->CNDTR, BDMA_CNDTR_NDT));
+    }
+    inline void bdmaSetCurrentTargetMem(BDMACurrentTargetMemory CurrentMemory)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CCR, BDMA_CCR_CT, CurrentMemory);
+    }
+    inline BDMACurrentTargetMemory bdmaGetCurrentTargetMem()
+    {
+        return (BDMACurrentTargetMemory)(READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_CT));
+    }
+    inline void bdmaEnableDoubleBufferMode()
+    {
+        SET_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_DBM);
+    }
+    inline void bdmaDisableDoubleBufferMode()
+    {
+        CLEAR_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_DBM);
+    }
+    inline void bdmaConfigAddresses(uint32_t SrcAddress, uint32_t DstAddress, BDMADirection Direction)
+    {
+        /* Direction Memory to Periph */
+        if (Direction == BDMA_DIRECTION_MEMORY_TO_PERIPH)
+        {
+            WRITE_REG(bdmaChannelAddr_->CM0AR, SrcAddress);
+            WRITE_REG(bdmaChannelAddr_->CPAR, DstAddress);
+        }
+        /* Direction Periph to Memory and Memory to Memory */
+        else
+        {
+            WRITE_REG(bdmaChannelAddr_->CPAR, SrcAddress);
+            WRITE_REG(bdmaChannelAddr_->CM0AR, DstAddress);
+        }
+    }
+    inline void bdmaSetMemoryAddress(uint32_t MemoryAddress)
+    {
+        WRITE_REG(bdmaChannelAddr_->CM0AR, MemoryAddress);
+    }
+    inline void bdmaSetPeriphAddress(uint32_t PeriphAddress)
+    {
+        WRITE_REG(bdmaChannelAddr_->CPAR, PeriphAddress);
+    }
+    inline uint32_t bdmaGetMemoryAddress()
+    {
+        return (READ_REG(bdmaChannelAddr_->CM0AR));
+    }
+    inline uint32_t bdmaGetPeriphAddress()
+    {
+        return (READ_REG(bdmaChannelAddr_->CPAR));
+    }
+
+/**
+  * @brief  Set the Memory to Memory Source address.
+  */
+    inline void bdmaSetM2MSrcAddress(uint32_t MemoryAddress)
+    {
+        WRITE_REG(bdmaChannelAddr_->CPAR, MemoryAddress);
+    }
+
+/**
+  * @brief  Set the Memory to Memory Destination address.
+  */
+    inline void bdmaSetM2MDstAddress(uint32_t MemoryAddress)
+    {
+        WRITE_REG(bdmaChannelAddr_->CM0AR, MemoryAddress);
+    }
+    inline uint32_t bdmaGetM2MSrcAddress()
+    {
+        return (READ_REG(bdmaChannelAddr_->CPAR));
+    }
+    inline uint32_t bdmaGetM2MDstAddress()
+    {
+        return (READ_REG(bdmaChannelAddr_->CM0AR));
+    }
+
+/**
+  * @brief Set Memory 1 address (used in case of Double buffer mode).
+  */
+    inline void bdmaSetMemory1Address(uint32_t Address)
+    {
+        MODIFY_REG(bdmaChannelAddr_->CM1AR, BDMA_CM1AR_MA, Address);
+    }
+
+/**
+  * @brief Get Memory 1 address (used in case of Double buffer mode).
+  */
+    inline uint32_t bdmaGetMemory1Address()
+    {
+        return (bdmaChannelAddr_->CM1AR);
+    }
+    inline void bdmaSetPeriphRequest(DMAMUX2Requests Request)
+    {
+        MODIFY_REG(getDmaMuxChannel()->CCR, DMAMUX_CxCR_DMAREQ_ID, Request);
+    }
+    inline DMAMUX2Requests bdmaGetPeriphRequest()
+    {
+        return (DMAMUX2Requests)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_DMAREQ_ID));
+    }
+
+/** @defgroup BDMA_LL_EF_FLAG_Management FLAG_Management
+  * @{
+  */
+/**
+  * @brief  Get Channel 0 global interrupt flag.
+  * @rmtoll ISR          GIF0          bdmaIsActiveFlag_GI0
+  * @param  BDMAx BDMA Instance
+  * @retval State of bit (1 or 0).
+  */
+
+    inline bool bdmaIsActiveFlagGlobalIsr()
+    {
+        bool bFlag = false;
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF0) == (BDMA_ISR_GIF0)) ? true : false);
+                break;
+            case BDMA_CHANNEL_1:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF1) == (BDMA_ISR_GIF1)) ? true : false);
+                break;
+            case BDMA_CHANNEL_2:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF2) == (BDMA_ISR_GIF2)) ? true : false);
+                break;
+            case BDMA_CHANNEL_3:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF3) == (BDMA_ISR_GIF3)) ? true : false);
+                break;
+            case BDMA_CHANNEL_4:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF4) == (BDMA_ISR_GIF4)) ? true : false);
+                break;
+            case BDMA_CHANNEL_5:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF5) == (BDMA_ISR_GIF5)) ? true : false);
+                break;
+            case BDMA_CHANNEL_6:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF6) == (BDMA_ISR_GIF6)) ? true : false);
+                break;
+            case BDMA_CHANNEL_7:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_GIF7) == (BDMA_ISR_GIF7)) ? true : false);
+                break;
+            default:
+                bFlag = false;
+                break;
+        }
+        return bFlag;
+    }
+    inline bool bdmaIsActiveFlagTransterComplete()
+    {
+        bool bFlag = false;
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF0) == (BDMA_ISR_TCIF0)) ? true : false);
+                break;
+            case BDMA_CHANNEL_1:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF1) == (BDMA_ISR_TCIF1)) ? true : false);
+                break;
+            case BDMA_CHANNEL_2:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF2) == (BDMA_ISR_TCIF2)) ? true : false);
+                break;
+            case BDMA_CHANNEL_3:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF3) == (BDMA_ISR_TCIF3)) ? true : false);
+                break;
+            case BDMA_CHANNEL_4:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF4) == (BDMA_ISR_TCIF4)) ? true : false);
+                break;
+            case BDMA_CHANNEL_5:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF5) == (BDMA_ISR_TCIF5)) ? true : false);
+                break;
+            case BDMA_CHANNEL_6:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF6) == (BDMA_ISR_TCIF6)) ? true : false);
+                break;
+            case BDMA_CHANNEL_7:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TCIF7) == (BDMA_ISR_TCIF7)) ? true : false);
+                break;
+            default:
+                bFlag = false;
+                break;
+        }
+        return bFlag;
+    }
+    inline bool bdmaIsActiveFlagTransterHalf()
+    {
+        bool bFlag = false;
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF0) == (BDMA_ISR_HTIF0)) ? true : false);
+                break;
+            case BDMA_CHANNEL_1:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF1) == (BDMA_ISR_HTIF1)) ? true : false);
+                break;
+            case BDMA_CHANNEL_2:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF2) == (BDMA_ISR_HTIF2)) ? true : false);
+                break;
+            case BDMA_CHANNEL_3:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF3) == (BDMA_ISR_HTIF3)) ? true : false);
+                break;
+            case BDMA_CHANNEL_4:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF4) == (BDMA_ISR_HTIF4)) ? true : false);
+                break;
+            case BDMA_CHANNEL_5:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF5) == (BDMA_ISR_HTIF5)) ? true : false);
+                break;
+            case BDMA_CHANNEL_6:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF6) == (BDMA_ISR_HTIF6)) ? true : false);
+                break;
+            case BDMA_CHANNEL_7:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_HTIF7) == (BDMA_ISR_HTIF7)) ? true : false);
+                break;
+            default:
+                bFlag = false;
+                break;
+        }
+        return bFlag;
+    }
+    inline bool bdmaIsActiveFlagTransterError()
+    {
+        bool bFlag = false;
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF0) == (BDMA_ISR_TEIF0)) ? true : false);
+                break;
+            case BDMA_CHANNEL_1:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF1) == (BDMA_ISR_TEIF1)) ? true : false);
+                break;
+            case BDMA_CHANNEL_2:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF2) == (BDMA_ISR_TEIF2)) ? true : false);
+                break;
+            case BDMA_CHANNEL_3:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF3) == (BDMA_ISR_TEIF3)) ? true : false);
+                break;
+            case BDMA_CHANNEL_4:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF4) == (BDMA_ISR_TEIF4)) ? true : false);
+                break;
+            case BDMA_CHANNEL_5:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF5) == (BDMA_ISR_TEIF5)) ? true : false);
+                break;
+            case BDMA_CHANNEL_6:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF6) == (BDMA_ISR_TEIF6)) ? true : false);
+                break;
+            case BDMA_CHANNEL_7:
+                bFlag = ((READ_BIT(bdmax_->ISR, BDMA_ISR_TEIF7) == (BDMA_ISR_TEIF7)) ? true : false);
+                break;
+            default:
+                bFlag = false;
+                break;
+        }
+        return bFlag;
+    }
+/**
+  * @brief  Clear Channel 0 global interrupt flag.
+  * @note Do not Clear Channel 0 global interrupt flag when the channel in ON.
+    Instead clear specific flags transfer complete, half transfer & transfer
+    error flag with LL_DMA_ClearFlag_TC0, LL_DMA_ClearFlag_HT0,
+    LL_DMA_ClearFlag_TE0. bug id 2.3.1 in Product Errata Sheet.
+  * @rmtoll IFCR         CGIF0         bdmaClearFlag_GI0
+  * @param  BDMAx BDMA Instance
+  * @retval None
+  */
+    inline void bdmaClearFlagGlobalIsr()
+    {
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF0);
+                break;
+            case BDMA_CHANNEL_1:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF1);
+                break;
+            case BDMA_CHANNEL_2:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF2);
+                break;
+            case BDMA_CHANNEL_3:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF3);
+                break;
+            case BDMA_CHANNEL_4:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF4);
+                break;
+            case BDMA_CHANNEL_5:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF5);
+                break;
+            case BDMA_CHANNEL_6:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF6);
+                break;
+            case BDMA_CHANNEL_7:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CGIF7);
+                break;
+            default:
+                break;
+        }
+    }
+    inline void bdmaClearFlagTransferComplete()
+    {
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF0);
+                break;
+            case BDMA_CHANNEL_1:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF1);
+                break;
+            case BDMA_CHANNEL_2:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF2);
+                break;
+            case BDMA_CHANNEL_3:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF3);
+                break;
+            case BDMA_CHANNEL_4:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF4);
+                break;
+            case BDMA_CHANNEL_5:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF5);
+                break;
+            case BDMA_CHANNEL_6:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF6);
+                break;
+            case BDMA_CHANNEL_7:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTCIF7);
+                break;
+            default:
+                break;
+        }
+    }
+    inline void bdmaClearFlagTransferHalf()
+    {
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF0);
+                break;
+            case BDMA_CHANNEL_1:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF1);
+                break;
+            case BDMA_CHANNEL_2:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF2);
+                break;
+            case BDMA_CHANNEL_3:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF3);
+                break;
+            case BDMA_CHANNEL_4:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF4);
+                break;
+            case BDMA_CHANNEL_5:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF5);
+                break;
+            case BDMA_CHANNEL_6:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF6);
+                break;
+            case BDMA_CHANNEL_7:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CHTIF7);
+                break;
+            default:
+                break;
+        }
+    }
+    inline void bdmaClearFlagTransferError()
+    {
+        switch(channelNum_)
+        {
+            case BDMA_CHANNEL_0:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF0);
+                break;
+            case BDMA_CHANNEL_1:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF1);
+                break;
+            case BDMA_CHANNEL_2:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF2);
+                break;
+            case BDMA_CHANNEL_3:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF3);
+                break;
+            case BDMA_CHANNEL_4:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF4);
+                break;
+            case BDMA_CHANNEL_5:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF5);
+                break;
+            case BDMA_CHANNEL_6:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF6);
+                break;
+            case BDMA_CHANNEL_7:
+                WRITE_REG(bdmax_->IFCR, BDMA_IFCR_CTEIF7);
+                break;
+            default:
+                break;
+        }
+    }
+    inline void bdmaEnableITTransferComplete()
+    {
+        SET_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TCIE);
+    }
+    inline void bdmaEnableITTransferHalf()
+    {
+        SET_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_HTIE);
+    }
+    inline void bdmaEnableITTransterError()
+    {
+        SET_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TEIE);
+    }
+    inline void bdmaDisableITTransferComplete()
+    {
+        CLEAR_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TCIE);
+    }
+    inline void bdmaDisableITTransferHalf()
+    {
+        CLEAR_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_HTIE);
+    }
+    inline void bdmaDisableITTransterError()
+    {
+        CLEAR_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TEIE);
+    }
+    inline bool bdmaIsEnabledITTransferComplete()
+    {
+        return ((READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) ? true : false);
+    }
+    inline bool bdmaIsEnabledIT_HT()
+    {
+        return ((READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) ? true : false);
+    }
+    inline bool bdmaIsEnabledIT_TE()
+    {
+      return ((READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) ? true : false);
+    }
+private:
+    inline BDMAChannelNum BDMAGetChannelIndex(const BDMA_Channel_TypeDef* channel) const
+    {
+        return  (((uint32_t)(channel) == ((uint32_t)BDMA_Channel0)) ? BDMA_CHANNEL_0 : \
+                ((uint32_t)(channel) == ((uint32_t)BDMA_Channel1)) ? BDMA_CHANNEL_1 : \
+                ((uint32_t)(channel) == ((uint32_t)BDMA_Channel2)) ? BDMA_CHANNEL_2 : \
+                ((uint32_t)(channel) == ((uint32_t)BDMA_Channel3)) ? BDMA_CHANNEL_3 : \
+                ((uint32_t)(channel) == ((uint32_t)BDMA_Channel4)) ? BDMA_CHANNEL_4 : \
+                ((uint32_t)(channel) == ((uint32_t)BDMA_Channel5)) ? BDMA_CHANNEL_5 : \
+                ((uint32_t)(channel) == ((uint32_t)BDMA_Channel6)) ? BDMA_CHANNEL_6 : \
+                BDMA_CHANNEL_7);
+    }
+    inline BDMA_Channel_TypeDef* BDMAGetChannelInstance(const BDMAChannelNum channelNum) const
+    {
+        return  ((((uint32_t)(bdmax_) == ((uint32_t)BDMA)) && ((uint32_t)(channelNum) == ((uint32_t)BDMA_CHANNEL_0))) ? BDMA_Channel0 : \
+                (((uint32_t)(bdmax_) == ((uint32_t)BDMA)) && ((uint32_t)(channelNum) == ((uint32_t)BDMA_CHANNEL_1))) ? BDMA_Channel1 : \
+                (((uint32_t)(bdmax_) == ((uint32_t)BDMA)) && ((uint32_t)(channelNum) == ((uint32_t)BDMA_CHANNEL_2))) ? BDMA_Channel2 : \
+                (((uint32_t)(bdmax_) == ((uint32_t)BDMA)) && ((uint32_t)(channelNum) == ((uint32_t)BDMA_CHANNEL_3))) ? BDMA_Channel3 : \
+                (((uint32_t)(bdmax_) == ((uint32_t)BDMA)) && ((uint32_t)(channelNum) == ((uint32_t)BDMA_CHANNEL_4))) ? BDMA_Channel4 : \
+                (((uint32_t)(bdmax_) == ((uint32_t)BDMA)) && ((uint32_t)(channelNum) == ((uint32_t)BDMA_CHANNEL_5))) ? BDMA_Channel5 : \
+                (((uint32_t)(bdmax_) == ((uint32_t)BDMA)) && ((uint32_t)(channelNum) == ((uint32_t)BDMA_CHANNEL_6))) ? BDMA_Channel6 : \
+                BDMA_Channel7);
+    }
+private:
+    BDMA_TypeDef * bdmax_;
+    BDMA_Channel_TypeDef *bdmaChannelAddr_;
+    BDMAChannelNum channelNum_;
 };

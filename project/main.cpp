@@ -305,8 +305,34 @@ int main(void)
         while(1);
     }
     LED led(GPIOE, GPIO_NUM_9, false);
+    DMA dmax1(DMA1, DMA_STREAM_0);
+    DMA dmax2(DMA1, DMA_STREAM_1);
+    DMA dmax3(DMA1, DMA_STREAM_2);
+    DMA dmax4(DMA1, DMA_STREAM_3);
+    DMA dmax5(DMA1, DMA_STREAM_4);
     DMA dmax(DMA2, DMA_STREAM_7);
-    DMA_InitTypeDef DMA_InitStruct;
+
+    BDMAX bdma1(BDMA, BDMA_CHANNEL_0);
+    BDMAX bdma2(BDMA, BDMA_CHANNEL_1);
+    BDMAX bdma3(BDMA, BDMA_CHANNEL_2);
+    BDMAX bdma4(BDMA, BDMA_CHANNEL_3);
+    BDMAX bdma5(BDMA, BDMA_CHANNEL_4);
+    BDMAX bdma6(BDMA, BDMA_CHANNEL_5);
+
+    printf("dmux1 ch 0: %p \r\n",DMAMUX1_Channel0);
+    printf("dmux1 ch 1: %p \r\n",DMAMUX1_Channel1);
+    printf("dmux1 ch 2: %p \r\n",DMAMUX1_Channel2);
+    printf("dmux1 ch 3: %p \r\n",DMAMUX1_Channel3);
+    printf("dmux1 ch 4: %p \r\n",DMAMUX1_Channel4);
+    printf("dmux1 ch 15: %p \r\n",DMAMUX1_Channel15);
+
+    printf("dmux2 ch 0: %p \r\n",DMAMUX2_Channel0);
+    printf("dmux2 ch 1: %p \r\n",DMAMUX2_Channel1);
+    printf("dmux2 ch 2: %p \r\n",DMAMUX2_Channel2);
+    printf("dmux2 ch 3: %p \r\n",DMAMUX2_Channel3);
+    printf("dmux2 ch 4: %p \r\n",DMAMUX2_Channel4);
+    printf("dmux2 ch 5: %p \r\n",DMAMUX2_Channel5);
+    /*DMA_InitTypeDef DMA_InitStruct;
     DMA_InitStruct.Direction = DMA_DIRECTION_MEMORY_TO_PERIPH;
     DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&(USART1->TDR);  
     DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)sendBuff;             
@@ -334,7 +360,7 @@ int main(void)
     ATOMIC_SET_BIT(USART1->CR3, USART_CR3_DMAT);
     led.on();
     delayTick(3000);
-    dmax.dmaEnableStream();
+    dmax.dmaEnableStream();*/
       //LL_DMA_EnableIT_TC(DMA2, LL_DMA_STREAM_7);
   //LL_DMA_EnableIT_TE(DMA2, LL_DMA_STREAM_7);
   //NVIC_SetPriority(DMA2_Stream7_IRQn, 0);
