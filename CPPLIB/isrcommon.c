@@ -712,6 +712,7 @@ void registerDMAIsrCb(DMA_Stream_TypeDef* stream, DMA_ISR_CB cb, void* param)
 			DMAIsrCbBuff[15].cb = cb;
 			DMAIsrCbBuff[15].stream = stream;
 			DMAIsrCbBuff[15].param = param;
+			printf("register dma2 xx stream 7\r\n");
 			break;
 		default:
 			break;

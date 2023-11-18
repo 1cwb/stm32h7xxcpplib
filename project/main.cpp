@@ -209,7 +209,7 @@ int main(void)
     return 0;
 }
 #endif
-#if 1
+#if 0
 int main(void)
 {
     /* Captured Values */
@@ -291,6 +291,61 @@ int main(void)
         delayTick(500);
         led.reverse();
         printf("hellow world i = %lu\r\n",i++);
+    }
+    return 0;
+}
+#endif
+
+#if 1
+static uint8_t sendBuff[] = "----------------------------------------------------------------------=====================++++++++++++++++++++++++++-";
+int main(void)
+{
+    if(!hwInit())
+    {
+        while(1);
+    }
+    LED led(GPIOE, GPIO_NUM_9, false);
+    DMA dmax(DMA2, DMA_STREAM_7);
+    DMA_InitTypeDef DMA_InitStruct;
+    DMA_InitStruct.Direction = DMA_DIRECTION_MEMORY_TO_PERIPH;
+    DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&(USART1->TDR);  
+    DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)sendBuff;             
+    DMA_InitStruct.Mode = DMA_MODE_NORMAL;                   
+    DMA_InitStruct.PeriphOrM2MSrcIncMode = DMA_PERIPH_NOINCREMENT;  
+    DMA_InitStruct.MemoryOrM2MDstIncMode = DMA_MEMORY_INCREMENT;  
+    DMA_InitStruct.PeriphOrM2MSrcDataSize = DMA_PDATAALIGN_BYTE; 
+    DMA_InitStruct.MemoryOrM2MDstDataSize = DMA_MDATAALIGN_BYTE; 
+    DMA_InitStruct.NbData = sizeof(sendBuff);                 
+    DMA_InitStruct.PeriphRequest = DMAMUX1_REQ_USART1_TX;
+    DMA_InitStruct.Priority = DMA_PRIORITY_MEDIUM;               
+    DMA_InitStruct.FIFOMode = DMA_FIFOMODE_DISABLE;               
+    DMA_InitStruct.FIFOThreshold = DMA_FIFOTHRESHOLD_FULL;          
+    DMA_InitStruct.MemBurst = DMA_MBURST_SINGLE;               
+    DMA_InitStruct.PeriphBurst = DMA_PBURST_SINGLE;   
+    dmax.dmaDeInit();
+    dmax.dmaInit(&DMA_InitStruct);
+    dmax.dmaEnableITTransterHalf();
+    dmax.dmaEnableITTransferComplete();
+    dmax.enableDmaIsr(2,2);
+    dmax.registerInterruptCb([&](DMA* pdma, DMATransferIsrType type){
+        printf("ooo type is%u\r\n",type);
+
+    });
+    ATOMIC_SET_BIT(USART1->CR3, USART_CR3_DMAT);
+    led.on();
+    delayTick(3000);
+    dmax.dmaEnableStream();
+      //LL_DMA_EnableIT_TC(DMA2, LL_DMA_STREAM_7);
+  //LL_DMA_EnableIT_TE(DMA2, LL_DMA_STREAM_7);
+  //NVIC_SetPriority(DMA2_Stream7_IRQn, 0);
+  //NVIC_EnableIRQ(DMA2_Stream7_IRQn);
+  //ATOMIC_SET_BIT(USART1->CR3, USART_CR3_DMAT);
+  //LL_DMA_EnableStream(DMA2, LL_DMA_STREAM_7);
+    while(1)
+    {
+        delayTick(3000);
+        //led.reverse();
+        //printf("hellow world +++\r\n");
     }
     return 0;
 }

@@ -2,6 +2,15 @@
 #include "stm32h7xx.h"
 #include "isrcommon.h"
 
+#define DTCM_MEM   __attribute__((section(".dtcmram")))
+#define DTCM_MEM_ALIGN(x)   __attribute__((section(".dtcmram"))) __attribute__((aligned(x)))
+
+#define D2_MEM   __attribute__((section(".ramd2")))
+#define D2_MEM_ALIGN(x)   __attribute__((section(".ramd2"))) __attribute__((aligned(x)))
+
+#define D3_MEM   __attribute__((section(".ramd3")))
+#define D3_MEM_ALIGN(x)   __attribute__((section(".ramd3"))) __attribute__((aligned(x)))
+
 enum NVICPriorityGroup
 {
     NVIC_PRIORITYGROUP_0    =   ((uint32_t)0x00000007),  /*!< 0 bits for pre-emption priority 4 bits for subpriority */  
