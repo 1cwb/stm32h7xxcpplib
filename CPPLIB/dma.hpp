@@ -706,14 +706,12 @@ public:
         dmaMuxBase_ = dmamux;
         dmaMuxChannelNum_ = (DMAMUXChannel)(streamNum + DMARemapToDMAMUXChannel(dmax));
         dmaMuxChannel_ = ((DMAMUX_Channel_TypeDef *)(uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (streamNum)) + (uint32_t)(DMAMUX_CCR_SIZE * DMARemapToDMAMUXChannel(dmax))));
-        printf("tony dmaMuxChannelNum_ = %u, dmaMuxChannel_ = %p\r\n",dmaMuxChannelNum_, dmaMuxChannel_);
     }
     DMAMUX(DMAMUX_Channel_TypeDef *dmamux, BDMAChannelNum channelNum)
     {
         dmaMuxBase_ = dmamux;
         dmaMuxChannelNum_ = (DMAMUXChannel)(channelNum);
         dmaMuxChannel_ = ((DMAMUX_Channel_TypeDef *)(uint32_t)((uint32_t)dmaMuxBase_ + (DMAMUX_CCR_SIZE * (channelNum))));
-        printf("tony dmaMuxChannelNum_ = %u, dmaMuxChannel_ = %p\r\n",dmaMuxChannelNum_, dmaMuxChannel_);
     }
     ~DMAMUX()
     {
@@ -2049,7 +2047,78 @@ public:
     BDMAX(DMA&&) = delete;
     BDMAX& operator=(const BDMAX&) = delete;
     BDMAX& operator=(BDMAX&&) = delete;
+    eResult bdmaInit(LL_BDMA_InitTypeDef *BDMA_InitStruct)
+    {
+        /*---------------------------- DMAx CCR Configuration ------------------------
+        * Configure DMAx_Channely: data transfer direction, data transfer mode,
+        *                          peripheral and memory increment mode,
+        *                          data size alignment and  priority level with parameters :
+        * - Direction:      BDMA_CCR_DIR and BDMA_CCR_MEM2MEM bits
+        * - Mode:           BDMA_CCR_CIRC bit
+        * - PeriphOrM2MSrcIncMode:  BDMA_CCR_PINC bit
+        * - MemoryOrM2MDstIncMode:  BDMA_CCR_MINC bit
+        * - PeriphOrM2MSrcDataSize: BDMA_CCR_PSIZE[1:0] bits
+        * - MemoryOrM2MDstDataSize: BDMA_CCR_MSIZE[1:0] bits
+        * - Priority:               BDMA_CCR_PL[1:0] bits
+        */
+        bdmaConfigTransfer(BDMA_InitStruct->Direction                   | \
+                                BDMA_InitStruct->Mode                   | \
+                                BDMA_InitStruct->PeriphOrM2MSrcIncMode  | \
+                                BDMA_InitStruct->MemoryOrM2MDstIncMode  | \
+                                BDMA_InitStruct->PeriphOrM2MSrcDataSize | \
+                                BDMA_InitStruct->MemoryOrM2MDstDataSize | \
+                                BDMA_InitStruct->Priority);
 
+        /*-------------------------- DMAx CMAR Configuration -------------------------
+        * Configure the memory or destination base address with parameter :
+        * - MemoryOrM2MDstAddress: BDMA_CMAR_MA[31:0] bits
+        */
+        bdmaSetMemoryAddress(BDMA_InitStruct->MemoryOrM2MDstAddress);
+
+        /*-------------------------- DMAx CPAR Configuration -------------------------
+        * Configure the peripheral or source base address with parameter :
+        * - PeriphOrM2MSrcAddress: BDMA_CPAR_PA[31:0] bits
+        */
+        bdmaSetPeriphAddress(BDMA_InitStruct->PeriphOrM2MSrcAddress);
+
+        /*--------------------------- DMAx CNDTR Configuration -----------------------
+        * Configure the peripheral base address with parameter :
+        * - NbData: BDMA_CNDTR_NDT[15:0] bits
+        */
+        bdmaSetDataLength(BDMA_InitStruct->NbData);
+
+        /*--------------------------- DMAMUXx CCR Configuration ----------------------
+        * Configure the DMA request for DMA Channels on DMAMUX Channel x with parameter :
+        * - PeriphRequest: BDMA_CxCR[7:0] bits
+        */
+        bdmaSetPeriphRequest(BDMA_InitStruct->PeriphRequest);
+
+        return (uint32_t)E_RESULT_OK;
+    }
+    eResult bdmaDeInit()
+    {
+        /* Disable the selected DMAx_Channely */
+        bdmaDisableChannel();
+        /* Reset DMAx_Channely control register */
+        WRITE_REG(bdmaChannelAddr_->CCR, 0U);
+
+        /* Reset DMAx_Channely remaining bytes register */
+        WRITE_REG(bdmaChannelAddr_->CNDTR, 0U);
+
+        /* Reset DMAx_Channely peripheral address register */
+        WRITE_REG(bdmaChannelAddr_->CPAR, 0U);
+
+        /* Reset DMAx_Channely memory 0 address register */
+        WRITE_REG(bdmaChannelAddr_->CM0AR, 0U);
+
+        /* Reset DMAx_Channely memory 1 address register */
+        WRITE_REG(bdmaChannelAddr_->CM1AR, 0U);
+
+        /* Reset Request register field for BDMAx Channel */
+        bdmaSetPeriphRequest(DMAMUX2_REQ_MEM2MEM);
+        bdmaClearFlagGlobalIsr();
+        return E_RESULT_OK;
+    }
     inline void bdmaEnableChannel()
     {
         SET_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_EN);
