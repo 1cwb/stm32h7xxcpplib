@@ -769,14 +769,6 @@ public:
     {
       return ((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE) == (DMAMUX_CxCR_SE)) ? true : false);
     }
-    inline void dmaMuxSetSyncID(DMAMUX1SyncSignalEventID SyncID)
-    {
-        MODIFY_REG(dmaMuxChannel_->CCR, DMAMUX_CxCR_SYNC_ID, SyncID);
-    }
-    inline DMAMUX1SyncSignalEventID dmaMuxGetSyncID()
-    {
-        return (DMAMUX1SyncSignalEventID)(READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SYNC_ID));
-    }
     inline void dmaMuxEnableRequestGen()
     {
         SET_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * (dmaMuxRequestGenChannelNum_))))->RGCR, DMAMUX_RGxCR_GE);
@@ -809,9 +801,9 @@ public:
     {
         MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID, RequestSignalID);
     }
-    inline DMAMUX1SyncSignalEventID dmaMuxGetRequestSignalID()
+    inline DMAMUX1ExtReqSignalGenID dmaMuxGetRequestSignalID()
     {
-        return (DMAMUX1SyncSignalEventID)(READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID));
+        return (DMAMUX1ExtReqSignalGenID)(READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID));
     }
     inline bool dmaMuxIsActiveFlagSyncEventOverrun()
     {
@@ -1310,6 +1302,14 @@ public:
     inline DMAMUX1Requests dmaGetPeriphRequest()
     {
         return (DMAMUX1Requests)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_DMAREQ_ID));
+    }
+    inline void dmaMuxSetSyncID(DMAMUX1SyncSignalEventID SyncID)
+    {
+        MODIFY_REG(getDmaMuxChannel()->CCR, DMAMUX_CxCR_SYNC_ID, SyncID);
+    }
+    inline DMAMUX1SyncSignalEventID dmaMuxGetSyncID()
+    {
+        return (DMAMUX1SyncSignalEventID)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_SYNC_ID));
     }
     inline void dmaSetMemoryBurstxfer(DMAMemoryBurst Mburst)
     {
@@ -2047,7 +2047,7 @@ public:
     BDMAX(DMA&&) = delete;
     BDMAX& operator=(const BDMAX&) = delete;
     BDMAX& operator=(BDMAX&&) = delete;
-    eResult bdmaInit(LL_BDMA_InitTypeDef *BDMA_InitStruct)
+    eResult bdmaInit(BDMAInitTypeDef *BDMA_InitStruct)
     {
         /*---------------------------- DMAx CCR Configuration ------------------------
         * Configure DMAx_Channely: data transfer direction, data transfer mode,
@@ -2093,7 +2093,11 @@ public:
         */
         bdmaSetPeriphRequest(BDMA_InitStruct->PeriphRequest);
 
-        return (uint32_t)E_RESULT_OK;
+        if(BDMA_InitStruct->PeriphRequest >= DMAMUX2_REQ_GENERATOR0 && BDMA_InitStruct->PeriphRequest <= DMAMUX2_REQ_GENERATOR7)
+        {
+            initDmaMuxReqGenChannelNum((DMAMUXReqGenChannel)(BDMA_InitStruct->PeriphRequest - 1));
+        }
+        return E_RESULT_OK;
     }
     eResult bdmaDeInit()
     {
@@ -2296,7 +2300,14 @@ public:
     {
         return (DMAMUX2Requests)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_DMAREQ_ID));
     }
-
+    inline void dmaMuxSetSyncID(DMAMUX2SyncSignalEventID SyncID)
+    {
+        MODIFY_REG(getDmaMuxChannel()->CCR, DMAMUX_CxCR_SYNC_ID, SyncID);
+    }
+    inline DMAMUX2SyncSignalEventID dmaMuxGetSyncID()
+    {
+        return (DMAMUX2SyncSignalEventID)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_SYNC_ID));
+    }
 /** @defgroup BDMA_LL_EF_FLAG_Management FLAG_Management
   * @{
   */
