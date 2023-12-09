@@ -596,6 +596,13 @@ enum DMATransferIsrType
     DMA_FIFO_ERROR,
     DMA_ISR_ERROR
 };
+enum BDMATransferIsrType
+{
+    BDMA_TRANSFER_HALF,
+    BDMA_TRANSFER_COMPLETE,
+    BDMA_TRANSFER_ERROR,
+    BDMA_ISR_GLOBAL_ERROR
+};
 enum DMAMUXOverRunType
 {
     DMAMUX_OVERRUN_TYPE_SYNC,
@@ -769,13 +776,17 @@ public:
     {
       return ((READ_BIT(dmaMuxChannel_->CCR, DMAMUX_CxCR_SE) == (DMAMUX_CxCR_SE)) ? true : false);
     }
+    DMAMUX_RequestGen_TypeDef* getDMAMUXRequestGenChannelAddr() const
+    {
+        return ((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)));
+    }
     inline void dmaMuxEnableRequestGen()
     {
-        SET_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * (dmaMuxRequestGenChannelNum_))))->RGCR, DMAMUX_RGxCR_GE);
+        SET_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GE);
     }
     inline void dmaMuxDisableRequestGen()
     {
-        CLEAR_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * (dmaMuxRequestGenChannelNum_))))->RGCR, DMAMUX_RGxCR_GE);
+        CLEAR_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GE);
     }
     inline bool dmaMuxIsEnabledRequestGen()
     {
@@ -796,14 +807,6 @@ public:
     inline uint32_t dmaMuxGetGenRequestNb()
     {
         return (uint32_t)((READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_GNBREQ) >> DMAMUX_RGxCR_GNBREQ_Pos) + 1U);
-    }
-    inline void dmaMuxSetRequestSignalID(DMAMUX1ExtReqSignalGenID RequestSignalID)
-    {
-        MODIFY_REG(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID, RequestSignalID);
-    }
-    inline DMAMUX1ExtReqSignalGenID dmaMuxGetRequestSignalID()
-    {
-        return (DMAMUX1ExtReqSignalGenID)(READ_BIT(((DMAMUX_RequestGen_TypeDef *)((uint32_t)dmaMuxBase_ + DMAMUX_REQ_GEN_OFFSET + (DMAMUX_RGCR_SIZE * dmaMuxRequestGenChannelNum_)))->RGCR, DMAMUX_RGxCR_SIG_ID));
     }
     inline bool dmaMuxIsActiveFlagSyncEventOverrun()
     {
@@ -1051,6 +1054,7 @@ private:
     DMAMUX_Channel_TypeDef *dmaMuxBase_;
     DMAMUXChannel dmaMuxChannelNum_;
     DMAMUXReqGenChannel dmaMuxRequestGenChannelNum_;
+    DMAMUX_RequestGen_TypeDef *dmaMuxRequestGenChannelAddr_;
 };
 class DMA : public DMAMUX
 {
@@ -1064,11 +1068,11 @@ public:
         dmaStreamAddr_ = (DMA_Stream_TypeDef*)((uint32_t)(dmax_) + DMA_STR_OFFSET_TAB[streamNum_]);
         if(dmax_ == DMA1)
         {
-            RCCControl::getInstance()->enableDMA1Clk(true);
+            RCCControl::getInstance()->AHB1GRP1EnableClock(RCC_AHB1_GRP1_PERIPH_DMA1);
         }
         else if(dmax_ == DMA2)
         {
-            RCCControl::getInstance()->enableDMA2Clk(true);
+            RCCControl::getInstance()->AHB1GRP1EnableClock(RCC_AHB1_GRP1_PERIPH_DMA2);
         }
     }
     ~DMA()
@@ -1310,6 +1314,14 @@ public:
     inline DMAMUX1SyncSignalEventID dmaMuxGetSyncID()
     {
         return (DMAMUX1SyncSignalEventID)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_SYNC_ID));
+    }
+    inline void dmaMuxSetRequestSignalID(DMAMUX1ExtReqSignalGenID RequestSignalID)
+    {
+        MODIFY_REG(getDMAMUXRequestGenChannelAddr()->RGCR, DMAMUX_RGxCR_SIG_ID, RequestSignalID);
+    }
+    inline DMAMUX1ExtReqSignalGenID dmaMuxGetRequestSignalID()
+    {
+        return (DMAMUX1ExtReqSignalGenID)(READ_BIT(getDMAMUXRequestGenChannelAddr()->RGCR, DMAMUX_RGxCR_SIG_ID));
     }
     inline void dmaSetMemoryBurstxfer(DMAMemoryBurst Mburst)
     {
@@ -1912,7 +1924,7 @@ private:
         IRQn_Type irqtype = DMA1_Stream0_IRQn;
         switch (reinterpret_cast<uint32_t>(dmaStreamAddr_))
         {
-            case DMA1_Stream0_BASE:
+            case (uint32_t)DMA1_Stream0_BASE:
                 irqtype = DMA1_Stream0_IRQn;
                 break;
             case (uint32_t)DMA1_Stream1_BASE:
@@ -2031,14 +2043,15 @@ private:
 
 class BDMAX : public DMAMUX
 {
+    using BDMAInterruptCb = std::function<void(BDMAX*, BDMATransferIsrType)>;
+    using BDMAMUXInterruptCb = std::function<void(BDMAX*, DMAMUXOverRunType)>;
 public:
-    //tony
     BDMAX(BDMA_TypeDef* bdmax, BDMAChannelNum channelNum) : DMAMUX(DMAMUX2, channelNum)
     {
         bdmax_ = bdmax;
         channelNum_ = channelNum;
         bdmaChannelAddr_ = ((BDMA_Channel_TypeDef *)((uint32_t)(bdmax_) + BDMA_CH_OFFSET_TAB[channelNum_]));
-        RCCControl::getInstance()->enableBDMAClk(true);
+        RCCControl::getInstance()->AHB4GRP1EnableClock(RCC_AHB4_GRP1_PERIPH_BDMA);
     }
     ~BDMAX()
     {
@@ -2097,6 +2110,13 @@ public:
         {
             initDmaMuxReqGenChannelNum((DMAMUXReqGenChannel)(BDMA_InitStruct->PeriphRequest - 1));
         }
+        registerBDMAIsrCb(bdmaChannelAddr_, [](void* param, uint8_t bBDMAMuxISR){
+            BDMAX* pbdma = reinterpret_cast<BDMAX*>(param);
+            if(pbdma)
+            {
+                pbdma->isrHandler(bBDMAMuxISR);
+            }
+        }, this);
         return E_RESULT_OK;
     }
     eResult bdmaDeInit()
@@ -2307,6 +2327,14 @@ public:
     inline DMAMUX2SyncSignalEventID dmaMuxGetSyncID()
     {
         return (DMAMUX2SyncSignalEventID)(READ_BIT(getDmaMuxChannel()->CCR, DMAMUX_CxCR_SYNC_ID));
+    }
+    inline void dmaMuxSetRequestSignalID(DMAMUX2ExtReqSignalGenID RequestSignalID)
+    {
+        MODIFY_REG(getDMAMUXRequestGenChannelAddr()->RGCR, DMAMUX_RGxCR_SIG_ID, RequestSignalID);
+    }
+    inline DMAMUX2ExtReqSignalGenID dmaMuxGetRequestSignalID()
+    {
+        return (DMAMUX2ExtReqSignalGenID)(READ_BIT(getDMAMUXRequestGenChannelAddr()->RGCR, DMAMUX_RGxCR_SIG_ID));
     }
 /** @defgroup BDMA_LL_EF_FLAG_Management FLAG_Management
   * @{
@@ -2624,15 +2652,140 @@ public:
     {
         return ((READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) ? true : false);
     }
-    inline bool bdmaIsEnabledIT_HT()
+    inline bool bdmaIsEnabledITTransferHalf()
     {
         return ((READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) ? true : false);
     }
-    inline bool bdmaIsEnabledIT_TE()
+    inline bool bdmaIsEnabledITTransterError()
     {
       return ((READ_BIT(bdmaChannelAddr_->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) ? true : false);
     }
+    void enableBdmaIsr(uint32_t PreemptPriority, uint32_t SubPriority)
+    {
+        if(NVIC_GetEnableIRQ(getIrqType()) == 0U)
+        {
+            NVIC_SetPriority(getIrqType(), NVIC_EncodePriority(NVIC_GetPriorityGrouping(), PreemptPriority, SubPriority));
+            NVIC_EnableIRQ(getIrqType());
+        }
+    }
+    void disableBdmaIsr()
+    {
+        NVIC_DisableIRQ(getIrqType());
+    }
+    void registerInterruptCb(const BDMAInterruptCb& isrcb)
+    {
+        bdmacb_ = isrcb;
+    }
+    void unregisterInterruptCb()
+    {
+        if(bdmacb_)
+        {
+            bdmacb_ = BDMAInterruptCb();
+        }
+    }
+     void enableDMAMUXIsr(uint32_t PreemptPriority, uint32_t SubPriority)
+    {
+        if(NVIC_GetEnableIRQ(DMAMUX2_OVR_IRQn) == 0U)
+        {
+            NVIC_SetPriority(DMAMUX2_OVR_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), PreemptPriority, SubPriority));
+            NVIC_EnableIRQ(DMAMUX2_OVR_IRQn);
+        }
+    }
+    void disableDMAMUXIsr()
+    {
+        NVIC_DisableIRQ(DMAMUX2_OVR_IRQn);
+    }
+    void registerDMAMUXInterruptCb(const BDMAMUXInterruptCb& isrcb)
+    {
+        bdmamuxcb_ = isrcb;
+    }
+    void unregisterDMAMUXInterruptCb()
+    {
+        if(bdmamuxcb_)
+        {
+            bdmamuxcb_ = BDMAMUXInterruptCb();
+        }
+    }
 private:
+    IRQn_Type getIrqType()
+    {
+        IRQn_Type irqtype = BDMA_Channel0_IRQn;
+        switch (reinterpret_cast<uint32_t>(bdmaChannelAddr_))
+        {
+            case (uint32_t)BDMA_Channel0_BASE:
+                irqtype = BDMA_Channel0_IRQn;
+                break;
+            case (uint32_t)BDMA_Channel1_BASE:
+                irqtype = BDMA_Channel1_IRQn;
+                break;
+            case (uint32_t)BDMA_Channel2_BASE:
+                irqtype = BDMA_Channel2_IRQn;
+                break;
+            case (uint32_t)BDMA_Channel3_BASE:
+                irqtype = BDMA_Channel3_IRQn;
+                break;
+            case (uint32_t)BDMA_Channel4_BASE:
+                irqtype = BDMA_Channel4_IRQn;
+                break;
+            case (uint32_t)BDMA_Channel5_BASE:
+                irqtype = BDMA_Channel5_IRQn;
+                break;
+            case (uint32_t)BDMA_Channel6_BASE:
+                irqtype = BDMA_Channel6_IRQn;
+                break;
+            case (uint32_t)BDMA_Channel7_BASE:
+                irqtype = BDMA_Channel7_IRQn;
+                break;
+            default:
+                break;
+        }
+        return irqtype;
+    }
+    void isrHandler(uint8_t bBDMAMuxISR)
+    {
+        if(!bBDMAMuxISR)
+        {
+            BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+            if(bdmaIsEnabledITTransferHalf() && bdmaIsActiveFlagTransterHalf())
+            {
+                bdmaClearFlagTransferHalf();
+                isrType = BDMA_TRANSFER_HALF;
+            }
+            else if(bdmaIsEnabledITTransferComplete() && bdmaIsActiveFlagTransterComplete())
+            {
+                bdmaClearFlagTransferComplete();
+                isrType = BDMA_TRANSFER_COMPLETE;
+            }
+            else if(bdmaIsEnabledITTransterError() && bdmaIsActiveFlagTransterError()) 
+            {
+                bdmaClearFlagTransferError();
+                isrType = BDMA_TRANSFER_ERROR;
+            }
+            if(bdmacb_)
+            {
+                bdmacb_(this, isrType);
+            }
+        }
+        else
+        {
+            if(dmaMuxIsEnabledITReqGenTrigEventOverrun() && dmaMuxIsActiveFlagReqGenTrigEventOverrun())
+            {
+                dmaMuxClearFlagReqGenTrigEventOverrun();
+                if(bdmamuxcb_)
+                {
+                    bdmamuxcb_(this, DMAMUX_OVERRUN_TYPE_GEN);
+                }
+            }
+            else if(dmaMuxIsEnabledITSyncEventOverrun() && dmaMuxIsActiveFlagSyncEventOverrun())
+            {
+                dmaMuxClearFlagSyncEventOverrun();
+                if(bdmamuxcb_)
+                {
+                    bdmamuxcb_(this, DMAMUX_OVERRUN_TYPE_SYNC);
+                }
+            }
+        }
+    }
     inline BDMAChannelNum BDMAGetChannelIndex(const BDMA_Channel_TypeDef* channel) const
     {
         return  (((uint32_t)(channel) == ((uint32_t)BDMA_Channel0)) ? BDMA_CHANNEL_0 : \
@@ -2659,4 +2812,6 @@ private:
     BDMA_TypeDef * bdmax_;
     BDMA_Channel_TypeDef *bdmaChannelAddr_;
     BDMAChannelNum channelNum_;
+    BDMAInterruptCb bdmacb_;
+    BDMAMUXInterruptCb bdmamuxcb_;
 };

@@ -89,7 +89,7 @@ eResult clockInit(uint32_t plln, uint32_t pllm, uint32_t pllp, uint32_t pllq, ui
     rcc->setD2PPRE1APB1PreScaler(RCC_D2_PPRE1_APB1_PRESCALER_DIV2);
     rcc->setD2PPRE2APB2PreScaler(RCC_D2_PPRE2_APB2_PRESCALER_DIV2);
     rcc->setD3PPREAPB4PreScaler(RCC_D3_PPRE_APB4_PRESCALER_DIV2);
-    rcc->enableSYSCFGPerClk(true);//syscfg clk for exit interrupt
+    rcc->APB4GRP1EnableClock(RCC_APB4_GRP1_PERIPH_SYSCFG);//syscfg clk for exit interrupt
 
     CHECK_RETURN(rcc->enableCsi(true),E_RESULT_BAD_INIT_FLOW);//enable CSI
     SET_BIT(SYSCFG->CCCSR, SYSCFG_CCCSR_EN);//I/O compensation cell enable

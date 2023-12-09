@@ -367,6 +367,435 @@ enum RCCPLLCLKType
     RCC_PLL3_CLK_FREQ_Q,
     RCC_PLL3_CLK_FREQ_R,
 };
+/** @defgroup EC_AHB3_GRP1_PERIPH  AHB3 GRP1 PERIPH
+  * @{
+  */
+enum RCCAHB3GRP1PerClkType
+{
+    RCC_AHB3_GRP1_PERIPH_MDMA       =    RCC_AHB3ENR_MDMAEN,
+    RCC_AHB3_GRP1_PERIPH_DMA2D      =    RCC_AHB3ENR_DMA2DEN,
+
+    #if defined(JPEG)
+    RCC_AHB3_GRP1_PERIPH_JPGDEC     =    RCC_AHB3ENR_JPGDECEN,
+    #endif /* JPEG */
+
+    RCC_AHB3_GRP1_PERIPH_FMC        =    RCC_AHB3ENR_FMCEN,
+    #if defined(QUADSPI)
+    RCC_AHB3_GRP1_PERIPH_QSPI       =    RCC_AHB3ENR_QSPIEN,
+    #endif /* QUADSPI */
+    #if defined(OCTOSPI1) || defined(OCTOSPI2)
+    RCC_AHB3_GRP1_PERIPH_OSPI1      =    RCC_AHB3ENR_OSPI1EN,
+    RCC_AHB3_GRP1_PERIPH_OSPI2      =    RCC_AHB3ENR_OSPI2EN,
+    #endif /*(OCTOSPI1) || (OCTOSPI2)*/
+    #if defined(OCTOSPIM)
+    RCC_AHB3_GRP1_PERIPH_OCTOSPIM   =    RCC_AHB3ENR_IOMNGREN,
+    #endif /* OCTOSPIM */
+    #if defined(OTFDEC1) || defined(OTFDEC2)
+    RCC_AHB3_GRP1_PERIPH_OTFDEC1    =    RCC_AHB3ENR_OTFDEC1EN,
+    RCC_AHB3_GRP1_PERIPH_OTFDEC2    =    RCC_AHB3ENR_OTFDEC2EN,
+    #endif /* (OTFDEC1) || (OTFDEC2) */
+    #if defined(GFXMMU)
+    RCC_AHB3_GRP1_PERIPH_GFXMMU     =    RCC_AHB3ENR_GFXMMUEN,
+    #endif /* GFXMMU */
+    RCC_AHB3_GRP1_PERIPH_SDMMC1     =    RCC_AHB3ENR_SDMMC1EN,
+    RCC_AHB3_GRP1_PERIPH_FLASH      =    RCC_AHB3LPENR_FLASHLPEN,
+    RCC_AHB3_GRP1_PERIPH_DTCM1      =    RCC_AHB3LPENR_DTCM1LPEN,
+    RCC_AHB3_GRP1_PERIPH_DTCM2      =    RCC_AHB3LPENR_DTCM2LPEN,
+    RCC_AHB3_GRP1_PERIPH_ITCM       =    RCC_AHB3LPENR_ITCMLPEN,
+    #if defined(RCC_AHB3LPENR_AXISRAMLPEN)
+    RCC_AHB3_GRP1_PERIPH_AXISRAM    =    RCC_AHB3LPENR_AXISRAMLPEN,
+    #else
+    RCC_AHB3_GRP1_PERIPH_AXISRAM1   =    RCC_AHB3LPENR_AXISRAM1LPEN,
+    RCC_AHB3_GRP1_PERIPH_AXISRAM    =    LL_AHB3_GRP1_PERIPH_AXISRAM1,   /* for backward compatibility*/
+    #endif /* RCC_AHB3LPENR_AXISRAMLPEN */
+    #if defined(CD_AXISRAM2_BASE)
+    RCC_AHB3_GRP1_PERIPH_AXISRAM2   =    RCC_AHB3LPENR_AXISRAM2LPEN,
+    #endif /* CD_AXISRAM2_BASE */
+    #if defined(CD_AXISRAM3_BASE)
+    RCC_AHB3_GRP1_PERIPH_AXISRAM3   =    RCC_AHB3LPENR_AXISRAM3LPEN
+    #endif /* CD_AXISRAM3_BASE */
+};
+
+/** @defgroup BUS_LL_EC_AHB1_GRP1_PERIPH  AHB1 GRP1 PERIPH
+  * @{
+  */
+enum RCCAHB1GRP1PerClkType
+{
+    RCC_AHB1_GRP1_PERIPH_DMA1          = RCC_AHB1ENR_DMA1EN,
+    RCC_AHB1_GRP1_PERIPH_DMA2          = RCC_AHB1ENR_DMA2EN,
+    RCC_AHB1_GRP1_PERIPH_ADC12         = RCC_AHB1ENR_ADC12EN,
+    #if defined(DUAL_CORE)
+    RCC_AHB1_GRP1_PERIPH_ART           = RCC_AHB1ENR_ARTEN,
+    #endif /* DUAL_CORE */
+    #if defined(RCC_AHB1ENR_CRCEN)
+    RCC_AHB1_GRP1_PERIPH_CRC           = RCC_AHB1ENR_CRCEN,
+    #endif /* RCC_AHB1ENR_CRCEN */
+    #if defined(ETH)
+    RCC_AHB1_GRP1_PERIPH_ETH1MAC       = RCC_AHB1ENR_ETH1MACEN,
+    RCC_AHB1_GRP1_PERIPH_ETH1TX        = RCC_AHB1ENR_ETH1TXEN,
+    RCC_AHB1_GRP1_PERIPH_ETH1RX        = RCC_AHB1ENR_ETH1RXEN,
+    #endif /* ETH */
+    RCC_AHB1_GRP1_PERIPH_USB1OTGHS     = RCC_AHB1ENR_USB1OTGHSEN,
+    RCC_AHB1_GRP1_PERIPH_USB1OTGHSULPI = RCC_AHB1ENR_USB1OTGHSULPIEN,
+    #if defined(USB2_OTG_FS)
+    RCC_AHB1_GRP1_PERIPH_USB2OTGHS     = RCC_AHB1ENR_USB2OTGHSEN,
+    RCC_AHB1_GRP1_PERIPH_USB2OTGHSULPI = RCC_AHB1ENR_USB2OTGHSULPIEN
+    #endif /* USB2_OTG_FS */
+};
+
+/** @defgroup EC_AHB2_GRP1_PERIPH  AHB2 GRP1 PERIPH
+  * @{
+  */
+enum RCCAHB2GRP1PerClkType
+{
+    RCC_AHB2_GRP1_PERIPH_DCMI      =     RCC_AHB2ENR_DCMIEN,
+    #if defined(HSEM) && defined(RCC_AHB2ENR_HSEMEN)
+    RCC_AHB2_GRP1_PERIPH_HSEM      =     RCC_AHB2ENR_HSEMEN,
+    #endif /* HSEM && RCC_AHB2ENR_HSEMEN */
+    #if defined(CRYP)
+    RCC_AHB2_GRP1_PERIPH_CRYP      =     RCC_AHB2ENR_CRYPEN,
+    #endif /* CRYP */
+    #if defined(HASH)
+    RCC_AHB2_GRP1_PERIPH_HASH      =     RCC_AHB2ENR_HASHEN,
+    #endif /* HASH */
+    RCC_AHB2_GRP1_PERIPH_RNG       =     RCC_AHB2ENR_RNGEN,
+    RCC_AHB2_GRP1_PERIPH_SDMMC2    =     RCC_AHB2ENR_SDMMC2EN,
+    #if defined(FMAC)
+    RCC_AHB2_GRP1_PERIPH_FMAC      =     RCC_AHB2ENR_FMACEN,
+    #endif /* FMAC */
+    #if defined(CORDIC)
+    RCC_AHB2_GRP1_PERIPH_CORDIC    =     RCC_AHB2ENR_CORDICEN,
+    #endif /* CORDIC */
+    #if defined(BDMA1)
+    RCC_AHB2_GRP1_PERIPH_BDMA1     =     RCC_AHB2ENR_BDMA1EN,
+    #endif /* BDMA1 */
+    #if defined(RCC_AHB2ENR_D2SRAM1EN)
+    RCC_AHB2_GRP1_PERIPH_D2SRAM1   =     RCC_AHB2ENR_D2SRAM1EN,
+    #else
+    RCC_AHB2_GRP1_PERIPH_AHBSRAM1  =     RCC_AHB2ENR_AHBSRAM1EN,
+    RCC_AHB2_GRP1_PERIPH_D2SRAM1   =     LL_AHB2_GRP1_PERIPH_AHBSRAM1,    /* for backward compatibility*/
+    #endif /* RCC_AHB2ENR_D2SRAM1EN */
+    #if defined(RCC_AHB2ENR_D2SRAM2EN)
+    RCC_AHB2_GRP1_PERIPH_D2SRAM2   =     RCC_AHB2ENR_D2SRAM2EN,
+    #else
+    RCC_AHB2_GRP1_PERIPH_AHBSRAM2  =     RCC_AHB2ENR_AHBSRAM2EN,
+    RCC_AHB2_GRP1_PERIPH_D2SRAM2   =     LL_AHB2_GRP1_PERIPH_AHBSRAM2,    /* for backward compatibility*/
+    #endif /* RCC_AHB2ENR_D2SRAM2EN */
+    #if defined(RCC_AHB2ENR_D2SRAM3EN)
+    RCC_AHB2_GRP1_PERIPH_D2SRAM3   =     RCC_AHB2ENR_D2SRAM3EN
+    #endif /* RCC_AHB2ENR_D2SRAM3EN */
+};
+
+/** @defgroup BUS_LL_EC_AHB4_GRP1_PERIPH  AHB4 GRP1 PERIPH
+  * @{
+  */
+enum RCCAHB4GRP1PerClkType
+{
+    RCC_AHB4_GRP1_PERIPH_GPIOA     =     RCC_AHB4ENR_GPIOAEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOB     =     RCC_AHB4ENR_GPIOBEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOC     =     RCC_AHB4ENR_GPIOCEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOD     =     RCC_AHB4ENR_GPIODEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOE     =     RCC_AHB4ENR_GPIOEEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOF     =     RCC_AHB4ENR_GPIOFEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOG     =     RCC_AHB4ENR_GPIOGEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOH     =     RCC_AHB4ENR_GPIOHEN,
+    #if defined(GPIOI)
+    RCC_AHB4_GRP1_PERIPH_GPIOI     =     RCC_AHB4ENR_GPIOIEN,
+    #endif /* GPIOI */
+    RCC_AHB4_GRP1_PERIPH_GPIOJ     =     RCC_AHB4ENR_GPIOJEN,
+    RCC_AHB4_GRP1_PERIPH_GPIOK     =     RCC_AHB4ENR_GPIOKEN,
+    #if defined(RCC_AHB4ENR_CRCEN)
+    RCC_AHB4_GRP1_PERIPH_CRC       =     RCC_AHB4ENR_CRCEN,
+    #endif /* RCC_AHB4ENR_CRCEN */
+    #if defined(BDMA2)
+    RCC_AHB4_GRP1_PERIPH_BDMA2     =     RCC_AHB4ENR_BDMA2EN,
+    RCC_AHB4_GRP1_PERIPH_BDMA      =     LL_AHB4_GRP1_PERIPH_BDMA2, /* for backward compatibility*/
+    #else
+    RCC_AHB4_GRP1_PERIPH_BDMA      =     RCC_AHB4ENR_BDMAEN,
+    #endif /* BDMA2 */
+    #if defined(ADC3)
+    RCC_AHB4_GRP1_PERIPH_ADC3      =     RCC_AHB4ENR_ADC3EN,
+    #endif /* ADC3 */
+    #if defined(HSEM) && defined(RCC_AHB4ENR_HSEMEN)
+    RCC_AHB4_GRP1_PERIPH_HSEM      =     RCC_AHB4ENR_HSEMEN,
+    #endif /* HSEM && RCC_AHB4ENR_HSEMEN*/
+    RCC_AHB4_GRP1_PERIPH_BKPRAM    =     RCC_AHB4ENR_BKPRAMEN,
+    #if defined(RCC_AHB4LPENR_SRAM4LPEN)
+    RCC_AHB4_GRP1_PERIPH_SRAM4     =     RCC_AHB4LPENR_SRAM4LPEN,
+    RCC_AHB4_GRP1_PERIPH_D3SRAM1   =     RCC_AHB4_GRP1_PERIPH_SRAM4,
+    #else
+    RCC_AHB4_GRP1_PERIPH_SRDSRAM   =     RCC_AHB4ENR_SRDSRAMEN,
+    RCC_AHB4_GRP1_PERIPH_SRAM4     =     RCC_AHB4_GRP1_PERIPH_SRDSRAM,  /* for backward compatibility*/
+    RCC_AHB4_GRP1_PERIPH_D3SRAM1   =     RCC_AHB4_GRP1_PERIPH_SRDSRAM  /* for backward compatibility*/
+    #endif /* RCC_AHB4ENR_D3SRAM1EN */
+};
+/** @defgroup EC_APB3_GRP1_PERIPH  APB3 GRP1 PERIPH
+  * @{
+  */
+enum RCCAPB3GRP1PerClkType
+{
+    #if defined(LTDC)
+    RCC_APB3_GRP1_PERIPH_LTDC       =    RCC_APB3ENR_LTDCEN,
+    #endif /* LTDC */
+    #if defined(DSI)
+    RCC_APB3_GRP1_PERIPH_DSI        =    RCC_APB3ENR_DSIEN,
+    #endif /* DSI */
+    RCC_APB3_GRP1_PERIPH_WWDG1      =    RCC_APB3ENR_WWDG1EN,
+    #if defined(RCC_APB3ENR_WWDGEN)
+    RCC_APB3_GRP1_PERIPH_WWDG       =    LL_APB3_GRP1_PERIPH_WWDG1   /* for backward compatibility*/
+    #endif /* RCC_APB3ENR_WWDGEN */
+};
+/** @defgroup EC_APB1_GRP1_PERIPH  APB1 GRP1 PERIPH
+  * @{
+  */
+enum RCCAPB1GRP1PerClkType
+{
+    RCC_APB1_GRP1_PERIPH_TIM2      =     RCC_APB1LENR_TIM2EN,
+    RCC_APB1_GRP1_PERIPH_TIM3      =     RCC_APB1LENR_TIM3EN,
+    RCC_APB1_GRP1_PERIPH_TIM4      =     RCC_APB1LENR_TIM4EN,
+    RCC_APB1_GRP1_PERIPH_TIM5      =     RCC_APB1LENR_TIM5EN,
+    RCC_APB1_GRP1_PERIPH_TIM6      =     RCC_APB1LENR_TIM6EN,
+    RCC_APB1_GRP1_PERIPH_TIM7      =     RCC_APB1LENR_TIM7EN,
+    RCC_APB1_GRP1_PERIPH_TIM12     =     RCC_APB1LENR_TIM12EN,
+    RCC_APB1_GRP1_PERIPH_TIM13     =     RCC_APB1LENR_TIM13EN,
+    RCC_APB1_GRP1_PERIPH_TIM14     =     RCC_APB1LENR_TIM14EN,
+    RCC_APB1_GRP1_PERIPH_LPTIM1    =     RCC_APB1LENR_LPTIM1EN,
+#if defined(DUAL_CORE)
+    RCC_APB1_GRP1_PERIPH_WWDG2     =     RCC_APB1LENR_WWDG2EN,
+#endif /*DUAL_CORE*/
+    RCC_APB1_GRP1_PERIPH_SPI2      =     RCC_APB1LENR_SPI2EN,
+    RCC_APB1_GRP1_PERIPH_SPI3      =     RCC_APB1LENR_SPI3EN,
+    RCC_APB1_GRP1_PERIPH_SPDIFRX   =     RCC_APB1LENR_SPDIFRXEN,
+    RCC_APB1_GRP1_PERIPH_USART2    =     RCC_APB1LENR_USART2EN,
+    RCC_APB1_GRP1_PERIPH_USART3    =     RCC_APB1LENR_USART3EN,
+    RCC_APB1_GRP1_PERIPH_UART4     =     RCC_APB1LENR_UART4EN,
+    RCC_APB1_GRP1_PERIPH_UART5     =     RCC_APB1LENR_UART5EN,
+    RCC_APB1_GRP1_PERIPH_I2C1      =     RCC_APB1LENR_I2C1EN,
+    RCC_APB1_GRP1_PERIPH_I2C2      =     RCC_APB1LENR_I2C2EN,
+    RCC_APB1_GRP1_PERIPH_I2C3      =     RCC_APB1LENR_I2C3EN,
+#if defined(I2C5)
+    RCC_APB1_GRP1_PERIPH_I2C5      =     RCC_APB1LENR_I2C5EN,
+#endif /* I2C5 */
+#if defined(RCC_APB1LENR_CECEN)
+    RCC_APB1_GRP1_PERIPH_CEC       =     RCC_APB1LENR_CECEN,
+#else
+    RCC_APB1_GRP1_PERIPH_HDMICEC   =     RCC_APB1LENR_HDMICECEN,
+    RCC_APB1_GRP1_PERIPH_CEC       =     LL_APB1_GRP1_PERIPH_HDMICEC,   /* for backward compatibility*/
+#endif /* RCC_APB1LENR_CECEN */
+    RCC_APB1_GRP1_PERIPH_DAC12     =     RCC_APB1LENR_DAC12EN,
+    RCC_APB1_GRP1_PERIPH_UART7     =     RCC_APB1LENR_UART7EN,
+    RCC_APB1_GRP1_PERIPH_UART8     =     RCC_APB1LENR_UART8EN
+};
+
+/** @defgroup BUS_LL_EC_APB1_GRP2_PERIPH  APB1 GRP2 PERIPH
+  * @{
+  */
+enum RCCAPB1GRP2PerClkType
+{
+    RCC_APB1_GRP2_PERIPH_CRS       =     RCC_APB1HENR_CRSEN,
+    RCC_APB1_GRP2_PERIPH_SWPMI1    =     RCC_APB1HENR_SWPMIEN,
+    RCC_APB1_GRP2_PERIPH_OPAMP     =     RCC_APB1HENR_OPAMPEN,
+    RCC_APB1_GRP2_PERIPH_MDIOS     =     RCC_APB1HENR_MDIOSEN,
+    RCC_APB1_GRP2_PERIPH_FDCAN     =     RCC_APB1HENR_FDCANEN,
+    #if defined(TIM23)
+    RCC_APB1_GRP2_PERIPH_TIM23     =     RCC_APB1HENR_TIM23EN,
+    #endif /* TIM23 */
+    #if defined(TIM24)
+    RCC_APB1_GRP2_PERIPH_TIM24     =     RCC_APB1HENR_TIM24EN
+    #endif /* TIM24 */
+};
+
+/** @defgroup BUS_LL_EC_APB2_GRP1_PERIPH  APB2 GRP1 PERIPH
+  * @{
+  */
+enum RCCAPB2GRP1PerClkType
+{
+    RCC_APB2_GRP1_PERIPH_TIM1       =    RCC_APB2ENR_TIM1EN,
+    RCC_APB2_GRP1_PERIPH_TIM8       =    RCC_APB2ENR_TIM8EN,
+    RCC_APB2_GRP1_PERIPH_USART1     =    RCC_APB2ENR_USART1EN,
+    RCC_APB2_GRP1_PERIPH_USART6     =    RCC_APB2ENR_USART6EN,
+    #if defined(UART9)
+    RCC_APB2_GRP1_PERIPH_UART9      =    RCC_APB2ENR_UART9EN,
+    #endif /* UART9 */
+    #if defined(USART10)
+    RCC_APB2_GRP1_PERIPH_USART10    =    RCC_APB2ENR_USART10EN,
+    #endif /* USART10 */
+    RCC_APB2_GRP1_PERIPH_SPI1       =    RCC_APB2ENR_SPI1EN,
+    RCC_APB2_GRP1_PERIPH_SPI4       =    RCC_APB2ENR_SPI4EN,
+    RCC_APB2_GRP1_PERIPH_TIM15      =    RCC_APB2ENR_TIM15EN,
+    RCC_APB2_GRP1_PERIPH_TIM16      =    RCC_APB2ENR_TIM16EN,
+    RCC_APB2_GRP1_PERIPH_TIM17      =    RCC_APB2ENR_TIM17EN,
+    RCC_APB2_GRP1_PERIPH_SPI5       =    RCC_APB2ENR_SPI5EN,
+    RCC_APB2_GRP1_PERIPH_SAI1       =    RCC_APB2ENR_SAI1EN,
+    #if defined(SAI2)
+    RCC_APB2_GRP1_PERIPH_SAI2       =    RCC_APB2ENR_SAI2EN,
+    #endif /* SAI2 */
+    #if defined(SAI3)
+    RCC_APB2_GRP1_PERIPH_SAI3       =    RCC_APB2ENR_SAI3EN,
+    #endif /* SAI3 */
+    RCC_APB2_GRP1_PERIPH_DFSDM1     =    RCC_APB2ENR_DFSDM1EN,
+    #if defined(HRTIM1)
+    RCC_APB2_GRP1_PERIPH_HRTIM      =    RCC_APB2ENR_HRTIMEN
+    #endif /* HRTIM1 */
+};
+
+/** @defgroup BUS_LL_EC_APB4_GRP1_PERIPH  APB4 GRP1 PERIPH
+  * @{
+  */
+enum RCCAPB4GRP1PerClkType
+{
+    RCC_APB4_GRP1_PERIPH_SYSCFG     =    RCC_APB4ENR_SYSCFGEN,
+    RCC_APB4_GRP1_PERIPH_LPUART1    =    RCC_APB4ENR_LPUART1EN,
+    RCC_APB4_GRP1_PERIPH_SPI6       =    RCC_APB4ENR_SPI6EN,
+    RCC_APB4_GRP1_PERIPH_I2C4       =    RCC_APB4ENR_I2C4EN,
+    RCC_APB4_GRP1_PERIPH_LPTIM2     =    RCC_APB4ENR_LPTIM2EN,
+    RCC_APB4_GRP1_PERIPH_LPTIM3     =    RCC_APB4ENR_LPTIM3EN,
+    #if defined(LPTIM4)
+    RCC_APB4_GRP1_PERIPH_LPTIM4     =    RCC_APB4ENR_LPTIM4EN,
+    #endif /* LPTIM4 */
+    #if defined(LPTIM5)
+    RCC_APB4_GRP1_PERIPH_LPTIM5     =    RCC_APB4ENR_LPTIM5EN,
+    #endif /* LPTIM5 */
+    #if defined(DAC2)
+    RCC_APB4_GRP1_PERIPH_DAC2       =    RCC_APB4ENR_DAC2EN,
+    #endif /* DAC2 */
+    RCC_APB4_GRP1_PERIPH_COMP12     =    RCC_APB4ENR_COMP12EN,
+    RCC_APB4_GRP1_PERIPH_VREF       =    RCC_APB4ENR_VREFEN,
+    RCC_APB4_GRP1_PERIPH_RTCAPB     =    RCC_APB4ENR_RTCAPBEN,
+    #if defined(SAI4)
+    RCC_APB4_GRP1_PERIPH_SAI4       =    RCC_APB4ENR_SAI4EN,
+    #endif /* SAI4 */
+    #if defined(DTS)
+    RCC_APB4_GRP1_PERIPH_DTS        =    RCC_APB4ENR_DTSEN,
+    #endif /*DTS*/
+    #if defined(DFSDM2_BASE)
+    RCC_APB4_GRP1_PERIPH_DFSDM2     =    RCC_APB4ENR_DFSDM2EN
+    #endif /* DFSDM2_BASE */
+};
+/** @defgroup BUS_LL_EC_CLKAM_PERIPH  CLKAM PERIPH
+  * @{
+  */
+enum RCCAMPerClkType
+{
+    #if defined(RCC_D3AMR_BDMAAMEN)
+    RCC_CLKAM_PERIPH_BDMA     =     RCC_D3AMR_BDMAAMEN,
+    #else
+    RCC_CLKAM_PERIPH_BDMA2    =     RCC_SRDAMR_BDMA2AMEN,
+    RCC_CLKAM_PERIPH_BDMA     =     RCC_CLKAM_PERIPH_BDMA2, /* for backward compatibility*/
+    #endif /* RCC_D3AMR_BDMAAMEN */
+    #if defined(RCC_SRDAMR_GPIOAMEN)
+    RCC_CLKAM_PERIPH_GPIO     =     RCC_SRDAMR_GPIOAMEN,
+    #endif /* RCC_SRDAMR_GPIOAMEN */
+    #if defined(RCC_D3AMR_LPUART1AMEN)
+    RCC_CLKAM_PERIPH_LPUART1  =     RCC_D3AMR_LPUART1AMEN,
+    #else
+    RCC_CLKAM_PERIPH_LPUART1  =     RCC_SRDAMR_LPUART1AMEN,
+    #endif /* RCC_D3AMR_LPUART1AMEN */
+    #if defined(RCC_D3AMR_SPI6AMEN)
+    RCC_CLKAM_PERIPH_SPI6     =     RCC_D3AMR_SPI6AMEN,
+    #else
+    RCC_CLKAM_PERIPH_SPI6     =     RCC_SRDAMR_SPI6AMEN,
+    #endif /* RCC_D3AMR_SPI6AMEN */
+    #if defined(RCC_D3AMR_I2C4AMEN)
+    RCC_CLKAM_PERIPH_I2C4     =     RCC_D3AMR_I2C4AMEN,
+    #else
+    RCC_CLKAM_PERIPH_I2C4     =     RCC_SRDAMR_I2C4AMEN,
+    #endif /* RCC_D3AMR_I2C4AMEN */
+    #if defined(RCC_D3AMR_LPTIM2AMEN)
+    RCC_CLKAM_PERIPH_LPTIM2   =     RCC_D3AMR_LPTIM2AMEN,
+    #else
+    RCC_CLKAM_PERIPH_LPTIM2   =     RCC_SRDAMR_LPTIM2AMEN,
+    #endif /* RCC_D3AMR_LPTIM2AMEN */
+    #if defined(RCC_D3AMR_LPTIM3AMEN)
+    RCC_CLKAM_PERIPH_LPTIM3   =     RCC_D3AMR_LPTIM3AMEN,
+    #else
+    RCC_CLKAM_PERIPH_LPTIM3   =     RCC_SRDAMR_LPTIM3AMEN,
+    #endif /* RCC_D3AMR_LPTIM3AMEN */
+    #if defined(RCC_D3AMR_LPTIM4AMEN)
+    RCC_CLKAM_PERIPH_LPTIM4   =     RCC_D3AMR_LPTIM4AMEN,
+    #endif /* RCC_D3AMR_LPTIM4AMEN */
+    #if defined(RCC_D3AMR_LPTIM5AMEN)
+    RCC_CLKAM_PERIPH_LPTIM5   =     RCC_D3AMR_LPTIM5AMEN,
+    #endif /* RCC_D3AMR_LPTIM5AMEN */
+    #if defined(DAC2)
+    RCC_CLKAM_PERIPH_DAC2     =     RCC_SRDAMR_DAC2AMEN,
+    #endif /* DAC2 */
+    #if defined(RCC_D3AMR_COMP12AMEN)
+    RCC_CLKAM_PERIPH_COMP12   =     RCC_D3AMR_COMP12AMEN,
+    #else
+    RCC_CLKAM_PERIPH_COMP12   =     RCC_SRDAMR_COMP12AMEN,
+    #endif /* RCC_D3AMR_COMP12AMEN */
+    #if defined(RCC_D3AMR_VREFAMEN)
+    RCC_CLKAM_PERIPH_VREF     =     RCC_D3AMR_VREFAMEN,
+    #else
+    RCC_CLKAM_PERIPH_VREF     =     RCC_SRDAMR_VREFAMEN,
+    #endif /* RCC_D3AMR_VREFAMEN */
+    #if defined(RCC_D3AMR_RTCAMEN)
+    RCC_CLKAM_PERIPH_RTC      =     RCC_D3AMR_RTCAMEN,
+    #else
+    RCC_CLKAM_PERIPH_RTC      =     RCC_SRDAMR_RTCAMEN,
+    #endif /* RCC_D3AMR_RTCAMEN */
+    #if defined(RCC_D3AMR_CRCAMEN)
+    RCC_CLKAM_PERIPH_CRC      =     RCC_D3AMR_CRCAMEN,
+    #endif /* RCC_D3AMR_CRCAMEN */
+    #if defined(SAI4)
+    RCC_CLKAM_PERIPH_SAI4     =      RCC_D3AMR_SAI4AMEN,
+    #endif /* SAI4 */
+    #if defined(ADC3)
+    RCC_CLKAM_PERIPH_ADC3     =     RCC_D3AMR_ADC3AMEN,
+    #endif /* ADC3 */
+    #if defined(RCC_SRDAMR_DTSAMEN)
+    RCC_CLKAM_PERIPH_DTS      =     RCC_SRDAMR_DTSAMEN,
+    #endif /* RCC_SRDAMR_DTSAMEN */
+    #if defined(RCC_D3AMR_DTSAMEN)
+    RCC_CLKAM_PERIPH_DTS      =     RCC_D3AMR_DTSAMEN,
+    #endif /* RCC_D3AMR_DTSAMEN */
+    #if defined(DFSDM2_BASE)
+    RCC_CLKAM_PERIPH_DFSDM2   =     RCC_SRDAMR_DFSDM2AMEN,
+    #endif /* DFSDM2_BASE */
+    #if defined(RCC_D3AMR_BKPRAMAMEN)
+    RCC_CLKAM_PERIPH_BKPRAM   =     RCC_D3AMR_BKPRAMAMEN,
+    #else
+    RCC_CLKAM_PERIPH_BKPRAM   =     RCC_SRDAMR_BKPRAMAMEN,
+    #endif /* RCC_D3AMR_BKPRAMAMEN */
+    #if defined(RCC_D3AMR_SRAM4AMEN)
+    RCC_CLKAM_PERIPH_SRAM4    =     RCC_D3AMR_SRAM4AMEN,
+    #else
+    RCC_CLKAM_PERIPH_SRDSRAM  =     RCC_SRDAMR_SRDSRAMAMEN,
+    RCC_CLKAM_PERIPH_SRAM4    =     RCC_CLKAM_PERIPH_SRDSRAM
+    #endif /* RCC_D3AMR_SRAM4AMEN */
+};
+
+/** @defgroup EC_CKGA_PERIPH  CKGA (AXI Clocks Gating) PERIPH
+  * @{
+  */
+enum RCCCKGAPerType
+{
+    #if defined(RCC_CKGAENR_AXICKG)
+    RCC_CKGA_PERIPH_AXI        =    RCC_CKGAENR_AXICKG,
+    RCC_CKGA_PERIPH_AHB        =    RCC_CKGAENR_AHBCKG,
+    RCC_CKGA_PERIPH_CPU        =    RCC_CKGAENR_CPUCKG,
+    RCC_CKGA_PERIPH_SDMMC      =    RCC_CKGAENR_SDMMCCKG,
+    RCC_CKGA_PERIPH_MDMA       =    RCC_CKGAENR_MDMACKG,
+    RCC_CKGA_PERIPH_DMA2D      =    RCC_CKGAENR_DMA2DCKG,
+    RCC_CKGA_PERIPH_LTDC       =    RCC_CKGAENR_LTDCCKG,
+    RCC_CKGA_PERIPH_GFXMMUM    =    RCC_CKGAENR_GFXMMUMCKG,
+    RCC_CKGA_PERIPH_AHB12      =    RCC_CKGAENR_AHB12CKG,
+    RCC_CKGA_PERIPH_AHB34      =    RCC_CKGAENR_AHB34CKG,
+    RCC_CKGA_PERIPH_FLIFT      =    RCC_CKGAENR_FLIFTCKG,
+    RCC_CKGA_PERIPH_OCTOSPI2   =    RCC_CKGAENR_OCTOSPI2CKG,
+    RCC_CKGA_PERIPH_FMC        =    RCC_CKGAENR_FMCCKG,
+    RCC_CKGA_PERIPH_OCTOSPI1   =    RCC_CKGAENR_OCTOSPI1CKG,
+    RCC_CKGA_PERIPH_AXIRAM1    =    RCC_CKGAENR_AXIRAM1CKG,
+    RCC_CKGA_PERIPH_AXIRAM2    =    RCC_CKGAENR_AXIRAM2CKG,
+    RCC_CKGA_PERIPH_AXIRAM3    =    RCC_CKGAENR_AXIRAM3CKG,
+    RCC_CKGA_PERIPH_GFXMMUS    =    RCC_CKGAENR_GFXMMUSCKG,
+    RCC_CKGA_PERIPH_ECCRAM     =    RCC_CKGAENR_ECCRAMCKG,
+    RCC_CKGA_PERIPH_EXTI       =    RCC_CKGAENR_EXTICKG,
+    RCC_CKGA_PERIPH_JTAG       =    RCC_CKGAENR_JTAGCKG
+    #endif
+};
+
 class RCCControl
 {
 public:
@@ -1212,358 +1641,1002 @@ public:
     {
          SET_BIT(RCC->GCR, RCC_GCR_WW1RSC);
     }
-
-    void enableMDMAPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB3ENR, RCC_AHB3ENR_MDMAEN) : CLEAR_BIT(RCC->AHB3ENR, RCC_AHB3ENR_MDMAEN);
-    }
-    void enableDMA2DPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB3ENR, RCC_AHB3ENR_DMA2DEN) : CLEAR_BIT(RCC->AHB3ENR, RCC_AHB3ENR_DMA2DEN);
-    }
-    void enableJPGDECPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB3ENR, RCC_AHB3ENR_JPGDECEN) : CLEAR_BIT(RCC->AHB3ENR, RCC_AHB3ENR_JPGDECEN);
-    }
-    void enableFMCPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN) : CLEAR_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN);
-    }
-    void enableQSPIPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB3ENR, RCC_AHB3ENR_QSPIEN) : CLEAR_BIT(RCC->AHB3ENR, RCC_AHB3ENR_QSPIEN);
-    }
-    void enableSDMMC1PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB3ENR, RCC_AHB3ENR_SDMMC1EN) : CLEAR_BIT(RCC->AHB3ENR, RCC_AHB3ENR_SDMMC1EN);
-    }
-    void enableDMA1Clk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA1EN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA1EN);
-    }
-    void enableDMA2Clk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN);
-    }
-    void enableADC12PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ADC12EN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ADC12EN);
-    }
-    void enableETH1MACClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETH1MACEN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETH1MACEN);
-    }
-    void enableETH1TXClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETH1TXEN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETH1TXEN);
-    }
-    void enableETH1RXClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETH1RXEN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETH1RXEN);
-    }
-    void enableUSB1OTGPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB1OTGHSEN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB1OTGHSEN);
-    }
-    void enableUSB1ULPIClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB1OTGHSULPIEN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB1OTGHSULPIEN);
-    }
-    void enableUSB2OTGPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB2OTGHSEN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB2OTGHSEN);
-    }
-    void enableUSB2ULPIClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB2OTGHSULPIEN) : CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_USB2OTGHSULPIEN);
-    }
-    void enableDCMIPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_DCMIEN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_DCMIEN);
-    }
-    void enableCRYPTPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_CRYPEN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_CRYPEN);
-    }
-    void enableHASHPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_HASHEN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_HASHEN);
-    }
-    void enableRNGPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_RNGEN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_RNGEN);
-    }
-    void enableSDMMC2PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SDMMC2EN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SDMMC2EN);
-    }
-    void enableSRAM1Clk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM1EN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM1EN);
-    }
-    void enableSRAM2Clk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM2EN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM2EN);
-    }
-    void enableSRAM3Clk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM3EN) : CLEAR_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM3EN);
-    }
     void enableGPIOPerClk(GPIO_TypeDef *gpio, bool bEnabale)
     {
         uint32_t offset = (((uint32_t)gpio -  (uint32_t)GPIOA_BASE) / 0x400);
         bEnabale ? SET_BIT(RCC->AHB4ENR, 1UL << offset) : CLEAR_BIT(RCC->AHB4ENR, 1UL << offset);
     }
-    void enableCRCPerClk(bool bEnabale)
+    void AHB3GRP1EnableClock(RCCAHB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->AHB4ENR, RCC_AHB4ENR_CRCEN) : CLEAR_BIT(RCC->AHB4ENR, RCC_AHB4ENR_CRCEN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB3ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB3ENR, periphs);
+        (void)tmpreg;
     }
-    void enableBDMAClk(bool bEnabale)
+    bool AHB3GRP1IsEnabledClock(RCCAHB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->AHB4ENR, RCC_AHB4ENR_BDMAEN) : CLEAR_BIT(RCC->AHB4ENR, RCC_AHB4ENR_BDMAEN);
+        return ((READ_BIT(RCC->AHB3ENR, periphs) == periphs) ? true : false);
     }
-    void enableADC3PerClk(bool bEnabale)
+    void AHB3GRP1DisableClock(RCCAHB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->AHB4ENR, RCC_AHB4ENR_ADC3EN) : CLEAR_BIT(RCC->AHB4ENR, RCC_AHB4ENR_ADC3EN);
+        CLEAR_BIT(RCC->AHB3ENR, periphs);
     }
-    void enableHSEMPerClk(bool bEnabale)
+    void AHB3GRP1ForceReset(RCCAHB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->AHB4ENR, RCC_AHB4ENR_HSEMEN) : CLEAR_BIT(RCC->AHB4ENR, RCC_AHB4ENR_HSEMEN);
+        SET_BIT(RCC->AHB3RSTR, periphs);
     }
-    void enableBKPRAMPerClk(bool bEnabale)
+    void AHB3GRP1ReleaseReset(RCCAHB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->AHB4ENR, RCC_AHB4ENR_BKPRAMEN) : CLEAR_BIT(RCC->AHB4ENR, RCC_AHB4ENR_BKPRAMEN);
+        CLEAR_BIT(RCC->AHB3RSTR, periphs);
     }
-    void enableLTDCPerClk(bool bEnabale)
+    void AHB3GRP1EnableClockSleep(RCCAHB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB3ENR, RCC_APB3ENR_LTDCEN) : CLEAR_BIT(RCC->APB3ENR, RCC_APB3ENR_LTDCEN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB3LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB3LPENR, periphs);
+        (void)tmpreg;
     }
-    void enableWWDG1Clk(bool bEnabale)
+    void AHB3GRP1DisableClockSleep(RCCAHB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB3ENR, RCC_APB3ENR_WWDG1EN) : CLEAR_BIT(RCC->APB3ENR, RCC_APB3ENR_WWDG1EN);
-    }
-    void enableTIM2PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM2EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM2EN);
-    }
-    void enableTIM3PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM3EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM3EN);
-    }
-    void enableTIM4PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM4EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM4EN);
-    }
-    void enableTIM5PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM5EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM5EN);
-    }
-    void enableTIM6PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM6EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM6EN);
-    }
-    void enableTIM7PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM7EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM7EN);
-    }
-    void enableTIM12PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM12EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM12EN);
-    }
-    void enableTIM13PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM13EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM13EN);
-    }
-    void enableTIM14PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM14EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_TIM14EN);
-    }
-    void enableLPTIM1PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_LPTIM1EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_LPTIM1EN);
-    }
-    void enableSPI2PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_SPI2EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_SPI2EN);
-    }
-    void enableSPI3PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_SPI3EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_SPI3EN);
-    }
-    void enableSPDIFRXPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_SPDIFRXEN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_SPDIFRXEN);
-    }
-    void enableUSART2PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_USART2EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_USART2EN);
-    }
-    void enableUSART3PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_USART3EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_USART3EN);
-    }
-    void enableUART4PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_UART4EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_UART4EN);
-    }
-    void enableUART5PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_UART5EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_UART5EN);
-    }
-    void enableI2C1PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_I2C1EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_I2C1EN);
-    }
-    void enableI2C2PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_I2C2EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_I2C2EN);
-    }
-    void enableI2C3PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_I2C3EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_I2C3EN);
-    }
-    void enableDAC12PerClk(bool bEnabale/*dac1, 2*/)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_DAC12EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_DAC12EN);
-    }
-    void enableUART7PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_UART7EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_UART7EN);
-    }
-    void enableUART8PerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1LENR, RCC_APB1LENR_UART8EN) : CLEAR_BIT(RCC->APB1LENR, RCC_APB1LENR_UART8EN);
-    }
-    void enableCRSPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1HENR, RCC_APB1HENR_CRSEN) : CLEAR_BIT(RCC->APB1HENR, RCC_APB1HENR_CRSEN);
-    }
-    void enableSWPMIPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1HENR, RCC_APB1HENR_SWPMIEN) : CLEAR_BIT(RCC->APB1HENR, RCC_APB1HENR_SWPMIEN);
-    }
-    void enableOPAMPPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1HENR, RCC_APB1HENR_OPAMPEN) : CLEAR_BIT(RCC->APB1HENR, RCC_APB1HENR_OPAMPEN);
-    }
-    void enableMDIOSPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1HENR, RCC_APB1HENR_MDIOSEN) : CLEAR_BIT(RCC->APB1HENR, RCC_APB1HENR_MDIOSEN);
-    }
-    void enableFDCANPerClk(bool bEnabale)
-    {
-        bEnabale ? SET_BIT(RCC->APB1HENR, RCC_APB1HENR_FDCANEN) : CLEAR_BIT(RCC->APB1HENR, RCC_APB1HENR_FDCANEN);
+        CLEAR_BIT(RCC->AHB3LPENR, periphs);
     }
 
-    void enableTIM1PerClk(bool bEnabale)
+    /** @defgroup EF_AHB1 AHB1
+     * @{
+     */
+    void AHB1GRP1EnableClock(RCCAHB1GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM1EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM1EN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB1ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB1ENR, periphs);
+        (void)tmpreg;
     }
-    void enableTIM8PerClk(bool bEnabale)
+    bool AHB1GRP1IsEnabledClock(RCCAHB1GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM8EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM8EN);
+        return ((READ_BIT(RCC->AHB1ENR, periphs) == periphs) ? true : false);
     }
-    void enableUSART1PerClk(bool bEnabale)
+    void AHB1GRP1DisableClock(RCCAHB1GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN);
+        CLEAR_BIT(RCC->AHB1ENR, periphs);
     }
-    void enableUSART6PerClk(bool bEnabale)
+    void AHB1GRP1ForceReset(RCCAHB1GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_USART6EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_USART6EN);
+        SET_BIT(RCC->AHB1RSTR, periphs);
     }
-    void enableSPI1PerClk(bool bEnabale)
+    void AHB1GRP1ReleaseReset(RCCAHB1GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI1EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI1EN);
+        CLEAR_BIT(RCC->AHB1RSTR, periphs);
     }
-    void enableSPI4PerClk(bool bEnabale)
+    void AHB1GRP1EnableClockSleep(RCCAHB1GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI4EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI4EN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB1LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB1LPENR, periphs);
+        (void)tmpreg;
     }
-    void enableTIM15PerClk(bool bEnabale)
+    void AHB1GRP1DisableClockSleep(RCCAHB1GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM15EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM15EN);
+        CLEAR_BIT(RCC->AHB1LPENR, periphs);
     }
-    void enableTIM16PerClk(bool bEnabale)
+    /** @defgroup BUS_LL_EF_AHB2 AHB2
+     * @{
+     */
+    void AHB2GRP1EnableClock(RCCAHB2GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM16EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM16EN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB2ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB2ENR, periphs);
+        (void)tmpreg;
     }
-    void enableTIM17PerClk(bool bEnabale)
+    bool AHB2GRP1IsEnabledClock(RCCAHB2GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM17EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_TIM17EN);
+        return ((READ_BIT(RCC->AHB2ENR, periphs) == periphs) ? true : false);
     }
-    void enableSPI5PerClk(bool bEnabale)
+    void AHB2GRP1DisableClock(RCCAHB2GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI5EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI5EN);
+        CLEAR_BIT(RCC->AHB2ENR, periphs);
     }
-    void enableSAI1PerClk(bool bEnabale)
+    void AHB2GRP1ForceReset(RCCAHB2GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN);
+        SET_BIT(RCC->AHB2RSTR, periphs);
     }
-    void enableSAI2PerClk(bool bEnabale)
+    void AHB2GRP1ReleaseReset(RCCAHB2GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN);
+        CLEAR_BIT(RCC->AHB2RSTR, periphs);
     }
-    void enableSAI3PerClk(bool bEnabale)
+    void AHB2GRP1EnableClockSleep(RCCAHB2GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI3EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI3EN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB2LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB2LPENR, periphs);
+        (void)tmpreg;
     }
-    void enableDFSDM1PerClk(bool bEnabale)
+    void AHB2GRP1DisableClockSleep(RCCAHB2GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_DFSDM1EN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_DFSDM1EN);
+        CLEAR_BIT(RCC->AHB2LPENR, periphs);
     }
-    void enableHRTIMPerClk(bool bEnabale)
+    /** @defgroup BUS_LL_EF_AHB4 AHB4
+     * @{
+     */
+    void AHB4GRP1EnableClock(RCCAHB4GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB2ENR, RCC_APB2ENR_HRTIMEN) : CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_HRTIMEN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB4ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB4ENR, periphs);
+        (void)tmpreg;
     }
-    void enableSYSCFGPerClk(bool bEnabale)
+    bool AHB4GRP1IsEnabledClock(RCCAHB4GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
+        return ((READ_BIT(RCC->AHB4ENR, periphs) == periphs) ? true : false);
     }
-    void enableLPUART1PerClk(bool bEnabale)
+    void AHB4GRP1DisableClock(RCCAHB4GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_LPUART1EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_LPUART1EN);
+        CLEAR_BIT(RCC->AHB4ENR, periphs);
     }
-    void enableSPI6PerClk(bool bEnabale)
+    void AHB4GRP1ForceReset(RCCAHB4GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SPI6EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_SPI6EN);
+        SET_BIT(RCC->AHB4RSTR, periphs);
     }
-    void enableI2C4PerClk(bool bEnabale)
+    void AHB4GRP1ReleaseReset(RCCAHB4GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_I2C4EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_I2C4EN);
+        CLEAR_BIT(RCC->AHB4RSTR, periphs);
     }
-    void enableLPTIM2PerClk(bool bEnabale)
+    void AHB4GRP1EnableClockSleep(RCCAHB4GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM2EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM2EN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->AHB4LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->AHB4LPENR, periphs);
+        (void)tmpreg;
     }
-    void enableLPTIM3PerClk(bool bEnabale)
+    void AHB4GRP1DisableClockSleep(RCCAHB4GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM3EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM3EN);
+        CLEAR_BIT(RCC->AHB4LPENR, periphs);
     }
-    void enableLPTIM4PerClk(bool bEnabale)
+    /** @defgroup BUS_LL_EF_APB3 APB3
+     * @{
+     */
+    void APB3GRP1EnableClock(RCCAPB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM4EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM4EN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB3ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB3ENR, periphs);
+        (void)tmpreg;
     }
-    void enableLPTIM5PerClk(bool bEnabale)
+    bool APB3GRP1IsEnabledClock(RCCAPB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM5EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_LPTIM5EN);
+        return ((READ_BIT(RCC->APB3ENR, periphs) == periphs) ? true : false);
     }
-    void enableCOMP12PerClk(bool bEnabale)
+    void APB3GRP1DisableClock(RCCAPB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_COMP12EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_COMP12EN);
+        CLEAR_BIT(RCC->APB3ENR, periphs);
     }
-    void enableVREFPerClk(bool bEnabale)
+    void APB3GRP1ForceReset(RCCAPB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_VREFEN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_VREFEN);
+        SET_BIT(RCC->APB3RSTR, periphs);
     }
-    void enableRTCAPBPerClk(bool bEnabale)
+    void APB3GRP1ReleaseReset(RCCAPB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_RTCAPBEN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_RTCAPBEN);
+        CLEAR_BIT(RCC->APB3RSTR, periphs);
     }
-    void enableSAI4PerClk(bool bEnabale)
+    void APB3GRP1EnableClockSleep(RCCAPB3GRP1PerClkType periphs)
     {
-        bEnabale ? SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SAI4EN) : CLEAR_BIT(RCC->APB4ENR, RCC_APB4ENR_SAI4EN);
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB3LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB3LPENR, periphs);
+        (void)tmpreg;
+    }
+    void APB3GRP1DisableClockSleep(RCCAPB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB3LPENR, periphs);
+    }
+    /** @defgroup EF_APB1 APB1
+     * @{
+     */
+    void APB1GRP1EnableClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB1LENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB1LENR, periphs);
+        (void)tmpreg;
+    }
+    bool APB1GRP1IsEnabledClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC->APB1LENR, periphs) == periphs) ? true : false);
+    }
+    void APB1GRP1DisableClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB1LENR, periphs);
+    }
+    void APB1GRP1ForceReset(RCCAPB1GRP1PerClkType periphs)
+    {
+        SET_BIT(RCC->APB1LRSTR, periphs);
+    }
+    void APB1GRP1ReleaseReset(RCCAPB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB1LRSTR, periphs);
+    }
+    void APB1GRP1EnableClockSleep(RCCAPB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB1LLPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB1LLPENR, periphs);
+        (void)tmpreg;
+    }
+    void APB1GRP1DisableClockSleep(RCCAPB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB1LLPENR, periphs);
+    }
+    void APB1GRP2EnableClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB1HENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB1HENR, periphs);
+        (void)tmpreg;
+    }
+    bool APB1GRP2IsEnabledClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        return ((READ_BIT(RCC->APB1HENR, periphs) == periphs) ? true : false);
+    }
+    void APB1GRP2DisableClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB1HENR, periphs);
+    }
+    void APB1GRP2ForceReset(RCCAPB1GRP2PerClkType periphs)
+    {
+        SET_BIT(RCC->APB1HRSTR, periphs);
+    }
+    void APB1GRP2ReleaseReset(RCCAPB1GRP2PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB1HRSTR, periphs);
+    }
+    void APB1GRP2EnableClockSleep(RCCAPB1GRP2PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB1HLPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB1HLPENR, periphs);
+        (void)tmpreg;
+    }
+    void APB1GRP2DisableClockSleep(RCCAPB1GRP2PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB1HLPENR, periphs);
+    }
+    /** @defgroup EF_APB2 APB2
+     * @{
+     */
+    void APB2GRP1EnableClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB2ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB2ENR, periphs);
+        (void)tmpreg;
+    }
+    bool APB2GRP1IsEnabledClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC->APB2ENR, periphs) == periphs) ? true : false);
+    }
+    void APB2GRP1DisableClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB2ENR, periphs);
+    }
+    void APB2GRP1ForceReset(RCCAPB2GRP1PerClkType periphs)
+    {
+        SET_BIT(RCC->APB2RSTR, periphs);
+    }
+    void APB2GRP1ReleaseReset(RCCAPB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB2RSTR, periphs);
+    }
+    void APB2GRP1EnableClockSleep(RCCAPB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB2LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB2LPENR, periphs);
+        (void)tmpreg;
+    }
+    void APB2GRP1DisableClockSleep(RCCAPB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB2LPENR, periphs);
     }
 
+    /** @defgroup EF_APB4 APB4
+     * @{
+     */
+    void APB4GRP1EnableClock(RCCAPB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB4ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB4ENR, periphs);
+        (void)tmpreg;
+    }
+    bool APB4GRP1IsEnabledClock(RCCAPB4GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC->APB4ENR, periphs) == periphs) ? true : false);
+    }
+    void APB4GRP1DisableClock(RCCAPB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB4ENR, periphs);
+    }
+    void APB4GRP1ForceReset(RCCAPB4GRP1PerClkType periphs)
+    {
+        SET_BIT(RCC->APB4RSTR, periphs);
+    }
+    void APB4GRP1ReleaseReset(RCCAPB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB4RSTR, periphs);
+    }
+    void APB4GRP1EnableClockSleep(RCCAPB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->APB4LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->APB4LPENR, periphs);
+        (void)tmpreg;
+    }
+    void APB4GRP1DisableClockSleep(RCCAPB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC->APB4LPENR, periphs);
+    }
+    /** @defgroup BUS_LL_EF_CLKAM CLKAM
+     * @{
+     */
+    void CLKAMEnable(RCCAMPerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+
+        #if defined(RCC_D3AMR_BDMAAMEN)
+        SET_BIT(RCC->D3AMR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->D3AMR, periphs);
+        #else
+        SET_BIT(RCC->SRDAMR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->SRDAMR, periphs);
+        #endif /* RCC_D3AMR_BDMAAMEN */
+        (void)tmpreg;
+    }
+    void CLKAMDisable(RCCAMPerClkType periphs)
+    {
+        #if defined(RCC_D3AMR_BDMAAMEN)
+        CLEAR_BIT(RCC->D3AMR, periphs);
+        #else
+        CLEAR_BIT(RCC->SRDAMR, periphs);
+        #endif /* RCC_D3AMR_BDMAAMEN */
+    }
+
+    /** @defgroup EF_CKGA CKGA
+     * @{
+     */
+
+    #if defined(RCC_CKGAENR_AXICKG)
+    void CKGAEnable(RCCCKGAPerType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC->CKGAENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC->CKGAENR, periphs);
+        (void)tmpreg;
+    }
+    #endif /* RCC_CKGAENR_AXICKG */
+
+    #if defined(RCC_CKGAENR_AXICKG)
+    void CKGADisable(RCCCKGAPerType periphs)
+    {
+        CLEAR_BIT(RCC->CKGAENR, periphs);
+    }
+    #endif /* RCC_CKGAENR_AXICKG */
+
+    #if defined(DUAL_CORE)
+    /** @addtogroup EF_AHB3 AHB3
+     * @{
+     */
+    void C1AHB3GRP1EnableClock(RCCAHB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB3ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB3ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1AHB3GRP1IsEnabledClock(RCCAHB3GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->AHB3ENR, periphs) == periphs) ? true : false);
+    }
+    void C1AHB3GRP1DisableClock(RCCAHB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB3ENR, periphs);
+    }
+    void C1AHB3GRP1EnableClockSleep(RCCAHB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB3LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB3LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1AHB3GRP1DisableClockSleep(RCCAHB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB3LPENR, periphs);
+    }
+    /** @addtogroup EF_AHB1 AHB1
+     * @{
+     */
+    void C1AHB1GRP1EnableClock(RCCAHB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB1ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB1ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1AHB1GRP1IsEnabledClock(RCCAHB1GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->AHB1ENR, periphs) == periphs) ? true : false);
+    }
+    void C1AHB1GRP1DisableClock(RCCAHB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB1ENR, periphs);
+    }
+    void LLC1AHB1GRP1EnableClockSleep(RCCAHB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB1LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB1LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1AHB1GRP1DisableClockSleep(RCCAHB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB1LPENR, periphs);
+    }
+
+    /** @addtogroup EF_AHB2 AHB2
+     * @{
+     */
+    void C1AHB2GRP1EnableClock(RCCAHB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB2ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB2ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1AHB2GRP1IsEnabledClock(RCCAHB2GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->AHB2ENR, periphs) == periphs) ? true : false);
+    }
+    void C1AHB2GRP1DisableClock(RCCAHB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB2ENR, periphs);
+    }
+    void C1AHB2GRP1EnableClockSleep(RCCAHB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB2LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB2LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1AHB2GRP1DisableClockSleep(RCCAHB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB2LPENR, periphs);
+    }
+    /** @addtogroup EF_AHB4 AHB4
+     * @{
+     */
+    void C1AHB4GRP1EnableClock(RCCAHB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB4ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB4ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1AHB4GRP1IsEnabledClock(RCCAHB4GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->AHB4ENR, periphs) == periphs) ? true : false);
+    }
+    void C1AHB4GRP1DisableClock(RCCAHB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB4ENR, periphs);
+    }
+    void C1AHB4GRP1EnableClockSleep(RCCAHB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->AHB4LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->AHB4LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1AHB4GRP1DisableClockSleep(RCCAHB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->AHB4LPENR, periphs);
+    }
+
+    /** @addtogroup BUS_LL_EF_APB3 APB3
+     * @{
+     */
+    void C1APB3GRP1EnableClock(RCCAPB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB3ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB3ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1APB3GRP1IsEnabledClock(RCCAPB3GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->APB3ENR, periphs) == periphs) ? true : false);
+    }
+    void C1APB3GRP1DisableClock(RCCAPB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB3ENR, periphs);
+    }
+    void C1APB3GRP1EnableClockSleep(RCCAPB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB3LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB3LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1APB3GRP1DisableClockSleep(RCCAPB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB3LPENR, periphs);
+    }
+    /** @addtogroup EF_APB1 APB1
+     * @{
+     */
+    void C1APB1GRP1EnableClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB1LENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB1LENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1APB1GRP1IsEnabledClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->APB1LENR, periphs) == periphs) ? true : false);
+    }
+    void C1APB1GRP1DisableClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB1LENR, periphs);
+    }
+    void C1APB1GRP1EnableClockSleep(RCCAPB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB1LLPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB1LLPENR, periphs);
+        (void)tmpreg;
+    }
+    void LL_C1_APB1_GRP1_DisableClockSleep(RCCAPB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB1LLPENR, periphs);
+    }
+    void C1APB1GRP2EnableClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB1HENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB1HENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1APB1GRP2IsEnabledClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->APB1HENR, periphs) == periphs) ? true : false);
+    }
+    void C1APB1GRP2DisableClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB1HENR, periphs);
+    }
+    void C1APB1GRP2EnableClockSleep(RCCAPB1GRP2PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB1HLPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB1HLPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1APB1GRP2DisableClockSleep(RCCAPB1GRP2PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB1HLPENR, periphs);
+    }
+    /** @addtogroup EF_APB2 APB2
+     * @{
+     */
+    void C1APB2GRP1EnableClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB2ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB2ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1APB2GRP1IsEnabledClock(uint32_t periphs)
+    {
+        return ((READ_BIT(RCC_C1->APB2ENR, periphs) == periphs) ? true : false);
+    }
+    void C1APB2GRP1DisableClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB2ENR, periphs);
+    }
+    void C1APB2GRP1EnableClockSleep(uint32_t periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB2LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB2LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1APB2GRP1DisableClockSleep(RCCAPB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB2LPENR, periphs);
+    }
+    /** @addtogroup EF_APB4 APB4
+     * @{
+     */
+    void C1APB4GRP1EnableClock(RCCAPB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB4ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB4ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C1APB4GRP1IsEnabledClock(RCCAPB4GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C1->APB4ENR, periphs) == periphs) ? true : false);
+    }
+    void C1APB4GRP1DisableClock(RCCAPB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB4ENR, periphs);
+    }
+    void LL_C1_APB4_GRP1_EnableClockSleep(RCCAPB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C1->APB4LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C1->APB4LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C1APB4GRP1DisableClockSleep(RCCAPB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C1->APB4LPENR, periphs);
+    }
+    /** @addtogroup EF_AHB3 AHB3
+     * @{
+     */
+    void C2AHB3GRP1EnableClock(RCCAHB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB3ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB3ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2AHB3GRP1IsEnabledClock(RCCAHB3GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C2->AHB3ENR, periphs) == periphs) ? true : false);
+    }
+    void C2AHB3GRP1DisableClock(RCCAHB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB3ENR, periphs);
+    }
+    void C2AHB3GRP1EnableClockSleep(RCCAHB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB3LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB3LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2AHB3GRP1DisableClockSleep(RCCAHB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB3LPENR, periphs);
+    }
+    /** @addtogroup EF_AHB1 AHB1
+     * @{
+     */
+    void C2AHB1GRP1EnableClock(RCCAHB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB1ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB1ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2AHB1GRP1IsEnabledClock(RCCAHB1GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C2->AHB1ENR, periphs) == periphs) ? true : false);
+    }
+    void C2AHB1GRP1DisableClock(RCCAHB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB1ENR, periphs);
+    }
+    void C2AHB1GRP1EnableClockSleep(RCCAHB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB1LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB1LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2AHB1GRP1DisableClockSleep(RCCAHB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB1LPENR, periphs);
+    }
+    /** @addtogroup EF_AHB2 AHB2
+     * @{
+     */
+    void C2AHB2GRP1EnableClock(RCCAHB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB2ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB2ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2AHB2GRP1IsEnabledClock(RCCAHB2GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C2->AHB2ENR, periphs) == periphs) ? true : false);
+    }
+    void C2AHB2GRP1DisableClock(RCCAHB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB2ENR, periphs);
+    }
+    void C2AHB2GRP1EnableClockSleep(RCCAHB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB2LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB2LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2AHB2GRP1DisableClockSleep(RCCAHB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB2LPENR, periphs);
+    }
+    /** @addtogroup EF_AHB4 AHB4
+     * @{
+     */
+    void C2AHB4GRP1EnableClock(RCCAHB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB4ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB4ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2AHB4GRP1IsEnabledClock(RCCAHB4GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C2->AHB4ENR, periphs) == periphs) ? true : false);
+    }
+    void C2AHB4GRP1_DisableClock(uint32_t periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB4ENR, periphs);
+    }
+    void C2AHB4GRP1EnableClockSleep(RCCAHB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->AHB4LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->AHB4LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2AHB4GRP1DisableClockSleep(RCCAHB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->AHB4LPENR, periphs);
+    }
+    /** @addtogroup EF_APB3 APB3
+     * @{
+     */
+    void C2APB3GRP1EnableClock(RCCAPB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB3ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB3ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2APB3GRP1IsEnabledClock(RCCAPB3GRP1PerClkTypes periphs)
+    {
+        return ((READ_BIT(RCC_C2->APB3ENR, periphs) == periphs) ? true : false);
+    }
+    void C2APB3GRP1DisableClock(RCCAPB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB3ENR, periphs);
+    }
+    void C2APB3GRP1EnableClockSleep(RCCAPB3GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB3LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB3LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2APB3GRP1DisableClockSleep(RCCAPB3GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB3LPENR, periphs);
+    }
+    /** @addtogroup EF_APB1 APB1
+     * @{
+     */
+    void C2APB1GRP1EnableClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB1LENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB1LENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2APB1GRP1IsEnabledClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C2->APB1LENR, periphs) == periphs) ? true : false);
+    }
+    void C2APB1GRP1DisableClock(RCCAPB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB1LENR, periphs);
+    }
+    void C2APB1GRP1EnableClockSleep(RCCAPB1GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB1LLPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB1LLPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2APB1GRP1DisableClockSleep(RCCAPB1GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB1LLPENR, periphs);
+    }
+    void C2APB1GRP2EnableClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB1HENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB1HENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2APB1GRP2IsEnabledClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C2->APB1HENR, periphs) == periphs) ? true : false);
+    }
+    void C2APB1GRP2DisableClock(RCCAPB1GRP2PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB1HENR, periphs);
+    }
+    void C2APB1GRP2EnableClockSleep(RCCAPB1GRP2PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB1HLPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB1HLPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2APB1GRP2DisableClockSleep(RCCAPB1GRP2PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB1HLPENR, periphs);
+    }
+    /** @addtogroup EF_APB2 APB2
+     * @{
+     */
+
+    /**
+     * @brief  Enable C2 APB2 peripherals clock.
+     * @rmtoll APB2ENR      TIM1EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      TIM8EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      USART1EN      LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      USART6EN      LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      SPI1EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      SPI4EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      TIM15EN       LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      TIM16EN       LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      TIM17EN       LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      SPI5EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      SAI1EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      SAI2EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      SAI3EN        LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      DFSDM1EN      LL_C2_APB2_GRP1_EnableClock\n
+     *         APB2ENR      HRTIMEN       LL_C2_APB2_GRP1_EnableClock
+     * @param  Periphs This parameter can be a combination of the following values:
+     *         @arg @ref LL_APB2_GRP1_PERIPH_TIM1
+     *         @arg @ref LL_APB2_GRP1_PERIPH_TIM8
+     *         @arg @ref LL_APB2_GRP1_PERIPH_USART1
+     *         @arg @ref LL_APB2_GRP1_PERIPH_USART6
+     *         @arg @ref LL_APB2_GRP1_PERIPH_SPI1
+     *         @arg @ref LL_APB2_GRP1_PERIPH_SPI4
+     *         @arg @ref LL_APB2_GRP1_PERIPH_TIM15
+     *         @arg @ref LL_APB2_GRP1_PERIPH_TIM16
+     *         @arg @ref LL_APB2_GRP1_PERIPH_TIM17
+     *         @arg @ref LL_APB2_GRP1_PERIPH_SPI5
+     *         @arg @ref LL_APB2_GRP1_PERIPH_SAI1
+     *         @arg @ref LL_APB2_GRP1_PERIPH_SAI2  (*)
+     *         @arg @ref LL_APB2_GRP1_PERIPH_SAI3 (*)
+     *         @arg @ref LL_APB2_GRP1_PERIPH_DFSDM1
+     *         @arg @ref LL_APB2_GRP1_PERIPH_HRTIM (*)
+     *
+     *         (*) value not defined in all devices.
+
+    * @retval None
+    */
+    void C2APB2GRP1EnableClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB2ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB2ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2APB2GRP1IsEnabledClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        return ((READ_BIT(RCC_C2->APB2ENR, periphs) == periphs) ? true : false);
+    }
+    void C2APB2GRP1DisableClock(RCCAPB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB2ENR, periphs);
+    }
+    void C2APB2GRP1EnableClockSleep(RCCAPB2GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB2LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB2LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2APB2GRP1DisableClockSleep(RCCAPB2GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB2LPENR, periphs);
+    }
+    /** @addtogroup EF_APB4 APB4
+     * @{
+     */
+    void C2APB4GRP1EnableClock(uint32_t periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB4ENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB4ENR, periphs);
+        (void)tmpreg;
+    }
+    bool C2APB4GRP1IsEnabledClock(uint32_t periphs)
+    {
+        return ((READ_BIT(RCC_C2->APB4ENR, periphs) == periphs) ? true : false);
+    }
+    void LL_C2_APB4_GRP1_DisableClock(RCCAPB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB4ENR, periphs);
+    }
+    void C2APB4GRP1EnableClockSleep(RCCAPB4GRP1PerClkType periphs)
+    {
+        __IO uint32_t tmpreg;
+        SET_BIT(RCC_C2->APB4LPENR, periphs);
+        /* Delay after an RCC peripheral clock enabling */
+        tmpreg = READ_BIT(RCC_C2->APB4LPENR, periphs);
+        (void)tmpreg;
+    }
+    void C2APB4GRP1DisableClockSleep(RCCAPB4GRP1PerClkType periphs)
+    {
+        CLEAR_BIT(RCC_C2->APB4LPENR, periphs);
+    }
+#endif /*DUAL_CORE*/
     void reset()
     {
         RCC->CR |= RCC_CR_HSION;

@@ -695,81 +695,81 @@ private:
             case USART1_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUSART1PerClk(true);
+                    RCCControl::getInstance()->APB2GRP1EnableClock(RCC_APB2_GRP1_PERIPH_USART1);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUSART1PerClk(false);
+                    RCCControl::getInstance()->APB2GRP1DisableClock(RCC_APB2_GRP1_PERIPH_USART1);
                 }
             break;
             case USART2_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUSART2PerClk(true);
+                    RCCControl::getInstance()->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_USART2);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUSART2PerClk(false);
+                    RCCControl::getInstance()->APB1GRP1DisableClock(RCC_APB1_GRP1_PERIPH_USART2);
                 }
             break;
             case USART3_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUSART3PerClk(true);
+                    RCCControl::getInstance()->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_USART3);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUSART3PerClk(false);
+                    RCCControl::getInstance()->APB1GRP1DisableClock(RCC_APB1_GRP1_PERIPH_USART3);
                 }
             break;
             case UART4_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUART4PerClk(true);
+                    RCCControl::getInstance()->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_UART4);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUART4PerClk(false);
+                    RCCControl::getInstance()->APB1GRP1DisableClock(RCC_APB1_GRP1_PERIPH_UART4);
                 }
             break;
             case UART5_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUART5PerClk(true);
+                    RCCControl::getInstance()->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_UART5);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUART5PerClk(false);
+                    RCCControl::getInstance()->APB1GRP1DisableClock(RCC_APB1_GRP1_PERIPH_UART5);
                 }
             break;
             case USART6_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUSART6PerClk(true);
+                    RCCControl::getInstance()->APB2GRP1EnableClock(RCC_APB2_GRP1_PERIPH_USART6);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUSART6PerClk(false);
+                    RCCControl::getInstance()->APB2GRP1DisableClock(RCC_APB2_GRP1_PERIPH_USART6);
                 }
             break;
             case UART7_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUART7PerClk(true);
+                    RCCControl::getInstance()->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_UART7);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUART7PerClk(false);
+                    RCCControl::getInstance()->APB1GRP1DisableClock(RCC_APB1_GRP1_PERIPH_UART7);
                 }
             break;
             case UART8_BASE:
                 if(benable)
                 {
-                    RCCControl::getInstance()->enableUART8PerClk(true);
+                    RCCControl::getInstance()->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_UART8);
                 }
                 else
                 {
-                    RCCControl::getInstance()->enableUART8PerClk(false);
+                    RCCControl::getInstance()->APB1GRP1DisableClock(RCC_APB1_GRP1_PERIPH_UART8);
                 }
             break;
             default:

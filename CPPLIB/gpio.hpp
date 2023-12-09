@@ -172,7 +172,7 @@ public:
             return false;
         }
 
-        RCCControl::getInstance()->enableSYSCFGPerClk(true);
+        //RCCControl::getInstance()->APB4GRP1EnableClock(RCC_APB4_GRP1_PERIPH_SYSCFG);
         uint32_t offset = (((uint32_t)gpiox_ -  (uint32_t)GPIOA_BASE) / 0x400);
         for(uint16_t pos = 0; pos < 16; pos++)
         {

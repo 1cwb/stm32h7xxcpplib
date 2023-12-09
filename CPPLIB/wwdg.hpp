@@ -41,7 +41,7 @@ public:
         tbdivi_ = divi;
         tCnt_ &= countVal;
         windVal_ &= windowVal;
-        RCCControl::getInstance()->enableWWDG1Clk(true);
+        RCCControl::getInstance()->APB3GRP1EnableClock(RCC_APB3_GRP1_PERIPH_WWDG1);
         RCCControl::getInstance()->resetWWDG1();
         MODIFY_REG(WWDG1->CFR, WWDG_CFR_WDGTB, (tbdivi_ << WWDG_CFR_WDGTB_Pos));
         MODIFY_REG(WWDG1->CFR, WWDG_CFR_W, (windVal_  << WWDG_CFR_W_Pos));

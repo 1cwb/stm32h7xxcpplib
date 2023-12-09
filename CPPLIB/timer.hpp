@@ -1988,45 +1988,46 @@ private:
         switch (reinterpret_cast<uint32_t>(timer_))
         {
             case TIM1_BASE:
-                rcc->enableTIM1PerClk(bEnable);
+                rcc->APB2GRP1EnableClock(RCC_APB2_GRP1_PERIPH_TIM1);
                 break;
             case TIM2_BASE:
-                rcc->enableTIM2PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM2);
                 break;
             case TIM3_BASE:
-                rcc->enableTIM3PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM3);
                 break;
             case TIM4_BASE:
-                rcc->enableTIM4PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM4);
                 break;
             case TIM5_BASE:
-                rcc->enableTIM5PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM5);
                 break;
             case TIM6_BASE:
-                rcc->enableTIM6PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM6);
+                break;
             case TIM7_BASE:
-                rcc->enableTIM7PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM7);
                 break;
             case TIM8_BASE:
-                rcc->enableTIM8PerClk(bEnable);
+                rcc->APB2GRP1EnableClock(RCC_APB2_GRP1_PERIPH_TIM8);
                 break;
             case TIM12_BASE:
-                rcc->enableTIM12PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM12);
                 break;
             case TIM13_BASE:
-                rcc->enableTIM13PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM13);
                 break;
             case TIM14_BASE:
-                rcc->enableTIM14PerClk(bEnable);
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_TIM14);
                 break;
             case TIM15_BASE:
-                rcc->enableTIM15PerClk(bEnable);
+                rcc->APB2GRP1EnableClock(RCC_APB2_GRP1_PERIPH_TIM15);
                 break;
             case TIM16_BASE:
-                rcc->enableTIM16PerClk(bEnable);
+                rcc->APB2GRP1EnableClock(RCC_APB2_GRP1_PERIPH_TIM16);
                 break;
             case TIM17_BASE:
-                rcc->enableTIM17PerClk(bEnable);
+                rcc->APB2GRP1EnableClock(RCC_APB2_GRP1_PERIPH_TIM17);
                 break;
             default:
                 break;
