@@ -305,6 +305,7 @@ int main(void)
         while(1);
     }
     LED led(GPIOE, GPIO_NUM_9, false);
+    LED led1(GPIOA, GPIO_NUM_7, true);
     DMA dmax(DMA2, DMA_STREAM_7);
     DMA_InitTypeDef DMA_InitStruct;
     DMA_InitStruct.Direction = DMA_DIRECTION_MEMORY_TO_PERIPH;
@@ -332,19 +333,13 @@ int main(void)
 
     });
     ATOMIC_SET_BIT(USART1->CR3, USART_CR3_DMAT);
-    led.on();
     delayTick(3000);
     dmax.dmaEnableStream();
-      //LL_DMA_EnableIT_TC(DMA2, LL_DMA_STREAM_7);
-  //LL_DMA_EnableIT_TE(DMA2, LL_DMA_STREAM_7);
-  //NVIC_SetPriority(DMA2_Stream7_IRQn, 0);
-  //NVIC_EnableIRQ(DMA2_Stream7_IRQn);
-  //ATOMIC_SET_BIT(USART1->CR3, USART_CR3_DMAT);
-  //LL_DMA_EnableStream(DMA2, LL_DMA_STREAM_7);
     while(1)
     {
-        delayTick(3000);
-        //led.reverse();
+        delayTick(100);
+        led.reverse();
+        led1.reverse();
         //printf("hellow world +++\r\n");
     }
     return 0;

@@ -835,44 +835,16 @@ private:
         {
             case USART1_BASE:
             case USART6_BASE:
-                switch(RCCControl::getInstance()->getUSART16KernelClkSrc())
-                {
-                    case RCC_D2_USART16_CLK_PCLK2:
-                        clk = RCCControl::getInstance()->getAPB2ClkFreq();
-                        break;
-                    case RCC_D2_USART16_CLK_PLL2_Q_CK:
-                        clk = RCCControl::getInstance()->getPLLClkFreq(RCC_PLL2_CLK_FREQ_Q);
-                        break;
-                    case RCC_D2_USART16_CLK_PLL3_Q_CK:
-                        clk = RCCControl::getInstance()->getPLLClkFreq(RCC_PLL3_CLK_FREQ_Q);
-                        break;
-                    case RCC_D2_USART16_CLK_CSI_KER_CK:
-                        clk = RCCControl::getInstance()->getCsiClkFreq();
-                        break;
-                }
-            break;
+                    clk = RCCControl::getInstance()->GetUSARTClockFreq(RCC_USART16_CLKSOURCE);
+                break;
             case USART2_BASE:
             case USART3_BASE:
             case UART4_BASE:
             case UART5_BASE:
             case UART7_BASE:
             case UART8_BASE:
-                switch(RCCControl::getInstance()->getUSART234578KernelClkSrc())
-                {
-                    case RCC_D2_USART234578_CLK_PCLK1:
-                        clk = RCCControl::getInstance()->getAPB1ClkFreq();
-                        break;
-                    case RCC_D2_USART234578_CLK_PLL2_Q_CK:
-                        clk = RCCControl::getInstance()->getPLLClkFreq(RCC_PLL2_CLK_FREQ_Q);
-                        break;
-                    case RCC_D2_USART234578_CLK_PLL3_Q_CK:
-                        clk = RCCControl::getInstance()->getPLLClkFreq(RCC_PLL3_CLK_FREQ_Q);
-                        break;
-                    case RCC_D2_USART234578_CLK_CSI_KER_CK:
-                        clk = RCCControl::getInstance()->getCsiClkFreq();
-                        break;
-                }
-            break;
+                    clk = RCCControl::getInstance()->GetUSARTClockFreq(RCC_USART234578_CLKSOURCE);
+                break;
             default:
             break;
         }

@@ -577,13 +577,13 @@ public:
             case TIM15_BASE:
             case TIM16_BASE:
             case TIM17_BASE:
-                if(rcc->getD2PPRE2APB2PreScale() != RCC_D2_PPRE2_APB2_PRESCALER_DIV1)
+                if(rcc->GetAPB2Prescaler() != RCC_APB2_DIV_1)
                 {
-                    clk = rcc->getAPB2ClkFreq()*2;
+                    clk = rcc->GetPCLK2ClockFreq()*2;
                 }
                 else
                 {
-                    clk = rcc->getAPB2ClkFreq();
+                    clk = rcc->GetPCLK2ClockFreq();
                 }
                 break;
             case TIM2_BASE:
@@ -595,13 +595,13 @@ public:
             case TIM12_BASE:
             case TIM13_BASE:
             case TIM14_BASE:
-                if(rcc->getD2PPRE1APB1PreScaler() != RCC_D2_PPRE1_APB1_PRESCALER_DIV1)
+                if(rcc->GetAPB1Prescaler() != RCC_APB1_DIV_1)
                 {
-                    clk = rcc->getAPB1ClkFreq()*2;
+                    clk = rcc->GetPCLK1ClockFreq()*2;
                 }
                 else
                 {
-                    clk = rcc->getAPB1ClkFreq();
+                    clk = rcc->GetPCLK1ClockFreq();
                 }
                 break;
             default:

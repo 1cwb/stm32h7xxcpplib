@@ -487,28 +487,28 @@ public:
     {
         if (timer_ == LPTIM1)
         {
-            LL_APB1_GRP1_ForceReset(LL_APB1_GRP1_PERIPH_LPTIM1);
-            LL_APB1_GRP1_ReleaseReset(LL_APB1_GRP1_PERIPH_LPTIM1);
+            RCCControl::getInstance()->APB1GRP1ForceReset(RCC_APB1_GRP1_PERIPH_LPTIM1);
+            RCCControl::getInstance()->APB1GRP1ReleaseReset(RCC_APB1_GRP1_PERIPH_LPTIM1);
         }
         else if (timer_ == LPTIM2)
         {
-            LL_APB4_GRP1_ForceReset(LL_APB4_GRP1_PERIPH_LPTIM2);
-            LL_APB4_GRP1_ReleaseReset(LL_APB4_GRP1_PERIPH_LPTIM2);
+            RCCControl::getInstance()->APB4GRP1ForceReset(RCC_APB4_GRP1_PERIPH_LPTIM2);
+            RCCControl::getInstance()->APB4GRP1ReleaseReset(RCC_APB4_GRP1_PERIPH_LPTIM2);
         }
         else if (timer_ == LPTIM3)
         {
-            LL_APB4_GRP1_ForceReset(LL_APB4_GRP1_PERIPH_LPTIM3);
-            LL_APB4_GRP1_ReleaseReset(LL_APB4_GRP1_PERIPH_LPTIM3);
+            RCCControl::getInstance()->APB4GRP1ForceReset(RCC_APB4_GRP1_PERIPH_LPTIM3);
+            RCCControl::getInstance()->APB4GRP1ReleaseReset(RCC_APB4_GRP1_PERIPH_LPTIM3);
         }
         else if (timer_ == LPTIM4)
         {
-            LL_APB4_GRP1_ForceReset(LL_APB4_GRP1_PERIPH_LPTIM4);
-            LL_APB4_GRP1_ReleaseReset(LL_APB4_GRP1_PERIPH_LPTIM4);
+            RCCControl::getInstance()->APB4GRP1ForceReset(RCC_APB4_GRP1_PERIPH_LPTIM4);
+            RCCControl::getInstance()->APB4GRP1ReleaseReset(RCC_APB4_GRP1_PERIPH_LPTIM4);
         }
         else if (timer_ == LPTIM5)
         {
-            LL_APB4_GRP1_ForceReset(LL_APB4_GRP1_PERIPH_LPTIM5);
-            LL_APB4_GRP1_ReleaseReset(LL_APB4_GRP1_PERIPH_LPTIM5);
+            RCCControl::getInstance()->APB4GRP1ForceReset(RCC_APB4_GRP1_PERIPH_LPTIM5);
+            RCCControl::getInstance()->APB4GRP1ReleaseReset(RCC_APB4_GRP1_PERIPH_LPTIM5);
         }
     }
 private:

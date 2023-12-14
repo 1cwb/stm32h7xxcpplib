@@ -42,7 +42,7 @@ public:
         tCnt_ &= countVal;
         windVal_ &= windowVal;
         RCCControl::getInstance()->APB3GRP1EnableClock(RCC_APB3_GRP1_PERIPH_WWDG1);
-        RCCControl::getInstance()->resetWWDG1();
+        RCCControl::getInstance()->WWDG1EnableSystemReset();
         MODIFY_REG(WWDG1->CFR, WWDG_CFR_WDGTB, (tbdivi_ << WWDG_CFR_WDGTB_Pos));
         MODIFY_REG(WWDG1->CFR, WWDG_CFR_W, (windVal_  << WWDG_CFR_W_Pos));
         MODIFY_REG(WWDG1->CR, WWDG_CR_T, (tCnt_  << WWDG_CR_T_Pos));
@@ -69,7 +69,7 @@ public:
     //Twwdg=(4096× 2^WDGTB[2:0]× (T[5:0]+1)) /Fpclk3;
     uint32_t getTimeOutMs()
     {
-        return ((4096 * (uint32_t)pow(2, tbdivi_) * (READ_BIT(WWDG1->CR, 0X3F)+1))/(RCCControl::getInstance()->getAPB3ClkFreq()/1000));
+        return ((4096 * (uint32_t)pow(2, tbdivi_) * (READ_BIT(WWDG1->CR, 0X3F)+1))/(RCCControl::getInstance()->GetPCLK3ClockFreq()/1000));
     }
     void enableIsr(uint32_t PreemptPriority, uint32_t SubPriority)
     {
