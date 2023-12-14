@@ -4,26 +4,6 @@
   * @brief    Flags defines which can be used with lptimReadReg function
   * @{
   */
-enum LPTIMFlags
-{
-    LPTIM_ISR_CMPM            =         LPTIM_ISR_CMPM,     /*!< Compare match */
-    LPTIM_ISR_CMPOK           =         LPTIM_ISR_CMPOK,    /*!< Compare register update OK */
-    LPTIM_ISR_ARRM            =         LPTIM_ISR_ARRM,     /*!< Autoreload match */
-    LPTIM_ISR_EXTTRIG         =         LPTIM_ISR_EXTTRIG,  /*!< External trigger edge event */
-    LPTIM_ISR_ARROK           =         LPTIM_ISR_ARROK,    /*!< Autoreload register update OK */
-    LPTIM_ISR_UP              =         LPTIM_ISR_UP,       /*!< Counter direction change down to up */
-    LPTIM_ISR_DOWN            =         LPTIM_ISR_DOWN      /*!< Counter direction change up to down */
-};
-enum LPTIMIsr
-{
-    LPTIM_IER_CMPMIE          =         LPTIM_IER_CMPMIE,     /*!< Compare match */
-    LPTIM_IER_CMPOKIE         =         LPTIM_IER_CMPOKIE,    /*!< Compare register update OK */
-    LPTIM_IER_ARRMIE          =         LPTIM_IER_ARRMIE,     /*!< Autoreload match */
-    LPTIM_IER_EXTTRIGIE       =         LPTIM_IER_EXTTRIGIE,  /*!< External trigger edge event */
-    LPTIM_IER_ARROKIE         =         LPTIM_IER_ARROKIE,    /*!< Autoreload register update OK */
-    LPTIM_IER_UPIE            =         LPTIM_IER_UPIE,       /*!< Counter direction change down to up */
-    LPTIM_IER_DOWNIE          =         LPTIM_IER_DOWNIE      /*!< Counter direction change up to down */
-};
 enum LPTMOperatingMode
 {
     LPTIM_OPERATING_MODE_CONTINUOUS  =  LPTIM_CR_CNTSTRT, /*!<LP Timer starts in continuous mode*/
@@ -136,23 +116,12 @@ enum LPTMInput2Src
     LPTIM_INPUT2_SRC_GPIO     =    0x00000000U,                   /*!< For LPTIM1 */
     LPTIM_INPUT2_SRC_COMP2    =    LPTIM_CFGR2_IN2SEL_0           /*!< For LPTIM1 */
 };
-
-enum LPTMClearFlag
+struct LPTIM_InitTypeDef
 {
-    LPTIM_ClearFLAG_CMPM   =  lptimClearFlag_CMPM,
-    LPTIM_ClearFLAG_CC1    =  lptimClearFlag_CC1,
-    LPTIM_ClearFLAG_CC2    =  lptimClearFlag_CC2,
-    LPTIM_ClearFLAG_CC1O   =  lptimClearFlag_CC1O,
-    LPTIM_ClearFLAG_CC2O   =  lptimClearFlag_CC2O,
-    LPTIM_ClearFLAG_ARRM   =  lptimClearFlag_ARRM
-};
-
-typedef LPTIM_InitTypeDef
-{
-    uint32_t ClockSource;
-    uint32_t Prescaler;
-    uint32_t Waveform;
-    uint32_t Polarity;
+    LPTMClkSource ClockSource;
+    LPTMPrescaler Prescaler;
+    LPTIMOutputWaveformType Waveform;
+    LPTIMOutputPolarity Polarity;
 };
 
 class LPTIMER
@@ -511,7 +480,148 @@ public:
             RCCControl::getInstance()->APB4GRP1ReleaseReset(RCC_APB4_GRP1_PERIPH_LPTIM5);
         }
     }
+    eResult lptimInit(LPTMClkSource ClockSource, LPTMPrescaler Prescaler, LPTIMOutputWaveformType Waveform, LPTIMOutputPolarity Polarity)
+    {
+        eResult result = E_RESULT_OK;
+        /* The LPTIMx_CFGR register must only be modified when the LPTIM is disabled
+            (ENABLE bit is reset to 0).
+        */
+        if (lptimIsEnabled())
+        {
+            result = E_RESULT_WRONG_STATUS;
+        }
+        else
+        {
+            /* Set CKSEL bitfield according to ClockSource value */
+            /* Set PRESC bitfield according to Prescaler value */
+            /* Set WAVE bitfield according to Waveform value */
+            /* Set WAVEPOL bitfield according to Polarity value */
+            MODIFY_REG(timer_->CFGR,
+                    (LPTIM_CFGR_CKSEL | LPTIM_CFGR_PRESC | LPTIM_CFGR_WAVE | LPTIM_CFGR_WAVPOL), ClockSource | Prescaler | Waveform | Polarity);
+        }
+        return result;
+    }
+    void lptimDisable()
+    {
+        uint32_t sysclkFreq = RCCControl::getInstance()->GetSystemClockFreq();
+        RCCLPTIMxClkSource tmpclksource;
+        uint32_t tmpIER;
+        uint32_t tmpCFGR;
+        uint32_t tmpCMP;
+        uint32_t tmpARR;
+        uint32_t primask_bit;
+        uint32_t tmpCFGR2;
+
+        /* Enter critical section */
+        primask_bit = __get_PRIMASK();
+        __set_PRIMASK(1) ;
+
+        /********** Save LPTIM Config *********/
+        /* Save LPTIM source clock */
+        switch ((uint32_t)timer_)
+        {
+            case LPTIM1_BASE:
+            tmpclksource = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM1_CLKSOURCE);
+            break;
+            case LPTIM2_BASE:
+            tmpclksource = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM2_CLKSOURCE);
+            break;
+        #if defined(LPTIM3)&&defined(LPTIM4)&&defined(LPTIM5)
+            case LPTIM3_BASE:
+            case LPTIM4_BASE:
+            case LPTIM5_BASE:
+            tmpclksource = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM345_CLKSOURCE);
+            break;
+        #elif defined(LPTIM3)
+            case LPTIM3_BASE:
+            tmpclksource = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM3_CLKSOURCE);
+            break;
+        #endif /* LPTIM3 && LPTIM4 && LPTIM5 */
+            default:
+            break;
+        }
+
+        /* Save LPTIM configuration registers */
+        tmpIER = timer_->IER;
+        tmpCFGR = timer_->CFGR;
+        tmpCMP = timer_->CMP;
+        tmpARR = timer_->ARR;
+        tmpCFGR2 = timer_->CFGR2;
+
+        /************* Reset LPTIM ************/
+        lptimDeInit();
+
+        if ((tmpCMP != 0UL) || (tmpARR != 0UL))
+        {
+            /* Force LPTIM source kernel clock from APB */
+            switch ((uint32_t)timer_)
+            {
+            case LPTIM1_BASE:
+                RCCControl::getInstance()->SetLPTIMClockSource(RCC_LPTIM1_CLKSOURCE_PCLK1);
+                break;
+            case LPTIM2_BASE:
+                RCCControl::getInstance()->SetLPTIMClockSource(RCC_LPTIM2_CLKSOURCE_PCLK4);
+                break;
+        #if defined(LPTIM3)&&defined(LPTIM4)&&defined(LPTIM5)
+            case LPTIM3_BASE:
+            case LPTIM4_BASE:
+            case LPTIM5_BASE:
+                RCCControl::getInstance()->SetLPTIMClockSource(RCC_LPTIM345_CLKSOURCE_PCLK4);
+                break;
+        #elif defined(LPTIM3)
+            case LPTIM3_BASE:
+                RCCControl::getInstance()->SetLPTIMClockSource(RCC_LPTIM3_CLKSOURCE_PCLK4);
+                break;
+        #endif /* LPTIM3 && LPTIM4 && LPTIM5*/
+            default:
+                break;
+            }
+
+            if (tmpCMP != 0UL)
+            {
+                /* Restore CMP and ARR registers (LPTIM should be enabled first) */
+                timer_->CR |= LPTIM_CR_ENABLE;
+                timer_->CMP = tmpCMP;
+
+                /* Polling on CMP write ok status after above restore operation */
+                do
+                {
+                    sysclkFreq--; /* Used for timeout */
+                } while (((lptimIsActiveFlagCMPOK() != 1UL)) && ((sysclkFreq) > 0UL));
+
+                lptimClearFlagCMPOK();
+            }
+
+            if (tmpARR != 0UL)
+            {
+                timer_->CR |= LPTIM_CR_ENABLE;
+                timer_->ARR = tmpARR;
+
+                sysclkFreq = RCCControl::getInstance()->GetSystemClockFreq();
+                /* Polling on ARR write ok status after above restore operation */
+                do
+                {
+                    sysclkFreq--; /* Used for timeout */
+                } while (((lptimIsActiveFlagARROK() != 1UL)) && ((sysclkFreq) > 0UL));
+
+                lptimClearFlagARROK();
+            }
+
+
+            /* Restore LPTIM source kernel clock */
+            RCCControl::getInstance()->SetLPTIMClockSource(tmpclksource);
+        }
+
+        /* Restore configuration registers (LPTIM should be disabled first) */
+        timer_->CR &= ~(LPTIM_CR_ENABLE);
+        timer_->IER = tmpIER;
+        timer_->CFGR = tmpCFGR;
+        timer_->CFGR2 = tmpCFGR2;
+
+        /* Exit critical section: restore previous priority mask */
+        __set_PRIMASK(primask_bit);
+    }
 private:
     LPTIM_TypeDef* timer_;
-    //LPTIM_InitTypeDef* lptimx_;
+    LPTIM_InitTypeDef* lptimx_;
 };
