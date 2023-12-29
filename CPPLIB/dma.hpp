@@ -587,22 +587,6 @@ enum DMACurrentTargetMemory
     DMA_CURRENTTARGETMEM1     =     DMA_SxCR_CT                              /*!< Set CurrentTarget Memory to Memory 1  */
 };
 
-enum DMATransferIsrType
-{
-    DMA_TRANSFER_HALF,
-    DMA_TRANSFER_COMPLETE,
-    DMA_TRANSFER_ERROR,
-    DMA_DIRECTOR_MODE_ERROR,
-    DMA_FIFO_ERROR,
-    DMA_ISR_ERROR
-};
-enum BDMATransferIsrType
-{
-    BDMA_TRANSFER_HALF,
-    BDMA_TRANSFER_COMPLETE,
-    BDMA_TRANSFER_ERROR,
-    BDMA_ISR_GLOBAL_ERROR
-};
 enum DMAMUXOverRunType
 {
     DMAMUX_OVERRUN_TYPE_SYNC,
@@ -1109,11 +1093,36 @@ public:
         {
             initDmaMuxReqGenChannelNum((DMAMUXReqGenChannel)(DMA_InitStruct->PeriphRequest - 1));
         }
-        registerDMAIsrCb(dmaStreamAddr_, [](void* param, uint8_t bDMAMuxISR){
+        registerDMAIsrCb(dmaStreamAddr_, [](void* param, uint8_t bDMAMuxISR, uint32_t isrtype){
             DMA* pdmax = reinterpret_cast<DMA*>(param);
             if(pdmax)
             {
-                pdmax->isrHandler(bDMAMuxISR);
+                if(!bDMAMuxISR)
+                {
+                    if(pdmax->dmacb_)
+                    {
+                        pdmax->dmacb_(pdmax, (DMATransferIsrType)isrtype);
+                    }
+                }
+                else
+                {
+                    if(pdmax->dmaMuxIsEnabledITReqGenTrigEventOverrun() && pdmax->dmaMuxIsActiveFlagReqGenTrigEventOverrun())
+                    {
+                        pdmax->dmaMuxClearFlagReqGenTrigEventOverrun();
+                        if(pdmax->dmamuxcb_)
+                        {
+                            pdmax->dmamuxcb_(pdmax, DMAMUX_OVERRUN_TYPE_GEN);
+                        }
+                    }
+                    else if(pdmax->dmaMuxIsEnabledITSyncEventOverrun() && pdmax->dmaMuxIsActiveFlagSyncEventOverrun())
+                    {
+                        pdmax->dmaMuxClearFlagSyncEventOverrun();
+                        if(pdmax->dmamuxcb_)
+                        {
+                            pdmax->dmamuxcb_(pdmax, DMAMUX_OVERRUN_TYPE_SYNC);
+                        }
+                    }
+                }
             }
         }, this);
         
@@ -1977,61 +1986,6 @@ private:
         }
         return irqtype;
     }
-    void isrHandler(uint8_t bDMAMuxISR)
-    {
-        if(!bDMAMuxISR)
-        {
-            DMATransferIsrType isrType = DMA_ISR_ERROR;
-            if(dmaIsEnabledITTransterHalf() && dmaIsActiveFlagTransferHalf())
-            {
-                dmaClearFlagTransferHalf();
-                isrType = DMA_TRANSFER_HALF;
-            } 
-            else if(dmaIsEnabledITTransferComplete() && dmaIsActiveFlagTransferComplete())
-            {
-                dmaClearFlagTransferComplete();
-                isrType = DMA_TRANSFER_COMPLETE;
-            }
-            else if(dmaIsEnabledITTransterError() && dmaIsActiveFlagTransferError()) 
-            {
-                dmaClearFlagTransferError();
-                isrType = DMA_TRANSFER_ERROR;
-            }
-            else if(dmaIsEnabledITDirectModeError() && dmaIsActiveFlagDirectModeError())
-            {
-                dmaClearFlagDirectModeError();
-                isrType = DMA_DIRECTOR_MODE_ERROR;
-            }
-            else if(dmaIsEnabledITFIFOError() && dmaIsActiveFlagFIFOError())
-            {
-                dmaClearFlagFIFOError();
-                isrType = DMA_FIFO_ERROR;
-            }
-            if(dmacb_)
-            {
-                dmacb_(this, isrType);
-            }
-        }
-        else
-        {
-            if(dmaMuxIsEnabledITReqGenTrigEventOverrun() && dmaMuxIsActiveFlagReqGenTrigEventOverrun())
-            {
-                dmaMuxClearFlagReqGenTrigEventOverrun();
-                if(dmamuxcb_)
-                {
-                    dmamuxcb_(this, DMAMUX_OVERRUN_TYPE_GEN);
-                }
-            }
-            else if(dmaMuxIsEnabledITSyncEventOverrun() && dmaMuxIsActiveFlagSyncEventOverrun())
-            {
-                dmaMuxClearFlagSyncEventOverrun();
-                if(dmamuxcb_)
-                {
-                    dmamuxcb_(this, DMAMUX_OVERRUN_TYPE_SYNC);
-                }
-            }
-        }
-    }
 private:
     DMA_TypeDef *dmax_;
     DMA_Stream_TypeDef * dmaStreamAddr_;
@@ -2110,11 +2064,36 @@ public:
         {
             initDmaMuxReqGenChannelNum((DMAMUXReqGenChannel)(BDMA_InitStruct->PeriphRequest - 1));
         }
-        registerBDMAIsrCb(bdmaChannelAddr_, [](void* param, uint8_t bBDMAMuxISR){
+        registerBDMAIsrCb(bdmaChannelAddr_, [](void* param, uint8_t bBDMAMuxISR, uint32_t isrtype){
             BDMAX* pbdma = reinterpret_cast<BDMAX*>(param);
             if(pbdma)
             {
-                pbdma->isrHandler(bBDMAMuxISR);
+                if(!bBDMAMuxISR)
+                {
+                    if(pbdma->bdmacb_)
+                    {
+                        pbdma->bdmacb_(pbdma, (BDMATransferIsrType)isrtype);
+                    }
+                }
+                else
+                {
+                    if(pbdma->dmaMuxIsEnabledITReqGenTrigEventOverrun() && pbdma->dmaMuxIsActiveFlagReqGenTrigEventOverrun())
+                    {
+                        pbdma->dmaMuxClearFlagReqGenTrigEventOverrun();
+                        if(pbdma->bdmamuxcb_)
+                        {
+                            pbdma->bdmamuxcb_(pbdma, DMAMUX_OVERRUN_TYPE_GEN);
+                        }
+                    }
+                    else if(pbdma->dmaMuxIsEnabledITSyncEventOverrun() && pbdma->dmaMuxIsActiveFlagSyncEventOverrun())
+                    {
+                        pbdma->dmaMuxClearFlagSyncEventOverrun();
+                        if(pbdma->bdmamuxcb_)
+                        {
+                            pbdma->bdmamuxcb_(pbdma, DMAMUX_OVERRUN_TYPE_SYNC);
+                        }
+                    }
+                }
             }
         }, this);
         return E_RESULT_OK;
@@ -2740,51 +2719,6 @@ private:
                 break;
         }
         return irqtype;
-    }
-    void isrHandler(uint8_t bBDMAMuxISR)
-    {
-        if(!bBDMAMuxISR)
-        {
-            BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
-            if(bdmaIsEnabledITTransferHalf() && bdmaIsActiveFlagTransterHalf())
-            {
-                bdmaClearFlagTransferHalf();
-                isrType = BDMA_TRANSFER_HALF;
-            }
-            else if(bdmaIsEnabledITTransferComplete() && bdmaIsActiveFlagTransterComplete())
-            {
-                bdmaClearFlagTransferComplete();
-                isrType = BDMA_TRANSFER_COMPLETE;
-            }
-            else if(bdmaIsEnabledITTransterError() && bdmaIsActiveFlagTransterError()) 
-            {
-                bdmaClearFlagTransferError();
-                isrType = BDMA_TRANSFER_ERROR;
-            }
-            if(bdmacb_)
-            {
-                bdmacb_(this, isrType);
-            }
-        }
-        else
-        {
-            if(dmaMuxIsEnabledITReqGenTrigEventOverrun() && dmaMuxIsActiveFlagReqGenTrigEventOverrun())
-            {
-                dmaMuxClearFlagReqGenTrigEventOverrun();
-                if(bdmamuxcb_)
-                {
-                    bdmamuxcb_(this, DMAMUX_OVERRUN_TYPE_GEN);
-                }
-            }
-            else if(dmaMuxIsEnabledITSyncEventOverrun() && dmaMuxIsActiveFlagSyncEventOverrun())
-            {
-                dmaMuxClearFlagSyncEventOverrun();
-                if(bdmamuxcb_)
-                {
-                    bdmamuxcb_(this, DMAMUX_OVERRUN_TYPE_SYNC);
-                }
-            }
-        }
     }
     inline BDMAChannelNum BDMAGetChannelIndex(const BDMA_Channel_TypeDef* channel) const
     {

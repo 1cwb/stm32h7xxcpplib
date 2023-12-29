@@ -1,5 +1,6 @@
 #pragma once 
 #include "common.hpp"
+
 /** @defgroup LPTIM_LL_EC_GET_FLAG Get Flags Defines
   * @brief    Flags defines which can be used with lptimReadReg function
   * @{
@@ -126,10 +127,11 @@ struct LPTIM_InitTypeDef
 
 class LPTIMER
 {
+    using LPTIMInterruptCb = std::function<void(LPTIMER*, LPTIMIsrFlgas)>;
 public:
     LPTIMER(LPTIM_TypeDef* timer) : timer_(timer)
     {
-
+        enableClk();
     }
     ~LPTIMER()
     {
@@ -480,7 +482,7 @@ public:
             RCCControl::getInstance()->APB4GRP1ReleaseReset(RCC_APB4_GRP1_PERIPH_LPTIM5);
         }
     }
-    eResult lptimInit(LPTMClkSource ClockSource, LPTMPrescaler Prescaler, LPTIMOutputWaveformType Waveform, LPTIMOutputPolarity Polarity)
+    eResult lptimInit(LPTMClkSource ClockSource, LPTMPrescaler Prescaler)
     {
         eResult result = E_RESULT_OK;
         /* The LPTIMx_CFGR register must only be modified when the LPTIM is disabled
@@ -492,12 +494,23 @@ public:
         }
         else
         {
+            lptimDisable();
             /* Set CKSEL bitfield according to ClockSource value */
             /* Set PRESC bitfield according to Prescaler value */
             /* Set WAVE bitfield according to Waveform value */
             /* Set WAVEPOL bitfield according to Polarity value */
             MODIFY_REG(timer_->CFGR,
-                    (LPTIM_CFGR_CKSEL | LPTIM_CFGR_PRESC | LPTIM_CFGR_WAVE | LPTIM_CFGR_WAVPOL), ClockSource | Prescaler | Waveform | Polarity);
+                    (LPTIM_CFGR_CKSEL | LPTIM_CFGR_PRESC), ClockSource | Prescaler);
+            registerLPTimIsrCb(timer_,[](void* param, LPTIMIsrFlgas flags){
+                LPTIMER* pltim = reinterpret_cast<LPTIMER*>(param);
+                if(pltim)
+                {
+                    if(pltim->timcb_)
+                    {
+                        pltim->timcb_(pltim, flags);
+                    }
+                }
+            } ,this);
         }
         return result;
     }
@@ -538,6 +551,7 @@ public:
             break;
         #endif /* LPTIM3 && LPTIM4 && LPTIM5 */
             default:
+            tmpclksource = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM1_CLKSOURCE);
             break;
         }
 
@@ -621,7 +635,161 @@ public:
         /* Exit critical section: restore previous priority mask */
         __set_PRIMASK(primask_bit);
     }
+    void lptimCountStart(uint32_t Period)
+    {
+        /* If clock source is not ULPTIM clock and counter source is external, then it must not be prescaled */
+        if(lptimGetClockSource() != LPTIM_CLK_SOURCE_EXTERNAL && lptimGetCounterMode() == LPTIM_COUNTER_MODE_EXTERNAL)
+        {
+            lptimSetPrescaler(LPTIM_PRESCALER_DIV1);
+        }
+        lptimEnable();
+        lptimClearFlagARROK();
+        lptimSetAutoReload(Period);
+        lptimStartCounter(LPTIM_OPERATING_MODE_CONTINUOUS);
+    }
+    void lptimCountStop()
+    {
+        lptimDisable();
+    }
+    eResult lptimTimeoutStart(uint32_t Period, uint32_t Timeout)
+    {
+        if(lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+        lptimEnableTimeout();
+        lptimEnable();
+        lptimClearFlagARROK();
+        lptimSetAutoReload(Period);
+        lptimClearFlagCMPOK();
+        lptimSetCompare(Timeout);
+        lptimStartCounter(LPTIM_OPERATING_MODE_CONTINUOUS);
+        return E_RESULT_OK;
+    }
+    eResult lptimTimeoutStop()
+    {
+        if(!lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+        lptimDisable();
+        lptimDisableTimeout();
+        return E_RESULT_OK;
+    }
+    eResult lptimPwmStart(uint32_t period, uint32_t pulse, LPTIMOutputPolarity outputPolarity = LPTIM_OUTPUT_POLARITY_REGULAR)
+    {
+        if(lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+        /* Reset WAVE bit to set PWM mode */
+        lptimSetWaveform(LPTIM_OUTPUT_WAVEFORM_PWM);
+        lptimSetPolarity(outputPolarity);
+        /* Enable the Peripheral */
+        lptimEnable();
+
+        /* Clear flag */
+        lptimClearFlagARROK();
+
+        /* Load the period value in the autoreload register */
+        lptimSetAutoReload(period);
+
+        /* Clear flag */
+        lptimClearFlagCMPOK();
+
+        /* Load the pulse value in the compare register */
+        lptimSetCompare(pulse);
+
+        /* Start timer in continuous mode */
+        lptimStartCounter(LPTIM_OPERATING_MODE_CONTINUOUS);
+        return E_RESULT_OK;
+    }
+    eResult lptimPwmStop()
+    {
+        if(!lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+        /* Disable the Peripheral */
+        lptimDisable();
+
+        return E_RESULT_OK;
+    }
+    void enableLPTIMIsr(uint32_t PreemptPriority, uint32_t SubPriority)
+    {
+        if(NVIC_GetEnableIRQ(getIrqType()) == 0U)
+        {
+            NVIC_SetPriority(getIrqType(), NVIC_EncodePriority(NVIC_GetPriorityGrouping(), PreemptPriority, SubPriority));
+            NVIC_EnableIRQ(getIrqType());
+        }
+    }
+    void disableLPTIMIsr()
+    {
+        NVIC_DisableIRQ(getIrqType());
+    }
+    void registerInterruptCb(const LPTIMInterruptCb& isrcb)
+    {
+        timcb_ = isrcb;
+    }
+    void unregisterInterruptCb()
+    {
+        if(timcb_)
+        {
+            timcb_ = LPTIMInterruptCb();
+        }
+    }
+private:
+    void enableClk(bool bEnable = true)
+    {
+        RCCControl* rcc = RCCControl::getInstance();
+        switch (reinterpret_cast<uint32_t>(timer_))
+        {
+            case LPTIM1_BASE:
+                rcc->APB1GRP1EnableClock(RCC_APB1_GRP1_PERIPH_LPTIM1);
+                break;
+            case LPTIM2_BASE:
+                rcc->APB4GRP1EnableClock(RCC_APB4_GRP1_PERIPH_LPTIM2);
+                break;
+            case LPTIM3_BASE:
+                rcc->APB4GRP1EnableClock(RCC_APB4_GRP1_PERIPH_LPTIM3);
+                break;
+            case LPTIM4_BASE:
+                rcc->APB4GRP1EnableClock(RCC_APB4_GRP1_PERIPH_LPTIM4);
+                break;
+            case LPTIM5_BASE:
+                rcc->APB4GRP1EnableClock(RCC_APB4_GRP1_PERIPH_LPTIM5);
+                break;
+            default:
+                break;
+        }
+    }
+    IRQn_Type getIrqType()
+    {
+        IRQn_Type type = LPTIM1_IRQn;
+        switch (reinterpret_cast<uint32_t>(timer_))
+        {
+            case LPTIM1_BASE:
+                type = LPTIM1_IRQn;
+                break;
+            case LPTIM2_BASE:
+                type = LPTIM2_IRQn;
+                break;
+            case LPTIM3_BASE:
+                type = LPTIM3_IRQn;
+                break;
+            case LPTIM4_BASE:
+                type = LPTIM4_IRQn;
+                break;
+            case LPTIM5_BASE:
+                type = LPTIM5_IRQn;
+                break;
+            default:
+                break;
+        }
+        return type;
+    }
 private:
     LPTIM_TypeDef* timer_;
-    LPTIM_InitTypeDef* lptimx_;
+    //LPTIM_InitTypeDef* lptimx_;
+    LPTIMInterruptCb timcb_;
 };

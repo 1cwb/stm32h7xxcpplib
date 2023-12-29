@@ -96,18 +96,6 @@ enum TIMChannelState
   TIM_CHANNEL_STATE_BUSY              = 0x02U,    /*!< An internal process is ongoing on the TIM channel */
 };
 
-enum TIMISRType
-{
-    TIM_IT_UPDATE         =          TIM_DIER_UIE,  
-    TIM_IT_CC1            =          TIM_DIER_CC1IE,  
-    TIM_IT_CC2            =          TIM_DIER_CC2IE,  
-    TIM_IT_CC3            =          TIM_DIER_CC3IE,  
-    TIM_IT_CC4            =          TIM_DIER_CC4IE,  
-    TIM_IT_COM            =          TIM_DIER_COMIE,  
-    TIM_IT_TRIGGER        =          TIM_DIER_TIE,  
-    TIM_IT_BREAK          =          TIM_DIER_BIE,
-    TIM_IT_DISABLE_ALL    =          (TIM_IT_UPDATE|TIM_IT_CC1|TIM_IT_CC2|TIM_IT_CC3|TIM_IT_CC4|TIM_IT_COM|TIM_IT_TRIGGER|TIM_IT_BREAK)
-};
 /** @defgroup TIM_Slave_Mode TIM Slave mode
   * @{
   */
@@ -120,28 +108,7 @@ enum TIMSlaveMode
     TIM_SLAVEMODE_EXTERNAL1             =    (TIM_SMCR_SMS_2 | TIM_SMCR_SMS_1 | TIM_SMCR_SMS_0), /*!< External Clock Mode 1         */
     TIM_SLAVEMODE_COMBINED_RESETTRIGGER =    TIM_SMCR_SMS_3                                     /*!< Combined reset + trigger mode */
 };
-/** @defgroup TIM_Flag_definition TIM Flag Definition
-  * @{
-  */
-enum TIMISRFlag
-{
-    TIM_FLAG_UPDATE           =         TIM_SR_UIF,                           /*!< Update interrupt flag         */
-    TIM_FLAG_CC1              =         TIM_SR_CC1IF,                         /*!< Capture/Compare 1 interrupt flag */
-    TIM_FLAG_CC2              =         TIM_SR_CC2IF,                         /*!< Capture/Compare 2 interrupt flag */
-    TIM_FLAG_CC3              =         TIM_SR_CC3IF,                         /*!< Capture/Compare 3 interrupt flag */
-    TIM_FLAG_CC4              =         TIM_SR_CC4IF,                         /*!< Capture/Compare 4 interrupt flag */
-    TIM_FLAG_CC5              =         TIM_SR_CC5IF,                         /*!< Capture/Compare 5 interrupt flag */
-    TIM_FLAG_CC6              =         TIM_SR_CC6IF,                         /*!< Capture/Compare 6 interrupt flag */
-    TIM_FLAG_COM              =         TIM_SR_COMIF,                         /*!< Commutation interrupt flag    */
-    TIM_FLAG_TRIGGER          =         TIM_SR_TIF,                           /*!< Trigger interrupt flag        */
-    TIM_FLAG_BREAK            =         TIM_SR_BIF,                           /*!< Break interrupt flag          */
-    TIM_FLAG_BREAK2           =         TIM_SR_B2IF,                          /*!< Break 2 interrupt flag        */
-    TIM_FLAG_SYSTEM_BREAK     =         TIM_SR_SBIF,                          /*!< System Break interrupt flag   */
-    TIM_FLAG_CC1OF            =         TIM_SR_CC1OF,                         /*!< Capture 1 overcapture flag    */
-    TIM_FLAG_CC2OF            =         TIM_SR_CC2OF,                         /*!< Capture 2 overcapture flag    */
-    TIM_FLAG_CC3OF            =         TIM_SR_CC3OF,                         /*!< Capture 3 overcapture flag    */
-    TIM_FLAG_CC4OF            =         TIM_SR_CC4OF                          /*!< Capture 4 overcapture flag    */
-};
+
 enum TIMActiveChannel
 {
     TIM_ACTIVE_CHANNEL_1        = 0x01U,    /*!< The active channel is 1     */
@@ -382,7 +349,7 @@ class COMMONTIMER
 {
     using TIMInterruptCb = std::function<void(COMMONTIMER*, TIMISRFlag)>;
 public:
-    COMMONTIMER(TIM_TypeDef* timer) : timer_(timer), timarr_(0), activeChannel_(TIM_ACTIVE_CHANNEL_CLEARED)
+    COMMONTIMER(TIM_TypeDef* timer) : timer_(timer), timarr_(0)//, activeChannel_(TIM_ACTIVE_CHANNEL_CLEARED)
     {
         enableClk();
         setAllChannelState(TIM_CHANNEL_STATE_RESET);
@@ -489,11 +456,14 @@ public:
         setAllChannelState(TIM_CHANNEL_STATE_READY);
         setAllChannelNState(TIM_CHANNEL_STATE_READY);
 
-        registerTimIsrCb(timer_,[](void* param){
+        registerTimIsrCb(timer_,[](void* param, TIMISRFlag flags){
             COMMONTIMER* ptim = reinterpret_cast<COMMONTIMER*>(param);
             if(ptim)
             {
-                ptim->handlerISREvent();
+                if(ptim->timcb_)
+                {
+                    ptim->timcb_(ptim, flags);
+                }
             }
         },this);
 
@@ -623,10 +593,10 @@ public:
         uint32_t prescaler = READ_BIT(timer_->PSC,TIM_PSC_PSC)+1;
         return (getInputClk()/prescaler)/(period);
     }
-    TIMActiveChannel getActiveChannel() const
+    /*TIMActiveChannel getActiveChannel() const
     {
         return activeChannel_;
-    }
+    }*/
     eResult selectClockSource(TIMCLKSrc clockSource, TIMExtCLKPolarity clockPolarity, TIMExtCLKPrecaler clockPrescaler, uint32_t clockFilter)
     {
         eResult status = E_RESULT_OK;
@@ -1773,169 +1743,6 @@ public:
         return E_RESULT_OK;
     }
 private:
-    void handlerISREvent()
-    {
-        /* Capture compare 1 event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_CC1) == TIM_FLAG_CC1)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_CC1) == TIM_IT_CC1)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_CC1);
-                activeChannel_ = TIM_ACTIVE_CHANNEL_1;
-                /* Input capture event */
-                if (READ_BIT(timer_->CCMR1, TIM_CCMR1_CC1S) != 0x00U)
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC1);
-                    }
-                }
-                else /* Output compare event */
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC1);
-                    }
-                }
-                activeChannel_ = TIM_ACTIVE_CHANNEL_CLEARED;
-            }
-        }
-        /* Capture compare 2 event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_CC2) == TIM_FLAG_CC2)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_CC2) == TIM_IT_CC2)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_CC2);
-                activeChannel_ = TIM_ACTIVE_CHANNEL_2;
-                /* Input capture event */
-                if (READ_BIT(timer_->CCMR1, TIM_CCMR1_CC2S) != 0x00U)
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC2);
-                    }
-                }
-                else /* Output compare event */
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC2);
-                    }
-                }
-                activeChannel_ = TIM_ACTIVE_CHANNEL_CLEARED;
-            }
-        }
-        /* Capture compare 3 event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_CC3) == TIM_FLAG_CC3)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_CC3) == TIM_IT_CC3)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_CC3);
-                activeChannel_ = TIM_ACTIVE_CHANNEL_3;
-                /* Input capture event */
-                if (READ_BIT(timer_->CCMR2, TIM_CCMR2_CC3S) != 0x00U)
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC3);
-                    }
-                }
-                else /* Output compare event */
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC3);
-                    }
-                }
-                activeChannel_ = TIM_ACTIVE_CHANNEL_CLEARED;
-            }
-        }
-        /* Capture compare 4 event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_CC4) == TIM_FLAG_CC4)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_CC4) == TIM_IT_CC4)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_CC4);
-                activeChannel_ = TIM_ACTIVE_CHANNEL_3;
-                /* Input capture event */
-                if (READ_BIT(timer_->CCMR2, TIM_CCMR2_CC4S) != 0x00U)
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC4);
-                    }
-                }
-                else /* Output compare event */
-                {
-                    if(timcb_)
-                    {
-                        timcb_(this, TIM_FLAG_CC4);
-                    }
-                }
-                activeChannel_ = TIM_ACTIVE_CHANNEL_CLEARED;
-            }
-        }
-        /* TIM Update event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_UPDATE) == TIM_FLAG_UPDATE)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_UPDATE) == TIM_IT_UPDATE)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_UPDATE);
-                if(timcb_)
-                {
-                    timcb_(this, TIM_FLAG_UPDATE);
-                }
-            }
-        }
-        /* TIM Break input event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_BREAK) == TIM_FLAG_BREAK)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_BREAK) == TIM_IT_BREAK)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_BREAK);
-                if(timcb_)
-                {
-                    timcb_(this, TIM_FLAG_BREAK);
-                }
-            }
-        }
-        /* TIM Break2 input event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_BREAK2) == TIM_FLAG_BREAK2)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_BREAK) == TIM_IT_BREAK)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_BREAK2);
-                if(timcb_)
-                {
-                    timcb_(this, TIM_FLAG_BREAK2);
-                }
-            }
-        }
-        /* TIM Trigger detection event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_TRIGGER) == TIM_FLAG_TRIGGER)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_TRIGGER) == TIM_IT_TRIGGER)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_TRIGGER);
-                if(timcb_)
-                {
-                    timcb_(this, TIM_FLAG_TRIGGER);
-                }
-            }
-        }
-        /* TIM commutation event */
-        if(READ_BIT(timer_->SR, TIM_FLAG_COM) == TIM_FLAG_COM)
-        {
-            if(READ_BIT(timer_->DIER, TIM_IT_COM) == TIM_IT_COM)
-            {
-                CLEAR_BIT(timer_->SR, TIM_FLAG_COM);
-                if(timcb_)
-                {
-                    timcb_(this, TIM_FLAG_COM);
-                }
-            }
-        }
-    }
     inline void setAllChannelState(TIMChannelState sta)
     {
         for(auto& it : channelState_)
@@ -2593,7 +2400,7 @@ private:
 private:
     TIM_TypeDef* timer_;
     __IO uint32_t timarr_;
-    __IO TIMActiveChannel activeChannel_;
+    //__IO TIMActiveChannel activeChannel_;
     __IO TIMChannelState  channelState_[6];   /*!< TIM channel operation state                       */
     __IO TIMChannelState  channelNState_[4];  /*!< TIM complementary channel operation state         */
     TIMInterruptCb timcb_;

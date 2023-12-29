@@ -509,109 +509,369 @@ void unRegisterTimIsrCb(TIM_TypeDef* timx)
 		timIsrCbBuff[13].param = NULL;
 	}
 }
-void timxIsrCallback(TIM_TypeDef *timx)
+void timxIsrCallback(TIM_TypeDef *timx, TIMISRFlag flags)
 {
-	for(int i = 0; i < 13; i++)
+	for(int i = 0; i < 14; i++)
 	{
 		if(timIsrCbBuff[i].timx == timx)
 		{
 			if(timIsrCbBuff[i].cb)
 			{
-				timIsrCbBuff[i].cb(timIsrCbBuff[i].param);
+				timIsrCbBuff[i].cb(timIsrCbBuff[i].param, flags);
 				break;
 			}
 		}
 	}
 }
 
+static void handlerISREvent(TIM_TypeDef *timer_)
+{
+	TIMISRFlag flag = TIM_FLAG_NONE;
+	/* Capture compare 1 event */
+	if((READ_BIT(timer_->DIER, TIM_IT_CC1) == TIM_IT_CC1) && (READ_BIT(timer_->SR, TIM_FLAG_CC1) == TIM_FLAG_CC1))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_CC1);
+		/* Input capture event */
+		if (READ_BIT(timer_->CCMR1, TIM_CCMR1_CC1S) != 0x00U)
+		{
+			flag = TIM_FLAG_CC1;
+			timxIsrCallback(timer_, flag);
+		}
+		else /* Output compare event */
+		{
+			flag = TIM_FLAG_CC1;
+			timxIsrCallback(timer_, flag);
+		}
+	}
+	/* Capture compare 2 event */
+	if((READ_BIT(timer_->DIER, TIM_IT_CC2) == TIM_IT_CC2) && (READ_BIT(timer_->SR, TIM_FLAG_CC2) == TIM_FLAG_CC2))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_CC2);
+		/* Input capture event */
+		if (READ_BIT(timer_->CCMR1, TIM_CCMR1_CC2S) != 0x00U)
+		{
+			flag = TIM_FLAG_CC2;
+			timxIsrCallback(timer_, flag);
+		}
+		else /* Output compare event */
+		{
+			flag = TIM_FLAG_CC2;
+			timxIsrCallback(timer_, flag);
+		}
+	}
+	/* Capture compare 3 event */
+	if((READ_BIT(timer_->DIER, TIM_IT_CC3) == TIM_IT_CC3) && (READ_BIT(timer_->SR, TIM_FLAG_CC3) == TIM_FLAG_CC3))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_CC3);
+		/* Input capture event */
+		if (READ_BIT(timer_->CCMR2, TIM_CCMR2_CC3S) != 0x00U)
+		{
+			flag = TIM_FLAG_CC3;
+			timxIsrCallback(timer_, flag);
+		}
+		else /* Output compare event */
+		{
+			flag = TIM_FLAG_CC3;
+			timxIsrCallback(timer_, flag);
+		}
+	}
+	/* Capture compare 4 event */
+	if((READ_BIT(timer_->DIER, TIM_IT_CC4) == TIM_IT_CC4) && (READ_BIT(timer_->SR, TIM_FLAG_CC4) == TIM_FLAG_CC4))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_CC4);
+		/* Input capture event */
+		if (READ_BIT(timer_->CCMR2, TIM_CCMR2_CC4S) != 0x00U)
+		{
+			flag = TIM_FLAG_CC4;
+			timxIsrCallback(timer_, flag);
+		}
+		else /* Output compare event */
+		{
+			flag = TIM_FLAG_CC4;
+			timxIsrCallback(timer_, flag);
+		}
+	}
+	/* TIM Update event */
+	if((READ_BIT(timer_->DIER, TIM_IT_UPDATE) == TIM_IT_UPDATE) && (READ_BIT(timer_->SR, TIM_FLAG_UPDATE) == TIM_FLAG_UPDATE))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_UPDATE);
+		flag = TIM_FLAG_UPDATE;
+		timxIsrCallback(timer_, flag);
+	}
+	/* TIM Break input event */
+	if((READ_BIT(timer_->DIER, TIM_IT_BREAK) == TIM_IT_BREAK) && (READ_BIT(timer_->SR, TIM_FLAG_BREAK) == TIM_FLAG_BREAK))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_BREAK);
+		flag = TIM_FLAG_BREAK;
+		timxIsrCallback(timer_, flag);
+	}
+	/* TIM Break2 input event */
+	if((READ_BIT(timer_->DIER, TIM_IT_BREAK) == TIM_IT_BREAK) && (READ_BIT(timer_->SR, TIM_FLAG_BREAK2) == TIM_FLAG_BREAK2))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_BREAK2);
+		flag = TIM_FLAG_BREAK2;
+		timxIsrCallback(timer_, flag);
+	}
+	/* TIM Trigger detection event */
+	if((READ_BIT(timer_->DIER, TIM_IT_TRIGGER) == TIM_IT_TRIGGER) && (READ_BIT(timer_->SR, TIM_FLAG_TRIGGER) == TIM_FLAG_TRIGGER))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_TRIGGER);
+		flag = TIM_FLAG_TRIGGER;
+		timxIsrCallback(timer_, flag);
+	}
+	/* TIM commutation event */
+	if((READ_BIT(timer_->DIER, TIM_IT_COM) == TIM_IT_COM) && (READ_BIT(timer_->SR, TIM_FLAG_COM) == TIM_FLAG_COM))
+	{
+		CLEAR_BIT(timer_->SR, TIM_FLAG_COM);
+		flag = TIM_FLAG_COM;
+		timxIsrCallback(timer_, flag);
+	}
+}
+
 void TIM1_BRK_IRQHandler(void)
 {
-	timxIsrCallback(TIM1);
+	handlerISREvent(TIM1);
 }
 void TIM1_UP_IRQHandler(void)
 {
-	timxIsrCallback(TIM1);
+	handlerISREvent(TIM1);
 }
 void TIM1_TRG_COM_IRQHandler(void)
 {
-	timxIsrCallback(TIM1);
+	handlerISREvent(TIM1);
 }
 void TIM1_CC_IRQHandler(void)
 {
-	timxIsrCallback(TIM1);
+	handlerISREvent(TIM1);
 }
 void TIM2_IRQHandler(void)
 {
-	timxIsrCallback(TIM2);
+	handlerISREvent(TIM2);
 }
 void TIM3_IRQHandler(void)
 {
-	timxIsrCallback(TIM3);
+	handlerISREvent(TIM3);
 }
 void TIM4_IRQHandler(void)
 {
-	timxIsrCallback(TIM4);
+	handlerISREvent(TIM4);
 }
 void TIM5_IRQHandler(void)
 {
-	timxIsrCallback(TIM5);
+	handlerISREvent(TIM5);
 }
 void TIM6_DAC_IRQHandler(void)
 {
-	timxIsrCallback(TIM6);
+	handlerISREvent(TIM6);
 }
 void TIM7_IRQHandler(void)
 {
-	timxIsrCallback(TIM7);
+	handlerISREvent(TIM7);
 }
 void TIM8_BRK_TIM12_IRQHandler(void)
 {
 	if(READ_BIT(TIM8->SR, TIM_SR_BIF) == TIM_SR_BIF)
 	{
-		timxIsrCallback(TIM8);
+		handlerISREvent(TIM8);
 	}
 	else
 	{
-		timxIsrCallback(TIM12);
+		handlerISREvent(TIM12);
 	}
 }
 void TIM8_UP_TIM13_IRQHandler(void)
 {
 	if(READ_BIT(TIM8->SR, TIM_SR_UIF) == TIM_SR_UIF)
 	{
-		timxIsrCallback(TIM8);
+		handlerISREvent(TIM8);
 	}
 	else
 	{
-		timxIsrCallback(TIM13);
+		handlerISREvent(TIM13);
 	}
 }
 void TIM8_TRG_COM_TIM14_IRQHandler(void)
 {
 	if(READ_BIT(TIM8->SR, TIM_SR_COMIF) == TIM_SR_COMIF || READ_BIT(TIM8->SR, TIM_SR_TIF) == TIM_SR_TIF)
 	{
-		timxIsrCallback(TIM8);
+		handlerISREvent(TIM8);
 	}
 	else
 	{
-		timxIsrCallback(TIM14);
+		handlerISREvent(TIM14);
 	}
 }
 void TIM8_CC_IRQHandler(void)
 {
-	timxIsrCallback(TIM8);
+	handlerISREvent(TIM8);
 }
 void TIM15_IRQHandler(void)
 {
-	timxIsrCallback(TIM15);
+	handlerISREvent(TIM15);
 }
 void TIM16_IRQHandler(void)
 {
-	timxIsrCallback(TIM16);
+	handlerISREvent(TIM16);
 }
 void TIM17_IRQHandler(void)
 {
-	timxIsrCallback(TIM17);
+	handlerISREvent(TIM17);
+}
+
+typedef struct lptimIsrSt
+{
+	LPTIM_ISR_CB cb;
+	LPTIM_TypeDef *timx;
+	void* param;
+}lptimIsrSt;
+
+static lptimIsrSt lptimIsrCbBuff[5] = {0};
+
+void registerLPTimIsrCb(LPTIM_TypeDef* timx, LPTIM_ISR_CB cb, void* param)
+{
+	if(timx == LPTIM1)
+	{
+		lptimIsrCbBuff[0].timx = timx;
+		lptimIsrCbBuff[0].cb = cb;
+		lptimIsrCbBuff[0].param = param;
+	}
+	else if(timx == LPTIM2)
+	{
+		lptimIsrCbBuff[1].timx = timx;
+		lptimIsrCbBuff[1].cb = cb;
+		lptimIsrCbBuff[1].param = param;
+	}
+	else if(timx == LPTIM3)
+	{
+		lptimIsrCbBuff[2].timx = timx;
+		lptimIsrCbBuff[2].cb = cb;
+		lptimIsrCbBuff[2].param = param;
+	}
+	else if(timx == LPTIM4)
+	{
+		lptimIsrCbBuff[3].timx = timx;
+		lptimIsrCbBuff[3].cb = cb;
+		lptimIsrCbBuff[3].param = param;
+	}
+	else if(timx == LPTIM5)
+	{
+		lptimIsrCbBuff[4].timx = timx;
+		lptimIsrCbBuff[4].cb = cb;
+		lptimIsrCbBuff[4].param = param;
+	}
+}
+void unRegisterLPTimIsrCb(LPTIM_TypeDef* timx)
+{
+	if(timx == LPTIM1)
+	{
+		lptimIsrCbBuff[0].timx = NULL;
+		lptimIsrCbBuff[0].cb = NULL;
+		lptimIsrCbBuff[0].param = NULL;
+	}
+	else if(timx == LPTIM2)
+	{
+		lptimIsrCbBuff[1].timx = NULL;
+		lptimIsrCbBuff[1].cb = NULL;
+		lptimIsrCbBuff[1].param = NULL;
+	}
+	else if(timx == LPTIM3)
+	{
+		lptimIsrCbBuff[2].timx = NULL;
+		lptimIsrCbBuff[2].cb = NULL;
+		lptimIsrCbBuff[2].param = NULL;
+	}
+	else if(timx == LPTIM4)
+	{
+		lptimIsrCbBuff[3].timx = NULL;
+		lptimIsrCbBuff[3].cb = NULL;
+		lptimIsrCbBuff[3].param = NULL;
+	}
+	else if(timx == LPTIM5)
+	{
+		lptimIsrCbBuff[4].timx = NULL;
+		lptimIsrCbBuff[4].cb = NULL;
+		lptimIsrCbBuff[4].param = NULL;
+	}
+}
+void lptimxIsrCallback(LPTIM_TypeDef *timx, LPTIMIsrFlgas flags)
+{
+	for(int i = 0; i < 5; i++)
+	{
+		if(lptimIsrCbBuff[i].timx == timx)
+		{
+			if(lptimIsrCbBuff[i].cb)
+			{
+				lptimIsrCbBuff[i].cb(lptimIsrCbBuff[i].param, flags);
+				break;
+			}
+		}
+	}
+}
+void lptimHandlerISREvent(LPTIM_TypeDef *timx)
+{
+	LPTIMIsrFlgas flags = LPTIM_ISR_FLAG_NONE;
+	if((READ_BIT(timx->IER, LPTIM_IER_CMPMIE) == LPTIM_IER_CMPMIE) && (READ_BIT(timx->ISR, LPTIM_ISR_CMPM) == LPTIM_ISR_CMPM))
+	{
+		SET_BIT(timx->ICR, LPTIM_ICR_CMPMCF);
+		flags = LPTIM_ISR_FLAG_CMPM;
+		lptimxIsrCallback(timx, flags);
+	}
+	if((READ_BIT(timx->ISR, LPTIM_ISR_CMPOK) == LPTIM_ISR_CMPOK) && (READ_BIT(timx->ISR, LPTIM_ISR_CMPOK) == LPTIM_ISR_CMPOK))
+	{
+		SET_BIT(timx->ICR, LPTIM_ICR_CMPOKCF);
+		flags = LPTIM_ISR_FLAG_CMPOK;
+		lptimxIsrCallback(timx, flags);
+	}
+	if((READ_BIT(timx->ISR, LPTIM_ISR_ARRM) == LPTIM_ISR_ARRM) && (READ_BIT(timx->ISR, LPTIM_ISR_ARRM) == LPTIM_ISR_ARRM))
+	{
+		SET_BIT(timx->ICR, LPTIM_ICR_ARRMCF);
+		flags = LPTIM_ISR_FLAG_ARRM;
+		lptimxIsrCallback(timx, flags);
+	}
+	if((READ_BIT(timx->ISR, LPTIM_ISR_ARROK) == LPTIM_ISR_ARROK) && (READ_BIT(timx->ISR, LPTIM_ISR_ARROK) == LPTIM_ISR_ARROK))
+	{
+		SET_BIT(timx->ICR, LPTIM_ICR_ARROKCF);
+		flags = LPTIM_ISR_FLAG_ARROK;
+		lptimxIsrCallback(timx, flags);
+	}
+	if((READ_BIT(timx->ISR, LPTIM_ISR_EXTTRIG) == LPTIM_ISR_EXTTRIG) && (READ_BIT(timx->ISR, LPTIM_ISR_EXTTRIG) == LPTIM_ISR_EXTTRIG))
+	{
+		SET_BIT(timx->ICR, LPTIM_ICR_EXTTRIGCF);
+		flags = LPTIM_ISR_FLAG_EXTTRIG;
+		lptimxIsrCallback(timx, flags);
+	}
+	if((READ_BIT(timx->ISR, LPTIM_ISR_UP) == LPTIM_ISR_UP) && (READ_BIT(timx->ISR, LPTIM_ISR_UP) == LPTIM_ISR_UP))
+	{
+		SET_BIT(timx->ICR, LPTIM_ICR_UPCF);
+		flags = LPTIM_ISR_FLAG_UP;
+		lptimxIsrCallback(timx, flags);
+	}
+	if((READ_BIT(timx->ISR, LPTIM_ISR_DOWN) == LPTIM_ISR_DOWN) && (READ_BIT(timx->ISR, LPTIM_ISR_DOWN) == LPTIM_ISR_DOWN))
+	{
+		SET_BIT(timx->ICR, LPTIM_ICR_DOWNCF);
+		flags = LPTIM_ISR_FLAG_DOWN;
+		lptimxIsrCallback(timx, flags);
+	}
+}
+void LPTIM1_IRQHandler()
+{
+	lptimHandlerISREvent(LPTIM1);
+}
+void LPTIM2_IRQHandler()
+{
+	lptimHandlerISREvent(LPTIM2);
+}
+void LPTIM3_IRQHandler()
+{
+	lptimHandlerISREvent(LPTIM3);
+}
+void LPTIM4_IRQHandler()
+{
+	lptimHandlerISREvent(LPTIM4);
+}
+void LPTIM5_IRQHandler()
+{
+	lptimHandlerISREvent(LPTIM5);
 }
 
 typedef struct DMAIsrSt
@@ -712,7 +972,6 @@ void registerDMAIsrCb(DMA_Stream_TypeDef* stream, DMA_ISR_CB cb, void* param)
 			DMAIsrCbBuff[15].cb = cb;
 			DMAIsrCbBuff[15].stream = stream;
 			DMAIsrCbBuff[15].param = param;
-			printf("register dma2 xx stream 7\r\n");
 			break;
 		default:
 			break;
@@ -795,170 +1054,1106 @@ void unRegisterBDMAIsrCb(BDMA_Channel_TypeDef* channel)
 }
 void DMA1_Stream0_IRQHandler()
 {
-	if(DMAIsrCbBuff[0].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream0->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA1->LISR, DMA_LISR_HTIF0) == (DMA_LISR_HTIF0)))
 	{
-		DMAIsrCbBuff[0].cb(DMAIsrCbBuff[0].param, 0);
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CHTIF0);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[0].cb)
+		{
+			DMAIsrCbBuff[0].cb(DMAIsrCbBuff[0].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream0->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->LISR, DMA_LISR_TCIF0) == (DMA_LISR_TCIF0))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTCIF0);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[0].cb)
+		{
+			DMAIsrCbBuff[0].cb(DMAIsrCbBuff[0].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream0->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->LISR, DMA_LISR_TEIF0) == (DMA_LISR_TEIF0))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTEIF0);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[0].cb)
+		{
+			DMAIsrCbBuff[0].cb(DMAIsrCbBuff[0].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream0->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->LISR, DMA_LISR_DMEIF0) == (DMA_LISR_DMEIF0))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CDMEIF0);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[0].cb)
+		{
+			DMAIsrCbBuff[0].cb(DMAIsrCbBuff[0].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream0->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->LISR, DMA_LISR_FEIF0) == (DMA_LISR_FEIF0))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CFEIF0);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[0].cb)
+		{
+			DMAIsrCbBuff[0].cb(DMAIsrCbBuff[0].param, 0, isrType);
+		}
 	}
 }
 void DMA1_Stream1_IRQHandler()
 {
-	if(DMAIsrCbBuff[1].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream1->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA1->LISR, DMA_LISR_HTIF1) == (DMA_LISR_HTIF1)))
 	{
-		DMAIsrCbBuff[1].cb(DMAIsrCbBuff[1].param, 0);
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CHTIF1);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[1].cb)
+		{
+			DMAIsrCbBuff[1].cb(DMAIsrCbBuff[1].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream1->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->LISR, DMA_LISR_TCIF1) == (DMA_LISR_TCIF1))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTCIF1);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[1].cb)
+		{
+			DMAIsrCbBuff[1].cb(DMAIsrCbBuff[1].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream1->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->LISR, DMA_LISR_TEIF1) == (DMA_LISR_TEIF1))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTEIF1);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[1].cb)
+		{
+			DMAIsrCbBuff[1].cb(DMAIsrCbBuff[1].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream1->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->LISR, DMA_LISR_DMEIF1) == (DMA_LISR_DMEIF1))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CDMEIF1);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[1].cb)
+		{
+			DMAIsrCbBuff[1].cb(DMAIsrCbBuff[1].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream1->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->LISR, DMA_LISR_FEIF1) == (DMA_LISR_FEIF1))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CFEIF1);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[1].cb)
+		{
+			DMAIsrCbBuff[1].cb(DMAIsrCbBuff[1].param, 0, isrType);
+		}
 	}
 }
 void DMA1_Stream2_IRQHandler()
 {
-	if(DMAIsrCbBuff[2].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream2->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA1->LISR, DMA_LISR_HTIF2) == (DMA_LISR_HTIF2)))
 	{
-		DMAIsrCbBuff[2].cb(DMAIsrCbBuff[2].param, 0);
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CHTIF2);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[2].cb)
+		{
+			DMAIsrCbBuff[2].cb(DMAIsrCbBuff[2].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream2->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->LISR, DMA_LISR_TCIF2) == (DMA_LISR_TCIF2))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTCIF2);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[2].cb)
+		{
+			DMAIsrCbBuff[2].cb(DMAIsrCbBuff[2].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream2->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->LISR, DMA_LISR_TEIF2) == (DMA_LISR_TEIF2))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTEIF2);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[2].cb)
+		{
+			DMAIsrCbBuff[2].cb(DMAIsrCbBuff[2].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream2->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->LISR, DMA_LISR_DMEIF2) == (DMA_LISR_DMEIF2))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CDMEIF2);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[2].cb)
+		{
+			DMAIsrCbBuff[2].cb(DMAIsrCbBuff[2].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream2->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->LISR, DMA_LISR_FEIF2) == (DMA_LISR_FEIF2))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CFEIF2);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[2].cb)
+		{
+			DMAIsrCbBuff[2].cb(DMAIsrCbBuff[2].param, 0, isrType);
+		}
 	}
 }
 void DMA1_Stream3_IRQHandler()
 {
-	if(DMAIsrCbBuff[3].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream3->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA1->LISR, DMA_LISR_HTIF3) == (DMA_LISR_HTIF3)))
 	{
-		DMAIsrCbBuff[3].cb(DMAIsrCbBuff[3].param, 0);
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CHTIF3);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[3].cb)
+		{
+			DMAIsrCbBuff[3].cb(DMAIsrCbBuff[3].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream3->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->LISR, DMA_LISR_TCIF3) == (DMA_LISR_TCIF3))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTCIF3);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[3].cb)
+		{
+			DMAIsrCbBuff[3].cb(DMAIsrCbBuff[3].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream3->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->LISR, DMA_LISR_TEIF3) == (DMA_LISR_TEIF3))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CTEIF3);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[3].cb)
+		{
+			DMAIsrCbBuff[3].cb(DMAIsrCbBuff[3].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream3->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->LISR, DMA_LISR_DMEIF3) == (DMA_LISR_DMEIF3))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CDMEIF3);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[3].cb)
+		{
+			DMAIsrCbBuff[3].cb(DMAIsrCbBuff[3].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream3->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->LISR, DMA_LISR_FEIF3) == (DMA_LISR_FEIF3))
+	{
+		WRITE_REG(DMA1->LIFCR, DMA_LIFCR_CFEIF3);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[3].cb)
+		{
+			DMAIsrCbBuff[3].cb(DMAIsrCbBuff[3].param, 0, isrType);
+		}
 	}
 }
 void DMA1_Stream4_IRQHandler()
 {
-	if(DMAIsrCbBuff[4].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream4->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA1->HISR, DMA_HISR_HTIF4) == (DMA_HISR_HTIF4))
 	{
-		DMAIsrCbBuff[4].cb(DMAIsrCbBuff[4].param, 0);
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CHTIF4);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[4].cb)
+		{
+			DMAIsrCbBuff[4].cb(DMAIsrCbBuff[4].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream4->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->HISR, DMA_HISR_TCIF4) == (DMA_HISR_TCIF4))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTCIF4);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[4].cb)
+		{
+			DMAIsrCbBuff[4].cb(DMAIsrCbBuff[4].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream4->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->HISR, DMA_HISR_TEIF4) == (DMA_HISR_TEIF4))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTEIF4);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[4].cb)
+		{
+			DMAIsrCbBuff[4].cb(DMAIsrCbBuff[4].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream4->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->HISR, DMA_HISR_DMEIF4) == (DMA_HISR_DMEIF4))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CDMEIF4);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[4].cb)
+		{
+			DMAIsrCbBuff[4].cb(DMAIsrCbBuff[4].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream4->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->HISR, DMA_HISR_FEIF4) == (DMA_HISR_FEIF4))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CFEIF4);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[4].cb)
+		{
+			DMAIsrCbBuff[4].cb(DMAIsrCbBuff[4].param, 0, isrType);
+		}
 	}
 }
 void DMA1_Stream5_IRQHandler()
 {
-	if(DMAIsrCbBuff[5].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream5->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA1->HISR, DMA_HISR_HTIF5) == (DMA_HISR_HTIF5))
 	{
-		DMAIsrCbBuff[5].cb(DMAIsrCbBuff[5].param, 0);
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CHTIF5);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[5].cb)
+		{
+			DMAIsrCbBuff[5].cb(DMAIsrCbBuff[5].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream5->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->HISR, DMA_HISR_TCIF5) == (DMA_HISR_TCIF5))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTCIF5);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[5].cb)
+		{
+			DMAIsrCbBuff[5].cb(DMAIsrCbBuff[5].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream5->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->HISR, DMA_HISR_TEIF5) == (DMA_HISR_TEIF5))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTEIF5);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[5].cb)
+		{
+			DMAIsrCbBuff[5].cb(DMAIsrCbBuff[5].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream5->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->HISR, DMA_HISR_DMEIF5) == (DMA_HISR_DMEIF5))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CDMEIF5);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[5].cb)
+		{
+			DMAIsrCbBuff[5].cb(DMAIsrCbBuff[5].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream5->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->HISR, DMA_HISR_FEIF5) == (DMA_HISR_FEIF5))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CFEIF5);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[5].cb)
+		{
+			DMAIsrCbBuff[5].cb(DMAIsrCbBuff[5].param, 0, isrType);
+		}
 	}
 }
 void DMA1_Stream6_IRQHandler()
 {
-	if(DMAIsrCbBuff[6].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream6->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA1->HISR, DMA_HISR_HTIF6) == (DMA_HISR_HTIF6))
 	{
-		DMAIsrCbBuff[6].cb(DMAIsrCbBuff[6].param, 0);
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CHTIF6);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[6].cb)
+		{
+			DMAIsrCbBuff[6].cb(DMAIsrCbBuff[6].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream6->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->HISR, DMA_HISR_TCIF6) == (DMA_HISR_TCIF6))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTCIF6);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[6].cb)
+		{
+			DMAIsrCbBuff[6].cb(DMAIsrCbBuff[6].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream6->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->HISR, DMA_HISR_TEIF6) == (DMA_HISR_TEIF6))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTEIF6);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[6].cb)
+		{
+			DMAIsrCbBuff[6].cb(DMAIsrCbBuff[6].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream6->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->HISR, DMA_HISR_DMEIF6) == (DMA_HISR_DMEIF6))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CDMEIF6);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[6].cb)
+		{
+			DMAIsrCbBuff[6].cb(DMAIsrCbBuff[6].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream6->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->HISR, DMA_HISR_FEIF6) == (DMA_HISR_FEIF6))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CFEIF6);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[6].cb)
+		{
+			DMAIsrCbBuff[6].cb(DMAIsrCbBuff[6].param, 0, isrType);
+		}
 	}
 }
 void DMA1_Stream7_IRQHandler()
 {
-		if(DMAIsrCbBuff[7].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA1_Stream7->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA1->HISR, DMA_HISR_HTIF7) == (DMA_HISR_HTIF7))
 	{
-		DMAIsrCbBuff[7].cb(DMAIsrCbBuff[7].param, 0);
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CHTIF7);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[7].cb)
+		{
+			DMAIsrCbBuff[7].cb(DMAIsrCbBuff[7].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream7->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA1->HISR, DMA_HISR_TCIF7) == (DMA_HISR_TCIF7))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTCIF7);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[7].cb)
+		{
+			DMAIsrCbBuff[7].cb(DMAIsrCbBuff[7].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream7->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA1->HISR, DMA_HISR_TEIF7) == (DMA_HISR_TEIF7))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CTEIF7);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[7].cb)
+		{
+			DMAIsrCbBuff[7].cb(DMAIsrCbBuff[7].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream7->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA1->HISR, DMA_HISR_DMEIF7) == (DMA_HISR_DMEIF7))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CDMEIF7);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[7].cb)
+		{
+			DMAIsrCbBuff[7].cb(DMAIsrCbBuff[7].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA1_Stream7->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA1->HISR, DMA_HISR_FEIF7) == (DMA_HISR_FEIF7))
+	{
+		WRITE_REG(DMA1->HIFCR, DMA_HIFCR_CFEIF7);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[7].cb)
+		{
+			DMAIsrCbBuff[7].cb(DMAIsrCbBuff[7].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream0_IRQHandler()
 {
-	if(DMAIsrCbBuff[8].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream0->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA2->LISR, DMA_LISR_HTIF0) == (DMA_LISR_HTIF0)))
 	{
-		DMAIsrCbBuff[8].cb(DMAIsrCbBuff[8].param, 0);
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CHTIF0);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[8].cb)
+		{
+			DMAIsrCbBuff[8].cb(DMAIsrCbBuff[8].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream0->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->LISR, DMA_LISR_TCIF0) == (DMA_LISR_TCIF0))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF0);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[8].cb)
+		{
+			DMAIsrCbBuff[8].cb(DMAIsrCbBuff[8].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream0->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->LISR, DMA_LISR_TEIF0) == (DMA_LISR_TEIF0))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTEIF0);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[8].cb)
+		{
+			DMAIsrCbBuff[8].cb(DMAIsrCbBuff[8].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream0->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->LISR, DMA_LISR_DMEIF0) == (DMA_LISR_DMEIF0))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CDMEIF0);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[8].cb)
+		{
+			DMAIsrCbBuff[8].cb(DMAIsrCbBuff[8].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream0->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->LISR, DMA_LISR_FEIF0) == (DMA_LISR_FEIF0))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CFEIF0);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[8].cb)
+		{
+			DMAIsrCbBuff[8].cb(DMAIsrCbBuff[8].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream1_IRQHandler()
 {
-	if(DMAIsrCbBuff[9].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream1->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA2->LISR, DMA_LISR_HTIF1) == (DMA_LISR_HTIF1)))
 	{
-		DMAIsrCbBuff[9].cb(DMAIsrCbBuff[9].param, 0);
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CHTIF1);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[9].cb)
+		{
+			DMAIsrCbBuff[9].cb(DMAIsrCbBuff[9].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream1->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->LISR, DMA_LISR_TCIF1) == (DMA_LISR_TCIF1))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF1);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[9].cb)
+		{
+			DMAIsrCbBuff[9].cb(DMAIsrCbBuff[9].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream1->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->LISR, DMA_LISR_TEIF1) == (DMA_LISR_TEIF1))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTEIF1);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[9].cb)
+		{
+			DMAIsrCbBuff[9].cb(DMAIsrCbBuff[9].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream1->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->LISR, DMA_LISR_DMEIF1) == (DMA_LISR_DMEIF1))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CDMEIF1);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[9].cb)
+		{
+			DMAIsrCbBuff[9].cb(DMAIsrCbBuff[9].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream1->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->LISR, DMA_LISR_FEIF1) == (DMA_LISR_FEIF1))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CFEIF1);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[9].cb)
+		{
+			DMAIsrCbBuff[9].cb(DMAIsrCbBuff[9].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream2_IRQHandler()
 {
-	if(DMAIsrCbBuff[10].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream2->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA2->LISR, DMA_LISR_HTIF2) == (DMA_LISR_HTIF2)))
 	{
-		DMAIsrCbBuff[10].cb(DMAIsrCbBuff[10].param, 0);
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CHTIF2);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[10].cb)
+		{
+			DMAIsrCbBuff[10].cb(DMAIsrCbBuff[10].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream2->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->LISR, DMA_LISR_TCIF2) == (DMA_LISR_TCIF2))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF2);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[10].cb)
+		{
+			DMAIsrCbBuff[10].cb(DMAIsrCbBuff[10].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream2->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->LISR, DMA_LISR_TEIF2) == (DMA_LISR_TEIF2))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTEIF2);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[10].cb)
+		{
+			DMAIsrCbBuff[10].cb(DMAIsrCbBuff[10].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream2->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->LISR, DMA_LISR_DMEIF2) == (DMA_LISR_DMEIF2))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CDMEIF2);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[10].cb)
+		{
+			DMAIsrCbBuff[10].cb(DMAIsrCbBuff[10].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream2->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->LISR, DMA_LISR_FEIF2) == (DMA_LISR_FEIF2))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CFEIF2);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[10].cb)
+		{
+			DMAIsrCbBuff[10].cb(DMAIsrCbBuff[10].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream3_IRQHandler()
 {
-	if(DMAIsrCbBuff[11].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream3->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && (READ_BIT(DMA2->LISR, DMA_LISR_HTIF3) == (DMA_LISR_HTIF3)))
 	{
-		DMAIsrCbBuff[11].cb(DMAIsrCbBuff[11].param, 0);
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CHTIF3);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[11].cb)
+		{
+			DMAIsrCbBuff[11].cb(DMAIsrCbBuff[11].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream3->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->LISR, DMA_LISR_TCIF3) == (DMA_LISR_TCIF3))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTCIF3);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[11].cb)
+		{
+			DMAIsrCbBuff[11].cb(DMAIsrCbBuff[11].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream3->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->LISR, DMA_LISR_TEIF3) == (DMA_LISR_TEIF3))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CTEIF3);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[11].cb)
+		{
+			DMAIsrCbBuff[11].cb(DMAIsrCbBuff[11].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream3->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->LISR, DMA_LISR_DMEIF3) == (DMA_LISR_DMEIF3))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CDMEIF3);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[11].cb)
+		{
+			DMAIsrCbBuff[11].cb(DMAIsrCbBuff[11].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream3->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->LISR, DMA_LISR_FEIF3) == (DMA_LISR_FEIF3))
+	{
+		WRITE_REG(DMA2->LIFCR, DMA_LIFCR_CFEIF3);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[11].cb)
+		{
+			DMAIsrCbBuff[11].cb(DMAIsrCbBuff[11].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream4_IRQHandler()
 {
-	if(DMAIsrCbBuff[12].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream4->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA2->HISR, DMA_HISR_HTIF4) == (DMA_HISR_HTIF4))
 	{
-		DMAIsrCbBuff[12].cb(DMAIsrCbBuff[12].param, 0);
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CHTIF4);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[12].cb)
+		{
+			DMAIsrCbBuff[12].cb(DMAIsrCbBuff[12].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream4->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->HISR, DMA_HISR_TCIF4) == (DMA_HISR_TCIF4))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF4);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[12].cb)
+		{
+			DMAIsrCbBuff[12].cb(DMAIsrCbBuff[12].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream4->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->HISR, DMA_HISR_TEIF4) == (DMA_HISR_TEIF4))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTEIF4);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[12].cb)
+		{
+			DMAIsrCbBuff[12].cb(DMAIsrCbBuff[12].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream4->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->HISR, DMA_HISR_DMEIF4) == (DMA_HISR_DMEIF4))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CDMEIF4);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[12].cb)
+		{
+			DMAIsrCbBuff[12].cb(DMAIsrCbBuff[12].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream4->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->HISR, DMA_HISR_FEIF4) == (DMA_HISR_FEIF4))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CFEIF4);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[12].cb)
+		{
+			DMAIsrCbBuff[12].cb(DMAIsrCbBuff[12].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream5_IRQHandler()
 {
-	if(DMAIsrCbBuff[13].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream5->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA2->HISR, DMA_HISR_HTIF5) == (DMA_HISR_HTIF5))
 	{
-		DMAIsrCbBuff[13].cb(DMAIsrCbBuff[13].param, 0);
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CHTIF5);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[13].cb)
+		{
+			DMAIsrCbBuff[13].cb(DMAIsrCbBuff[13].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream5->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->HISR, DMA_HISR_TCIF5) == (DMA_HISR_TCIF5))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF5);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[13].cb)
+		{
+			DMAIsrCbBuff[13].cb(DMAIsrCbBuff[13].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream5->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->HISR, DMA_HISR_TEIF5) == (DMA_HISR_TEIF5))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTEIF5);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[13].cb)
+		{
+			DMAIsrCbBuff[13].cb(DMAIsrCbBuff[13].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream5->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->HISR, DMA_HISR_DMEIF5) == (DMA_HISR_DMEIF5))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CDMEIF5);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[13].cb)
+		{
+			DMAIsrCbBuff[13].cb(DMAIsrCbBuff[13].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream5->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->HISR, DMA_HISR_FEIF5) == (DMA_HISR_FEIF5))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CFEIF5);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[13].cb)
+		{
+			DMAIsrCbBuff[13].cb(DMAIsrCbBuff[13].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream6_IRQHandler()
 {
-	if(DMAIsrCbBuff[14].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream6->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA2->HISR, DMA_HISR_HTIF6) == (DMA_HISR_HTIF6))
 	{
-		DMAIsrCbBuff[14].cb(DMAIsrCbBuff[14].param, 0);
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CHTIF6);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[14].cb)
+		{
+			DMAIsrCbBuff[14].cb(DMAIsrCbBuff[14].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream6->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->HISR, DMA_HISR_TCIF6) == (DMA_HISR_TCIF6))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF6);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[14].cb)
+		{
+			DMAIsrCbBuff[14].cb(DMAIsrCbBuff[14].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream6->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->HISR, DMA_HISR_TEIF6) == (DMA_HISR_TEIF6))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTEIF6);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[14].cb)
+		{
+			DMAIsrCbBuff[14].cb(DMAIsrCbBuff[14].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream6->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->HISR, DMA_HISR_DMEIF6) == (DMA_HISR_DMEIF6))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CDMEIF6);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[14].cb)
+		{
+			DMAIsrCbBuff[14].cb(DMAIsrCbBuff[14].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream6->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->HISR, DMA_HISR_FEIF6) == (DMA_HISR_FEIF6))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CFEIF6);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[14].cb)
+		{
+			DMAIsrCbBuff[14].cb(DMAIsrCbBuff[14].param, 0, isrType);
+		}
 	}
 }
 void DMA2_Stream7_IRQHandler()
 {
-	if(DMAIsrCbBuff[15].cb)
+	DMATransferIsrType isrType = DMA_ISR_ERROR;
+	if((READ_BIT(DMA2_Stream7->CR, DMA_SxCR_HTIE) == DMA_SxCR_HTIE) && READ_BIT(DMA2->HISR, DMA_HISR_HTIF7) == (DMA_HISR_HTIF7))
 	{
-		DMAIsrCbBuff[15].cb(DMAIsrCbBuff[15].param, 0);
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CHTIF7);
+		isrType = DMA_TRANSFER_HALF;
+		if(DMAIsrCbBuff[15].cb)
+		{
+			DMAIsrCbBuff[15].cb(DMAIsrCbBuff[15].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream7->CR, DMA_SxCR_TCIE) == DMA_SxCR_TCIE) && READ_BIT(DMA2->HISR, DMA_HISR_TCIF7) == (DMA_HISR_TCIF7))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTCIF7);
+		isrType = DMA_TRANSFER_COMPLETE;
+		if(DMAIsrCbBuff[15].cb)
+		{
+			DMAIsrCbBuff[15].cb(DMAIsrCbBuff[15].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream7->CR, DMA_SxCR_TEIE) == DMA_SxCR_TEIE) && READ_BIT(DMA2->HISR, DMA_HISR_TEIF7) == (DMA_HISR_TEIF7))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CTEIF7);
+		isrType = DMA_TRANSFER_ERROR;
+		if(DMAIsrCbBuff[15].cb)
+		{
+			DMAIsrCbBuff[15].cb(DMAIsrCbBuff[15].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream7->CR, DMA_SxCR_DMEIE) == DMA_SxCR_DMEIE) && READ_BIT(DMA2->HISR, DMA_HISR_DMEIF7) == (DMA_HISR_DMEIF7))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CDMEIF7);
+		isrType = DMA_DIRECTOR_MODE_ERROR;
+		if(DMAIsrCbBuff[15].cb)
+		{
+			DMAIsrCbBuff[15].cb(DMAIsrCbBuff[15].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(DMA2_Stream7->FCR, DMA_SxFCR_FEIE) == DMA_SxFCR_FEIE) && READ_BIT(DMA2->HISR, DMA_HISR_FEIF7) == (DMA_HISR_FEIF7))
+	{
+		WRITE_REG(DMA2->HIFCR, DMA_HIFCR_CFEIF7);
+		isrType = DMA_FIFO_ERROR;
+		if(DMAIsrCbBuff[15].cb)
+		{
+			DMAIsrCbBuff[15].cb(DMAIsrCbBuff[15].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel0_IRQHandler()
 {
-	if(BDMAIsrCbBuff[0].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF0) == (BDMA_ISR_GIF0)))
 	{
-		BDMAIsrCbBuff[0].cb(BDMAIsrCbBuff[0].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF0);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[0].cb)
+		{
+			BDMAIsrCbBuff[0].cb(BDMAIsrCbBuff[0].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel0->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF0) == (BDMA_ISR_TCIF0)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF0);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[0].cb)
+		{
+			BDMAIsrCbBuff[0].cb(BDMAIsrCbBuff[0].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel0->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF0) == (BDMA_ISR_HTIF0)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF0);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[0].cb)
+		{
+			BDMAIsrCbBuff[0].cb(BDMAIsrCbBuff[0].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel0->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF0) == (BDMA_ISR_TEIF0)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF0);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[0].cb)
+		{
+			BDMAIsrCbBuff[0].cb(BDMAIsrCbBuff[0].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel1_IRQHandler()
 {
-	if(BDMAIsrCbBuff[1].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF1) == (BDMA_ISR_GIF1)))
 	{
-		BDMAIsrCbBuff[1].cb(BDMAIsrCbBuff[1].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF1);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[1].cb)
+		{
+			BDMAIsrCbBuff[1].cb(BDMAIsrCbBuff[1].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel1->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF1) == (BDMA_ISR_TCIF1)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF1);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[1].cb)
+		{
+			BDMAIsrCbBuff[1].cb(BDMAIsrCbBuff[1].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel1->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF1) == (BDMA_ISR_HTIF1)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF1);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[1].cb)
+		{
+			BDMAIsrCbBuff[1].cb(BDMAIsrCbBuff[1].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel1->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF1) == (BDMA_ISR_TEIF1)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF1);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[1].cb)
+		{
+			BDMAIsrCbBuff[1].cb(BDMAIsrCbBuff[1].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel2_IRQHandler()
 {
-	if(BDMAIsrCbBuff[2].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF2) == (BDMA_ISR_GIF2)))
 	{
-		BDMAIsrCbBuff[2].cb(BDMAIsrCbBuff[2].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF2);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[2].cb)
+		{
+			BDMAIsrCbBuff[2].cb(BDMAIsrCbBuff[2].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel2->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF2) == (BDMA_ISR_TCIF2)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF2);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[2].cb)
+		{
+			BDMAIsrCbBuff[2].cb(BDMAIsrCbBuff[2].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel2->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF2) == (BDMA_ISR_HTIF2)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF2);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[2].cb)
+		{
+			BDMAIsrCbBuff[2].cb(BDMAIsrCbBuff[2].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel2->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF2) == (BDMA_ISR_TEIF2)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF2);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[2].cb)
+		{
+			BDMAIsrCbBuff[2].cb(BDMAIsrCbBuff[2].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel3_IRQHandler()
 {
-	if(BDMAIsrCbBuff[3].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF3) == (BDMA_ISR_GIF3)))
 	{
-		BDMAIsrCbBuff[3].cb(BDMAIsrCbBuff[3].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF3);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[3].cb)
+		{
+			BDMAIsrCbBuff[3].cb(BDMAIsrCbBuff[3].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel3->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF3) == (BDMA_ISR_TCIF3)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF3);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[3].cb)
+		{
+			BDMAIsrCbBuff[3].cb(BDMAIsrCbBuff[3].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel3->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF3) == (BDMA_ISR_HTIF3)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF3);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[3].cb)
+		{
+			BDMAIsrCbBuff[3].cb(BDMAIsrCbBuff[3].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel3->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF3) == (BDMA_ISR_TEIF3)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF3);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[3].cb)
+		{
+			BDMAIsrCbBuff[3].cb(BDMAIsrCbBuff[3].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel4_IRQHandler()
 {
-	if(BDMAIsrCbBuff[4].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF4) == (BDMA_ISR_GIF4)))
 	{
-		BDMAIsrCbBuff[4].cb(BDMAIsrCbBuff[4].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF4);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[4].cb)
+		{
+			BDMAIsrCbBuff[4].cb(BDMAIsrCbBuff[4].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel4->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF4) == (BDMA_ISR_TCIF4)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF4);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[4].cb)
+		{
+			BDMAIsrCbBuff[4].cb(BDMAIsrCbBuff[4].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel4->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF4) == (BDMA_ISR_HTIF4)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF4);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[4].cb)
+		{
+			BDMAIsrCbBuff[4].cb(BDMAIsrCbBuff[4].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel4->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF4) == (BDMA_ISR_TEIF4)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF4);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[4].cb)
+		{
+			BDMAIsrCbBuff[4].cb(BDMAIsrCbBuff[4].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel5_IRQHandler()
 {
-	if(BDMAIsrCbBuff[5].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF5) == (BDMA_ISR_GIF5)))
 	{
-		BDMAIsrCbBuff[5].cb(BDMAIsrCbBuff[5].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF5);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[5].cb)
+		{
+			BDMAIsrCbBuff[5].cb(BDMAIsrCbBuff[5].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel5->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF5) == (BDMA_ISR_TCIF5)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF5);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[5].cb)
+		{
+			BDMAIsrCbBuff[5].cb(BDMAIsrCbBuff[5].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel5->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF5) == (BDMA_ISR_HTIF5)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF5);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[5].cb)
+		{
+			BDMAIsrCbBuff[5].cb(BDMAIsrCbBuff[5].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel5->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF5) == (BDMA_ISR_TEIF5)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF5);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[5].cb)
+		{
+			BDMAIsrCbBuff[5].cb(BDMAIsrCbBuff[5].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel6_IRQHandler()
 {
-	if(BDMAIsrCbBuff[6].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF6) == (BDMA_ISR_GIF6)))
 	{
-		BDMAIsrCbBuff[6].cb(BDMAIsrCbBuff[6].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF6);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[6].cb)
+		{
+			BDMAIsrCbBuff[6].cb(BDMAIsrCbBuff[6].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel6->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF6) == (BDMA_ISR_TCIF6)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF6);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[6].cb)
+		{
+			BDMAIsrCbBuff[6].cb(BDMAIsrCbBuff[6].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel6->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF6) == (BDMA_ISR_HTIF6)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF6);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[6].cb)
+		{
+			BDMAIsrCbBuff[6].cb(BDMAIsrCbBuff[6].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel6->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF6) == (BDMA_ISR_TEIF6)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF6);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[6].cb)
+		{
+			BDMAIsrCbBuff[6].cb(BDMAIsrCbBuff[6].param, 0, isrType);
+		}
 	}
 }
 void BDMA_Channel7_IRQHandler()
 {
-	if(BDMAIsrCbBuff[7].cb)
+	BDMATransferIsrType isrType = BDMA_ISR_GLOBAL_ERROR;
+	if((READ_BIT(BDMA->ISR, BDMA_ISR_GIF7) == (BDMA_ISR_GIF7)))
 	{
-		BDMAIsrCbBuff[7].cb(BDMAIsrCbBuff[7].param, 0);
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CGIF7_Pos);
+		isrType = BDMA_ISR_GLOBAL_ERROR;
+		if(BDMAIsrCbBuff[7].cb)
+		{
+			BDMAIsrCbBuff[7].cb(BDMAIsrCbBuff[7].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel7->CCR, BDMA_CCR_TCIE) == (BDMA_CCR_TCIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TCIF7) == (BDMA_ISR_TCIF7)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTCIF7);
+		isrType = BDMA_TRANSFER_COMPLETE;
+		if(BDMAIsrCbBuff[7].cb)
+		{
+			BDMAIsrCbBuff[7].cb(BDMAIsrCbBuff[7].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel7->CCR, BDMA_CCR_HTIE) == (BDMA_CCR_HTIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_HTIF7) == (BDMA_ISR_HTIF7)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CHTIF7);
+		isrType = BDMA_TRANSFER_HALF;
+		if(BDMAIsrCbBuff[7].cb)
+		{
+			BDMAIsrCbBuff[7].cb(BDMAIsrCbBuff[7].param, 0, isrType);
+		}
+	}
+	if((READ_BIT(BDMA_Channel7->CCR, BDMA_CCR_TEIE) == (BDMA_CCR_TEIE)) && (READ_BIT(BDMA->ISR, BDMA_ISR_TEIF7) == (BDMA_ISR_TEIF7)))
+	{
+		WRITE_REG(BDMA->IFCR, BDMA_IFCR_CTEIF7);
+		isrType = BDMA_TRANSFER_ERROR;
+		if(BDMAIsrCbBuff[7].cb)
+		{
+			BDMAIsrCbBuff[7].cb(BDMAIsrCbBuff[7].param, 0, isrType);
+		}
 	}
 }
 void DMAMUX1_OVR_IRQHandler()
@@ -967,7 +2162,7 @@ void DMAMUX1_OVR_IRQHandler()
 	{
 		if(DMAIsrCbBuff[i].cb)
 		{
-			DMAIsrCbBuff[i].cb(DMAIsrCbBuff[i].param, 1);
+			DMAIsrCbBuff[i].cb(DMAIsrCbBuff[i].param, 1, 0);
 		}
 	}
 }
@@ -977,7 +2172,7 @@ void DMAMUX2_OVR_IRQHandler()
 	{
 		if(BDMAIsrCbBuff[i].cb)
 		{
-			BDMAIsrCbBuff[i].cb(BDMAIsrCbBuff[i].param, 1);
+			BDMAIsrCbBuff[i].cb(BDMAIsrCbBuff[i].param, 1, 0);
 		}
 	}
 }
