@@ -296,7 +296,7 @@ int main(void)
 }
 #endif
 
-#if 1
+#if 0
 static uint8_t sendBuff[] = "----------------------------------------------------------------------=====================++++++++++++++++++++++++++-";
 int main(void)
 {
@@ -346,7 +346,7 @@ int main(void)
 }
 #endif
 
-#if 0
+#if 1
 #include "lptimer.hpp"
 #include "isrcommon.h"
 int main(void)
@@ -358,7 +358,9 @@ int main(void)
     }
     LED led(GPIOE, GPIO_NUM_9, false);
     LED led1(GPIOA, GPIO_NUM_7, true);
+
     LPTIMER lptim2(LPTIM2);
+    RCCControl::getInstance()->SetLPTIMClockSource(RCC_LPTIM2_CLKSOURCE_LSI);
     printf("lptim2 input clk = %lu, src = %u\r\n",RCCControl::getInstance()->GetLPTIMClockFreq(RCC_LPTIM2_CLKSOURCE),RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM2_CLKSOURCE));
     lptim2.lptimInit(LPTIM_CLK_SOURCE_INTERNAL, LPTIM_PRESCALER_DIV1);
     lptim2.registerInterruptCb([&](LPTIMER* lptimx, LPTIMIsrFlgas flags){
@@ -383,7 +385,7 @@ int main(void)
     lptim2.lptimEnableITARRM();
     lptim2.lptimEnableITCMPM();
     lptim2.enableLPTIMIsr(2,2);
-    lptim2.lptimTimeoutStart(60000,30000);
+    lptim2.lptimTimeoutStart(16000-1,8000-1);
     printf("tony get lptim clk = %lu\r\n",RCCControl::getInstance()->GetLPTIMClockFreq(RCC_LPTIM2_CLKSOURCE));
     printf("tony timeout time = %lu\r\n",RCCControl::getInstance()->GetLPTIMClockFreq(RCC_LPTIM2_CLKSOURCE)*1000/30000);
     while(1)
@@ -403,30 +405,62 @@ int main(void)
     {
         while(1);
     }
-    LED led(GPIOE, GPIO_NUM_9, false);
+    //LED led(GPIOE, GPIO_NUM_9, false);
+    GPIO tim1ch1(GPIOE,GPIO_NUM_9,GPIO_MODE_AF_PP,GPIO_SPEED_HIGH,GPIO_PUPD_NONE);
+    tim1ch1.setAF(GPIO_AF1_TIM1);
+
     LED led1(GPIOA, GPIO_NUM_7, true);
  
-    COMMONTIMER timer2(TIM2);
-    timer2.timInit(2);
-    timer2.registerInterruptCb([&](COMMONTIMER* timer, TIMISRFlag flag) {
+    COMMONTIMER timer1(TIM1);
+    timer1.timInit(2000);
+    timer1.pwmConfig(TIM_CHANNEL_1,50,TIM_OCMODE_PWM1);
+    timer1.registerInterruptCb([&](COMMONTIMER* timer, TIMISRFlag flag) {
         if(timer)
         {
             if(flag == TIM_FLAG_UPDATE)
             {
-                printf("tony xxxx\r\n");
-                led.reverse();
+                //printf("tony xxxx\r\n");
+                //led.reverse();
+                led1.reverse();
             }
             else
             {
-                printf("mmmmmmmmm flag = %lu\r\n",flag);
+                //printf("mmmmmmmmm flag = %lu\r\n",flag);
             }
         }
     });
-    timer2.enableIsr(TIM_IT_UPDATE,2,2);
-    timer2.start();
+    timer1.enableIsr(TIM_IT_UPDATE,2,2);
+    timer1.pwmStart(TIM_CHANNEL_1);
+    timer1.start();
+    uint32_t i = 0;
+    uint16_t m = 0;
     while(1)
     {
         delayTick(100);
+        if(m == 0)
+        {
+            if(i<95)
+            {
+                i+=5;
+            }
+            else
+            {
+                m = 1;
+            }
+        }
+        else
+        {
+            if(i>=5)
+            {
+                i-=5;
+            }
+            else
+            {
+                m = 0;
+            }
+        }
+
+        timer1.pwmSetDuty(TIM_CHANNEL_1,i);
         printf("--------------\r\n");
     }
     return 0;

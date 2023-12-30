@@ -76,7 +76,7 @@ enum LPTMTrigPolarity
     LPTIM_TRIG_POLARITY_FALLING          =   LPTIM_CFGR_TRIGEN_1, /*!<LPTIM counter starts when a falling edge is detected*/
     LPTIM_TRIG_POLARITY_RISING_FALLING   =   LPTIM_CFGR_TRIGEN    /*!<LPTIM counter starts when a rising or a falling edge is detected*/
 };
-enum LPTMClkSource
+enum LPTMClkFromSourceType
 {
     LPTIM_CLK_SOURCE_INTERNAL     =     0x00000000U,      /*!<LPTIM is clocked by internal clock source (APB clock or any of the embedded oscillators)*/
     LPTIM_CLK_SOURCE_EXTERNAL     =     LPTIM_CFGR_CKSEL  /*!<LPTIM is clocked by an external clock source through the LPTIM external Input1*/
@@ -119,7 +119,7 @@ enum LPTMInput2Src
 };
 struct LPTIM_InitTypeDef
 {
-    LPTMClkSource ClockSource;
+    LPTMClkFromSourceType ClockSource;
     LPTMPrescaler Prescaler;
     LPTIMOutputWaveformType Waveform;
     LPTIMOutputPolarity Polarity;
@@ -274,13 +274,13 @@ public:
     {
         return (LPTMTrigPolarity)(READ_BIT(timer_->CFGR, LPTIM_CFGR_TRIGEN));
     }
-    inline void lptimSetClockSource(LPTMClkSource ClockSource)
+    inline void lptimSetClockedSourceType(LPTMClkFromSourceType ClockSource)
     {
         MODIFY_REG(timer_->CFGR, LPTIM_CFGR_CKSEL, ClockSource);
     }
-    inline LPTMClkSource lptimGetClockSource()
+    inline LPTMClkFromSourceType lptimGetClockedSourceType()
     {
-        return (LPTMClkSource)(READ_BIT(timer_->CFGR, LPTIM_CFGR_CKSEL));
+        return (LPTMClkFromSourceType)(READ_BIT(timer_->CFGR, LPTIM_CFGR_CKSEL));
     }
     inline void lptimConfigClock(LPTMClkFilter ClockFilter, LPTMClkPolarity ClockPolarity)
     {
@@ -482,7 +482,7 @@ public:
             RCCControl::getInstance()->APB4GRP1ReleaseReset(RCC_APB4_GRP1_PERIPH_LPTIM5);
         }
     }
-    eResult lptimInit(LPTMClkSource ClockSource, LPTMPrescaler Prescaler)
+    eResult lptimInit(LPTMClkFromSourceType ClockSource, LPTMPrescaler Prescaler)
     {
         eResult result = E_RESULT_OK;
         /* The LPTIMx_CFGR register must only be modified when the LPTIM is disabled
@@ -635,10 +635,17 @@ public:
         /* Exit critical section: restore previous priority mask */
         __set_PRIMASK(primask_bit);
     }
+    // LSE = 32768Hz
+    // 分频设置为 LPTIM_PRESCALER_DIV1，即未分频
+    // ARR 自动重载寄存器 = 31
+    // 那么 PWM 频率 = LSE / （ ARR + 1） = 32768Hz / (31 + 1) = 1024Hz
+    // 占空比 = 1 - (Comprare + 1)/ (ARR + 1)
+    // = 1 - (15 + 1)/(31 + 1)
+    // = 50%
     void lptimCountStart(uint32_t Period)
     {
         /* If clock source is not ULPTIM clock and counter source is external, then it must not be prescaled */
-        if(lptimGetClockSource() != LPTIM_CLK_SOURCE_EXTERNAL && lptimGetCounterMode() == LPTIM_COUNTER_MODE_EXTERNAL)
+        if(lptimGetClockedSourceType() != LPTIM_CLK_SOURCE_EXTERNAL && lptimGetCounterMode() == LPTIM_COUNTER_MODE_EXTERNAL)
         {
             lptimSetPrescaler(LPTIM_PRESCALER_DIV1);
         }
@@ -715,6 +722,107 @@ public:
 
         return E_RESULT_OK;
     }
+    eResult lptimOnePulseStart(uint32_t period, uint32_t pulse, LPTIMOutputPolarity outputPolarity = LPTIM_OUTPUT_POLARITY_REGULAR)
+    {
+        if(lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+
+        /* Reset WAVE bit to set one pulse mode */
+        lptimSetWaveform(LPTIM_OUTPUT_WAVEFORM_PWM);
+        lptimSetPolarity(outputPolarity);
+        /* Enable the Peripheral */
+        lptimEnable();
+
+        /* Clear flag */
+        lptimClearFlagARROK();
+
+        /* Load the period value in the autoreload register */
+        lptimSetAutoReload(period);
+
+        /* Clear flag */
+        lptimClearFlagCMPOK();
+
+        /* Load the pulse value in the compare register */
+        lptimSetCompare(pulse);
+
+        /* Start timer in single (one shot) mode */
+        lptimStartCounter(LPTIM_OPERATING_MODE_ONESHOT);
+
+        /* Return function status */
+        return E_RESULT_OK;
+    }
+
+    eResult lptimOnePulseStop()
+    {
+        if(!lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+        /* Disable the Peripheral */
+        lptimDisable();
+        return E_RESULT_OK;
+    }
+    eResult lptimEncoderStart(uint32_t period, LPTMEncoderMode encodeModePolarity = LPTIM_ENCODER_MODE_RISING)
+    {
+        if(lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+
+        /* Check the parameters */
+        CHECK_RETURN(lptimGetClockedSourceType() == LPTIM_CLK_SOURCE_INTERNAL, E_RESULT_INVALID_PARAM);
+        CHECK_RETURN(lptimGetPrescaler() == LPTIM_PRESCALER_DIV1, E_RESULT_INVALID_PARAM);
+
+        /* Set Input polarity */
+        lptimSetEncoderMode(encodeModePolarity);
+
+        /* Set ENC bit to enable the encoder interface */
+        lptimEnableEncoderMode();
+
+        /* Enable the Peripheral */
+        lptimEnable();
+
+        /* Clear flag */
+        lptimClearFlagARROK();
+
+        /* Load the period value in the autoreload register */
+        lptimSetAutoReload(period);
+
+        /* Start timer in continuous mode */
+        lptimStartCounter(LPTIM_OPERATING_MODE_CONTINUOUS);
+
+        /* Return function status */
+        return E_RESULT_OK;
+    }
+    eResult lptimEncoderStop()
+    {
+        if(!lptimIsEnabled())
+        {
+            return E_RESULT_WRONG_STATUS;
+        }
+        /* Disable the Peripheral */
+        lptimDisable();
+
+        /* Reset ENC bit to disable the encoder interface */
+        lptimDisableEncoderMode();
+
+        /* Return function status */
+        return E_RESULT_OK;
+    }
+    uint32_t lptimReadCounter()
+    {
+        return lptimGetCounter();
+    }
+    uint32_t lptimReadAutoReload()
+    {
+        return lptimGetAutoReload();
+    }
+    uint32_t lptimReadCompare()
+    {
+        return lptimGetCompare();
+    }
     void enableLPTIMIsr(uint32_t PreemptPriority, uint32_t SubPriority)
     {
         if(NVIC_GetEnableIRQ(getIrqType()) == 0U)
@@ -737,6 +845,27 @@ public:
         {
             timcb_ = LPTIMInterruptCb();
         }
+    }
+    RCCLPTIMxClkSource getClockSource()
+    {
+        RCCLPTIMxClkSource source = RCC_LPTIMX_CLOCK_SOURCE_NONE;
+        switch (reinterpret_cast<uint32_t>(timer_))
+        {
+            case LPTIM1_BASE:
+                source = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM1_CLKSOURCE);
+                break;
+            case LPTIM2_BASE:
+                source = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM2_CLKSOURCE);
+                break;
+            case LPTIM3_BASE:
+            case LPTIM4_BASE:
+            case LPTIM5_BASE:
+                source = RCCControl::getInstance()->GetLPTIMClockSource(RCC_LPTIM345_CLKSOURCE);
+                break;
+            default:
+                break;
+        }
+        return source;
     }
 private:
     void enableClk(bool bEnable = true)

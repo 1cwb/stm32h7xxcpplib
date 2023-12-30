@@ -95,6 +95,13 @@ eResult clockInit(uint32_t plln, uint32_t pllm, uint32_t pllp, uint32_t pllq, ui
     SET_BIT(SYSCFG->CCCSR, SYSCFG_CCCSR_EN);//I/O compensation cell enable
 
     rcc->SetUSARTClockSource(RCC_USART16_CLKSOURCE_PLL2Q);
+
+    //enable lsi hsi
+    rcc->HSIEnable();
+    while(!rcc->HSEIsReady());
+
+    rcc->LSIEnable();
+    while(!rcc->LSIIsReady());
     return E_RESULT_OK;
 }
 
