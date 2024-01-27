@@ -346,7 +346,7 @@ int main(void)
 }
 #endif
 
-#if 1
+#if 0
 #include "lptimer.hpp"
 #include "isrcommon.h"
 int main(void)
@@ -396,7 +396,8 @@ int main(void)
     return 0;
 }
 #endif
-#if 0
+#if 1
+#include "rtc.hpp"
 #include "lptimer.hpp"
 #include "isrcommon.h"
 int main(void)

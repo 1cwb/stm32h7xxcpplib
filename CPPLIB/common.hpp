@@ -1,5 +1,6 @@
 #pragma once
 #include "stm32h7xx.h"
+#include "stm32h750xx.h"
 #include "isrcommon.h"
 
 #define DTCM_MEM   __attribute__((section(".dtcmram")))
