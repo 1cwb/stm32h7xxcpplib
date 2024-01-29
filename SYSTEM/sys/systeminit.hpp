@@ -34,7 +34,7 @@ void mpuMemoryProtection(void)
                         MPU_ACCESS_NOT_SHAREABLE,
                         MPU_ACCESS_CACHEABLE,
                         MPU_ACCESS_NOT_BUFFERABLE);
-    CORTEXM7MPU::mpuEnable(MPU_PRIVILEGED_DEFAULT);
+    CORTEXM7MPU::mpuEnable(MPU_CTRL_PRIVILEGED_DEFAULT);
 }
 
 eResult clockInit(uint32_t plln, uint32_t pllm, uint32_t pllp, uint32_t pllq, uint32_t pllr)
