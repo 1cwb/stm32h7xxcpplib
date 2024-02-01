@@ -1,5 +1,7 @@
 #pragma once 
 #include "common.hpp"
+#include "cortex.hpp"
+#include "exti.hpp"
 
 /* Masks Definition */
 #define RTC_INIT_MASK              0xFFFFFFFFU
@@ -50,64 +52,6 @@ enum RTCAlarmBWeekDaySelect
 {
     RTC_ALMB_DATEWEEKDAYSEL_DATE        =  0x00000000U,             /*!< Alarm B Date is selected */
     RTC_ALMB_DATEWEEKDAYSEL_WEEKDAY     =  RTC_ALRMBR_WDSEL         /*!< Alarm B WeekDay is selected */
-};
-
-/** @defgroup EC_GET_FLAG Get Flags Defines
-  * @brief    Flags defines which can be used with RTC_ReadReg function
-  * @{
-  */
-enum RTCRIsrFlags
-{
-    #if defined(TAMP)
-    RTC_SCR_LITSF        =          RTC_SCR_CITSF,
-    RTC_SCR_LTSOVF       =          RTC_SCR_CTSOVF,
-    RTC_SCR_LTSF         =          RTC_SCR_CTSF,
-    RTC_SCR_LWUTF        =          RTC_SCR_CWUTF,
-    RTC_SCR_LALRBF       =          RTC_SCR_CALRBF,
-    RTC_SCR_LALRAF       =          RTC_SCR_CALRAF,
-    RTC_ICSR_LRECALPF    =          RTC_ICSR_RECALPF,
-    RTC_ICSR_LINITF      =          RTC_ICSR_INITF,
-    RTC_ICSR_LRSF        =          RTC_ICSR_RSF,
-    RTC_ICSR_LINITS      =          RTC_ICSR_INITS,
-    RTC_ICSR_LSHPF       =          RTC_ICSR_SHPF,
-    RTC_ICSR_LWUTWF      =          RTC_ICSR_WUTWF,
-    #else
-    RTC_ISR_LITSF        =          RTC_ISR_ITSF,
-    RTC_ISR_LRECALPF     =          RTC_ISR_RECALPF,
-    RTC_ISR_LTAMP3F      =          RTC_ISR_TAMP3F,
-    RTC_ISR_LTAMP2F      =          RTC_ISR_TAMP2F,
-    RTC_ISR_LTAMP1F      =          RTC_ISR_TAMP1F,
-    RTC_ISR_LTSOVF       =          RTC_ISR_TSOVF,
-    RTC_ISR_LTSF         =          RTC_ISR_TSF,
-    RTC_ISR_LWUTF        =          RTC_ISR_WUTF,
-    RTC_ISR_LALRBF       =          RTC_ISR_ALRBF,
-    RTC_ISR_LALRAF       =          RTC_ISR_ALRAF,
-    RTC_ISR_LINITF       =          RTC_ISR_INITF,
-    RTC_ISR_LRSF         =          RTC_ISR_RSF,
-    RTC_ISR_LINITS       =          RTC_ISR_INITS,
-    RTC_ISR_LSHPF        =          RTC_ISR_SHPF,
-    RTC_ISR_LWUTWF       =          RTC_ISR_WUTWF,
-    RTC_ISR_LALRBWF      =          RTC_ISR_ALRBWF,
-    RTC_ISR_LALRAWF      =          RTC_ISR_ALRAWF
-    #endif /* TAMP */
-};
-
-/** @defgroup EC_IT IT Defines
-  * @brief    IT defines which can be used with RTC_ReadReg and  RTC_WriteReg functions
-  * @{
-  */
-enum RTCEnableIT
-{
-    RTC_CR_LTSIE             =       RTC_CR_TSIE,
-    RTC_CR_LWUTIE            =       RTC_CR_WUTIE,
-    RTC_CR_LALRBIE           =       RTC_CR_ALRBIE,
-    RTC_CR_LALRAIE           =       RTC_CR_ALRAIE,
-#if !defined(TAMP)
-    RTC_TAMPCR_LTAMP3IE      =       RTC_TAMPCR_TAMP3IE,
-    RTC_TAMPCR_LTAMP2IE      =       RTC_TAMPCR_TAMP2IE,
-    RTC_TAMPCR_LTAMP1IE      =       RTC_TAMPCR_TAMP1IE,
-    RTC_TAMPCR_LTAMPIE       =       RTC_TAMPCR_TAMPIE
-#endif /* !TAMP */
 };
 
 /** @defgroup EC_WEEKDAY  WEEK DAY
@@ -512,142 +456,24 @@ enum RTCCalibrationPeriod
     RTC_CALIB_PERIOD_8SEC      =     RTC_CALR_CALW8         /*!< Use a 8-second calibration cycle period */
 };
 
-/**
-  * @brief  RTC Init structures definition
-  */
-typedef struct
-{
-  RTCHourFormat HourFormat;   /*!< Specifies the RTC Hours Format.
-                              This parameter can be a value of @ref EC_HOURFORMAT
-
-                              This feature can be modified afterwards using unitary function
-                              @ref RTC_SetHourFormat(). */
-
-  uint32_t AsynchPrescaler; /*!< Specifies the RTC Asynchronous Predivider value.
-                              This parameter must be a number between Min_Data = 0x00 and Max_Data = 0x7F
-
-                              This feature can be modified afterwards using unitary function
-                              @ref RTC_SetAsynchPrescaler(). */
-
-  uint32_t SynchPrescaler;  /*!< Specifies the RTC Synchronous Predivider value.
-                              This parameter must be a number between Min_Data = 0x00 and Max_Data = 0x7FFF
-
-                              This feature can be modified afterwards using unitary function
-                              @ref RTC_SetSynchPrescaler(). */
-} RTC_InitTypeDef;
-
-/**
-  * @brief  RTC Time structure definition
-  */
-typedef struct
-{
-  uint32_t TimeFormat; /*!< Specifies the RTC AM/PM Time.
-                            This parameter can be a value of @ref EC_TIME_FORMAT
-
-                            This feature can be modified afterwards using unitary function @ref RTC_TIME_SetFormat(). */
-
-  uint8_t Hours;       /*!< Specifies the RTC Time Hours.
-                            This parameter must be a number between Min_Data = 0 and Max_Data = 12 if the @ref RTC_TIME_FORMAT_PM is selected.
-                            This parameter must be a number between Min_Data = 0 and Max_Data = 23 if the @ref RTC_TIME_FORMAT_AM_OR_24 is selected.
-
-                            This feature can be modified afterwards using unitary function @ref RTC_TIME_SetHour(). */
-
-  uint8_t Minutes;     /*!< Specifies the RTC Time Minutes.
-                            This parameter must be a number between Min_Data = 0 and Max_Data = 59
-
-                            This feature can be modified afterwards using unitary function @ref RTC_TIME_SetMinute(). */
-
-  uint8_t Seconds;     /*!< Specifies the RTC Time Seconds.
-                            This parameter must be a number between Min_Data = 0 and Max_Data = 59
-
-                            This feature can be modified afterwards using unitary function @ref RTC_TIME_SetSecond(). */
-} RTC_TimeTypeDef;
-
-/**
-  * @brief  RTC Date structure definition
-  */
-typedef struct
-{
-  RTCWeekDay WeekDay;  /*!< Specifies the RTC Date WeekDay.
-                         This parameter can be a value of @ref EC_WEEKDAY
-
-                         This feature can be modified afterwards using unitary function @ref RTC_DATE_SetWeekDay(). */
-
-  RTCMonth Month;    /*!< Specifies the RTC Date Month.
-                         This parameter can be a value of @ref EC_MONTH
-
-                         This feature can be modified afterwards using unitary function @ref RTC_DATE_SetMonth(). */
-
-  uint8_t Day;      /*!< Specifies the RTC Date Day.
-                         This parameter must be a number between Min_Data = 1 and Max_Data = 31
-
-                         This feature can be modified afterwards using unitary function @ref RTC_DATE_SetDay(). */
-
-  uint8_t Year;     /*!< Specifies the RTC Date Year.
-                         This parameter must be a number between Min_Data = 0 and Max_Data = 99
-
-                         This feature can be modified afterwards using unitary function @ref RTC_DATE_SetYear(). */
-} RTC_DateTypeDef;
-
-/**
-  * @brief  RTC Alarm structure definition
-  */
-typedef struct
-{
-  RTC_TimeTypeDef AlarmTime;  /*!< Specifies the RTC Alarm Time members. */
-
-  union 
-  {
-    RTCAlarmAMask A;
-    RTCAlarmBMask B;
-  }AlarmMask;
-                                 /*!< Specifies the RTC Alarm Masks.
-                                      This parameter can be a value of @ref EC_ALMA_MASK for ALARM A or @ref EC_ALMB_MASK for ALARM B.
-
-                                      This feature can be modified afterwards using unitary function @ref RTC_ALMA_SetMask() for ALARM A
-                                      or @ref RTC_ALMB_SetMask() for ALARM B
-                                 */
-  union
-  {
-    RTCAlarmAWeekDaySelect A;
-    RTCAlarmBWeekDaySelect B;
-  }AlarmDateWeekDaySel;
-                                  /*!< Specifies the RTC Alarm is on day or WeekDay.
-                                      This parameter can be a value of @ref EC_ALMA_WEEKDAY_SELECTION for ALARM A or @ref EC_ALMB_WEEKDAY_SELECTION for ALARM B
-
-                                      This feature can be modified afterwards using unitary function @ref RTC_ALMA_EnableWeekday() or @ref RTC_ALMA_DisableWeekday()
-                                      for ALARM A or @ref RTC_ALMB_EnableWeekday() or @ref RTC_ALMB_DisableWeekday() for ALARM B
-                                 */
-  union
-  {
-    uint32_t day;
-    RTCWeekDay week;
-  }AlarmDateWeekDay;
-                                  /*!< Specifies the RTC Alarm Day/WeekDay.
-                                      If AlarmDateWeekDaySel set to day, this parameter  must be a number between Min_Data = 1 and Max_Data = 31.
-
-                                      This feature can be modified afterwards using unitary function @ref RTC_ALMA_SetDay()
-                                      for ALARM A or @ref RTC_ALMB_SetDay() for ALARM B.
-
-                                      If AlarmDateWeekDaySel set to Weekday, this parameter can be a value of @ref EC_WEEKDAY.
-
-                                      This feature can be modified afterwards using unitary function @ref RTC_ALMA_SetWeekDay()
-                                      for ALARM A or @ref RTC_ALMB_SetWeekDay() for ALARM B.
-                                 */
-} RTC_AlarmTypeDef;
-
 class RTCX
 {
+  using RTCInterruptCb = std::function<void(RTCX*, RTCRIsrFlags)>;
 public:
  #ifndef TAMP
-    RTCX(RTC_TypeDef* rtcx = RTC) : rtcx_(rtcx) 
+    RTCX(RTC_TypeDef* rtcx = RTC, RCCRTCClkSrc src = RCC_RTC_CLK_SRC_LSI) : rtcx_(rtcx)
     {
-
+        RCCControl::getInstance()->ForceBackupDomainReset();
+        RCCControl::getInstance()->ReleaseBackupDomainReset();
+        rtcDeInit();
+        RCCControl::getInstance()->SetRTCClockSource(src);
+        RCCControl::getInstance()->EnableRTC();
     }
 #else
-    RTCX(RTC_TypeDef* rtcx, ) : rtcx_(rtcx), tampx_(tampx)
+    RTCX(RTC_TypeDef* rtcx, RCCRTCClkSrc src = RCC_RTC_CLK_SRC_LSI) : rtcx_(rtcx), tampx_(tampx)
     {
-
+        RCCControl::getInstance()->SetRTCClockSource(src);
+        RCCControl::getInstance()->EnableRTC();
     }
 #endif
     ~RTCX()
@@ -4933,10 +4759,23 @@ public:
       #endif /* TAMP_CR1_TAMP1E */
         return status;
     }
+    //#ifdef RTC_CLOCK_SOURCE_LSI
+    /* ck_apre=LSIFreq/(ASYNC prediv + 1) with LSIFreq=32 KHz */
+    //#define RTC_ASYNCH_PREDIV          ((uint32_t)0x7F)
+    /* ck_spre=ck_apre/(SYNC prediv + 1) = 1 Hz */
+    //#define RTC_SYNCH_PREDIV           ((uint32_t)0x00F9)
+    //#endif
 
-    eResult rtcInit(RTC_InitTypeDef *RTC_InitStruct)
+    //#ifdef RTC_CLOCK_SOURCE_LSE
+    /* ck_apre=LSEFreq/(ASYNC prediv + 1) = 256Hz with LSEFreq=32768Hz */
+    //#define RTC_ASYNCH_PREDIV          ((uint32_t)0x7F)
+    /* ck_spre=ck_apre/(SYNC prediv + 1) = 1 Hz */
+    //#define RTC_SYNCH_PREDIV           ((uint32_t)0x00FF)
+    //#endif
+    eResult rtcInit(RTCHourFormat hourFormat, uint32_t asynchPrescaler = 0x7F, uint32_t synchPrescaler = (RCCControl::getInstance()->GetRTCClockSource()==RCC_RTC_CLK_SRC_LSI ? 0x00F9:0x00FF), RTCDataFormat rtcDataFormat = RTC_FORMAT_BCD)
     {
         eResult status = E_RESULT_ERROR;
+        rtcDataFormat_ = rtcDataFormat;
 
         /* Disable the write protection for RTC registers */
         rtcDisableWriteProtection();
@@ -4945,43 +4784,63 @@ public:
         if (rtcEnterInitMode() != E_RESULT_ERROR)
         {
           /* Set Hour Format */
-          rtcSetHourFormat(RTC_InitStruct->HourFormat);
+          rtcSetHourFormat(hourFormat);
 
           /* Configure Synchronous and Asynchronous prescaler factor */
-          rtcSetSynchPrescaler(RTC_InitStruct->SynchPrescaler);
-          rtcSetAsynchPrescaler(RTC_InitStruct->AsynchPrescaler);
+          rtcSetSynchPrescaler(synchPrescaler);
+          rtcSetAsynchPrescaler(asynchPrescaler);
 
           /* Exit Initialization mode */
           rtcDisableInitMode();
-
           status = E_RESULT_OK;
         }
         /* Enable the write protection for RTC registers */
         rtcEnableWriteProtection();
-
+        //REGISTER ISR CB
+        registerRTCIsrCb(RTC_CR_TIME_STAMP_IE, [](void* param, RTCRIsrFlags isrFlag){
+          RTCX* rtcx = reinterpret_cast<RTCX*> (param);
+          if(rtcx && rtcx->cb_)
+          {
+            rtcx->cb_(rtcx, isrFlag);
+          }
+        }, this);
+        registerRTCIsrCb(RTC_CR_WAKEUP_IE, [](void* param, RTCRIsrFlags isrFlag){
+          RTCX* rtcx = reinterpret_cast<RTCX*> (param);
+          if(rtcx && rtcx->cb_)
+          {
+            rtcx->cb_(rtcx, isrFlag);
+          }
+        }, this);
+        registerRTCIsrCb(RTC_CR_ALARMB_IE, [](void* param, RTCRIsrFlags isrFlag){
+          RTCX* rtcx = reinterpret_cast<RTCX*> (param);
+          if(rtcx && rtcx->cb_)
+          {
+            rtcx->cb_(rtcx, isrFlag);
+          }
+        }, this);
         return status;
     }
-    eResult rtcTIMEInit(uint32_t RTC_Format, RTC_TimeTypeDef *RTC_TimeStruct)
+    eResult rtcTIMEInit(RTCTimeFormat timeFormat, uint8_t hours, uint8_t minutes, uint8_t seconds)
     {
         eResult status = E_RESULT_ERROR;
-        if (RTC_Format == RTC_FORMAT_BIN)
+        if (rtcDataFormat_ == RTC_FORMAT_BIN)
         {
           if (rtcGetHourFormat() != RTC_HOURFORMAT_24HOUR)
           {
-            if(RTC_TimeStruct->Hours <= 0 || RTC_TimeStruct->Hours > 12)
+            if(hours <= 0 || hours > 12)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            RTC_TimeStruct->TimeFormat = RTC_TIME_FORMAT_AM_OR_24;
-            if(RTC_TimeStruct->Hours >= 24)
+            timeFormat = RTC_TIME_FORMAT_AM_OR_24;
+            if(hours >= 24)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
-          if(RTC_TimeStruct->Minutes >= 60 || RTC_TimeStruct->Seconds >= 60)
+          if(minutes >= 60 || seconds >= 60)
           {
             return E_RESULT_INVALID_PARAM;
           }
@@ -4990,20 +4849,20 @@ public:
         {
           if (rtcGetHourFormat() != RTC_HOURFORMAT_24HOUR)
           {
-            if(rtcConvertBcd2Bin(RTC_TimeStruct->Hours) <= 0 || rtcConvertBcd2Bin(RTC_TimeStruct->Hours) > 12)
+            if(rtcConvertBcd2Bin(hours) <= 0 || rtcConvertBcd2Bin(hours) > 12)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            RTC_TimeStruct->TimeFormat = RTC_TIME_FORMAT_AM_OR_24;
-            if(rtcConvertBcd2Bin(RTC_TimeStruct->Hours) >= 24)
+            timeFormat = RTC_TIME_FORMAT_AM_OR_24;
+            if(rtcConvertBcd2Bin(hours) >= 24)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
-          if(rtcConvertBcd2Bin(RTC_TimeStruct->Minutes) >= 60 || rtcConvertBcd2Bin(RTC_TimeStruct->Seconds) >= 60)
+          if(rtcConvertBcd2Bin(minutes) >= 60 || rtcConvertBcd2Bin(seconds) >= 60)
           {
             return E_RESULT_INVALID_PARAM;
           }
@@ -5015,16 +4874,16 @@ public:
         if (rtcEnterInitMode() != E_RESULT_ERROR)
         {
           /* Check the input parameters format */
-          if (RTC_Format != RTC_FORMAT_BIN)
+          if (rtcDataFormat_ != RTC_FORMAT_BIN)
           {
-            rtcTIMEConfig((RTCTimeFormat)RTC_TimeStruct->TimeFormat, RTC_TimeStruct->Hours,
-                              RTC_TimeStruct->Minutes, RTC_TimeStruct->Seconds);
+            rtcTIMEConfig(timeFormat, hours,
+                              minutes, seconds);
           }
           else
           {
-            rtcTIMEConfig((RTCTimeFormat)RTC_TimeStruct->TimeFormat, rtcConvertBin2Bcd(RTC_TimeStruct->Hours),
-                              rtcConvertBin2Bcd(RTC_TimeStruct->Minutes),
-                              rtcConvertBin2Bcd(RTC_TimeStruct->Seconds));
+            rtcTIMEConfig(timeFormat, rtcConvertBin2Bcd(hours),
+                              rtcConvertBin2Bcd(minutes),
+                              rtcConvertBin2Bcd(seconds));
           }
 
           /* Exit Initialization mode */
@@ -5044,40 +4903,40 @@ public:
         rtcEnableWriteProtection();
         return status;
     }
-    eResult rtcDATEInit(uint32_t RTC_Format, RTC_DateTypeDef *RTC_DateStruct)
+    eResult rtcDATEInit(RTCWeekDay weekDay, RTCMonth month, uint8_t day, uint8_t year)
     {
         eResult status = E_RESULT_ERROR;
 
-        if ((RTC_Format == RTC_FORMAT_BIN) && ((RTC_DateStruct->Month & 0x10U) == 0x10U))
+        if ((rtcDataFormat_ == RTC_FORMAT_BIN) && ((month & 0x10U) == 0x10U))
         {
-          RTC_DateStruct->Month = (RTCMonth)((RTC_DateStruct->Month & (uint8_t)~(0x10U)) + 0x0AU);
+          month = (RTCMonth)((month & (uint8_t)~(0x10U)) + 0x0AU);
         }
-        if (RTC_Format == RTC_FORMAT_BIN)
+        if (rtcDataFormat_ == RTC_FORMAT_BIN)
         {
-          if(RTC_DateStruct->Year > 99)
+          if(year > 99)
           {
               return E_RESULT_INVALID_PARAM;
           }
-          if(RTC_DateStruct->Month < 1 || RTC_DateStruct->Month > 12)
+          if(month < 1 || month > 12)
           {
             return E_RESULT_INVALID_PARAM;
           }
-          if(RTC_DateStruct->Day < 1 || RTC_DateStruct->Day > 31)
+          if(day < 1 || day > 31)
           {
             return E_RESULT_INVALID_PARAM;
           }
         }
         else
         {
-          if(rtcConvertBcd2Bin(RTC_DateStruct->Year) > 99)
+          if(rtcConvertBcd2Bin(year) > 99)
           {
               return E_RESULT_INVALID_PARAM;
           }
-          if(rtcConvertBcd2Bin(RTC_DateStruct->Month) < 1 || rtcConvertBcd2Bin(RTC_DateStruct->Month) > 12)
+          if(rtcConvertBcd2Bin(month) < 1 || rtcConvertBcd2Bin(month) > 12)
           {
             return E_RESULT_INVALID_PARAM;
           }
-          if(rtcConvertBcd2Bin(RTC_DateStruct->Day) < 1 || rtcConvertBcd2Bin(RTC_DateStruct->Day) > 31)
+          if(rtcConvertBcd2Bin(day) < 1 || rtcConvertBcd2Bin(day) > 31)
           {
             return E_RESULT_INVALID_PARAM;
           }
@@ -5090,14 +4949,14 @@ public:
         if (rtcEnterInitMode() != E_RESULT_ERROR)
         {
           /* Check the input parameters format */
-          if (RTC_Format != RTC_FORMAT_BIN)
+          if (rtcDataFormat_ != RTC_FORMAT_BIN)
           {
-            rtcDATEConfig(RTC_DateStruct->WeekDay, RTC_DateStruct->Day, RTC_DateStruct->Month, RTC_DateStruct->Year);
+            rtcDATEConfig(weekDay, day, month, year);
           }
           else
           {
-            rtcDATEConfig(RTC_DateStruct->WeekDay, rtcConvertBin2Bcd(RTC_DateStruct->Day),
-                              rtcConvertBin2Bcd(RTC_DateStruct->Month), rtcConvertBin2Bcd(RTC_DateStruct->Year));
+            rtcDATEConfig(weekDay, rtcConvertBin2Bcd(day),
+                              rtcConvertBin2Bcd(month), rtcConvertBin2Bcd(year));
           }
 
           /* Exit Initialization mode */
@@ -5118,40 +4977,40 @@ public:
 
         return status;
     }
-    eResult rtcALMAInit(uint32_t RTC_Format, RTC_AlarmTypeDef *RTC_AlarmStruct)
+    eResult rtcALMAInit(RTCAlarmAMask alarmMask, RTCAlarmAWeekDaySelect alarmDateWeekDaySel, uint32_t alarmDateWeekDay, RTCAlarmATimeFormat timeFormat, uint8_t hours, uint8_t minutes, uint8_t seconds)
     {
-        if (RTC_Format == RTC_FORMAT_BIN)
+        if (rtcDataFormat_ == RTC_FORMAT_BIN)
         {
           if (rtcGetHourFormat() != RTC_HOURFORMAT_24HOUR)
           {
-            if(RTC_AlarmStruct->AlarmTime.Hours > 12 || RTC_AlarmStruct->AlarmTime.Hours <= 0)
+            if(hours > 12 || hours <= 0)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            RTC_AlarmStruct->AlarmTime.TimeFormat = RTC_ALMA_TIME_FORMAT_AM;
-            if(RTC_AlarmStruct->AlarmTime.Hours > 23)
+            timeFormat = RTC_ALMA_TIME_FORMAT_AM;
+            if(hours > 23)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
-          if(RTC_AlarmStruct->AlarmTime.Minutes >= 60 || RTC_AlarmStruct->AlarmTime.Seconds >= 60)
+          if(minutes >= 60 || seconds >= 60)
           {
             return E_RESULT_INVALID_PARAM;
           }
 
-          if (RTC_AlarmStruct->AlarmDateWeekDaySel.A == RTC_ALMA_DATEWEEKDAYSEL_DATE)
+          if (alarmDateWeekDaySel == RTC_ALMA_DATEWEEKDAYSEL_DATE)
           {
-            if(RTC_AlarmStruct->AlarmDateWeekDay.day < 1 || RTC_AlarmStruct->AlarmDateWeekDay.day > 31)
+            if(alarmDateWeekDay < 1 || alarmDateWeekDay > 31)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            if(RTC_AlarmStruct->AlarmDateWeekDay.week < RTC_WEEKDAY_MONDAY || RTC_AlarmStruct->AlarmDateWeekDay.week > RTC_WEEKDAY_SUNDAY)
+            if(alarmDateWeekDay < RTC_WEEKDAY_MONDAY || alarmDateWeekDay > RTC_WEEKDAY_SUNDAY)
             {
               return E_RESULT_INVALID_PARAM;
             }
@@ -5161,34 +5020,34 @@ public:
         {
           if (rtcGetHourFormat() != RTC_HOURFORMAT_24HOUR)
           {
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Hours) > 12 || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Hours) <= 0)
+            if(rtcConvertBcd2Bin(hours) > 12 || rtcConvertBcd2Bin(hours) <= 0)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            RTC_AlarmStruct->AlarmTime.TimeFormat = RTC_ALMA_TIME_FORMAT_AM;
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Hours) > 23)
+            timeFormat = RTC_ALMA_TIME_FORMAT_AM;
+            if(rtcConvertBcd2Bin(hours) > 23)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
-          if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Minutes) >= 60 || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Seconds) >= 60)
+          if(rtcConvertBcd2Bin(minutes) >= 60 || rtcConvertBcd2Bin(seconds) >= 60)
           {
             return E_RESULT_INVALID_PARAM;
           }
 
-          if (RTC_AlarmStruct->AlarmDateWeekDaySel.A == RTC_ALMA_DATEWEEKDAYSEL_DATE)
+          if (alarmDateWeekDaySel == RTC_ALMA_DATEWEEKDAYSEL_DATE)
           {
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.day) < 1 || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.day) > 31)
+            if(rtcConvertBcd2Bin(alarmDateWeekDay) < 1 || rtcConvertBcd2Bin(alarmDateWeekDay) > 31)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.week) < RTC_WEEKDAY_MONDAY || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.week) > RTC_WEEKDAY_SUNDAY)
+            if(rtcConvertBcd2Bin(alarmDateWeekDay) < RTC_WEEKDAY_MONDAY || rtcConvertBcd2Bin(alarmDateWeekDay) > RTC_WEEKDAY_SUNDAY)
             {
               return E_RESULT_INVALID_PARAM;
             }
@@ -5197,43 +5056,45 @@ public:
 
         /* Disable the write protection for RTC registers */
         rtcDisableWriteProtection();
+        rtcALMADisable();
+        while(!rtcIsActiveFlagALRAW());
 
         /* Select weekday selection */
-        if (RTC_AlarmStruct->AlarmDateWeekDaySel.A == RTC_ALMA_DATEWEEKDAYSEL_DATE)
+        if (alarmDateWeekDaySel == RTC_ALMA_DATEWEEKDAYSEL_DATE)
         {
           /* Set the date for ALARM */
           rtcALMADisableWeekday();
-          if (RTC_Format != RTC_FORMAT_BIN)
+          if (rtcDataFormat_ != RTC_FORMAT_BIN)
           {
-            rtcALMASetDay(RTC_AlarmStruct->AlarmDateWeekDay.day);
+            rtcALMASetDay(alarmDateWeekDay);
           }
           else
           {
-            rtcALMASetDay(rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmDateWeekDay.day));
+            rtcALMASetDay(rtcConvertBin2Bcd(alarmDateWeekDay));
           }
         }
         else
         {
           /* Set the week day for ALARM */
           rtcALMAEnableWeekday();
-          rtcALMASetWeekDay(RTC_AlarmStruct->AlarmDateWeekDay.week);
+          rtcALMASetWeekDay((RTCWeekDay)alarmDateWeekDay);
         }
 
         /* Configure the Alarm register */
-        if (RTC_Format != RTC_FORMAT_BIN)
+        if (rtcDataFormat_ != RTC_FORMAT_BIN)
         {
-          rtcALMAConfigTime((RTCAlarmATimeFormat)RTC_AlarmStruct->AlarmTime.TimeFormat, RTC_AlarmStruct->AlarmTime.Hours,
-                                RTC_AlarmStruct->AlarmTime.Minutes, RTC_AlarmStruct->AlarmTime.Seconds);
+          rtcALMAConfigTime(timeFormat, hours,
+                                minutes, seconds);
         }
         else
         {
-          rtcALMAConfigTime((RTCAlarmATimeFormat)RTC_AlarmStruct->AlarmTime.TimeFormat,
-                                rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmTime.Hours),
-                                rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmTime.Minutes),
-                                rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmTime.Seconds));
+          rtcALMAConfigTime(timeFormat,
+                                rtcConvertBin2Bcd(hours),
+                                rtcConvertBin2Bcd(minutes),
+                                rtcConvertBin2Bcd(seconds));
         }
         /* Set ALARM mask */
-        rtcALMASetMask(RTC_AlarmStruct->AlarmMask.A);
+        rtcALMASetMask(alarmMask);
 
         /* Enable the write protection for RTC registers */
         rtcEnableWriteProtection();
@@ -5241,40 +5102,40 @@ public:
         return E_RESULT_OK;
     }
   
-    eResult rtcALMBInit(uint32_t RTC_Format, RTC_AlarmTypeDef *RTC_AlarmStruct)
+    eResult rtcALMBInit(RTCAlarmBMask alarmMask, RTCAlarmBWeekDaySelect alarmDateWeekDaySel, uint32_t alarmDateWeekDay, RTCAlarmBTimeFormat timeFormat, uint8_t hours, uint8_t minutes, uint8_t seconds)
     {
-        if (RTC_Format == RTC_FORMAT_BIN)
+        if (rtcDataFormat_ == RTC_FORMAT_BIN)
         {
           if (rtcGetHourFormat() != RTC_HOURFORMAT_24HOUR)
           {
-            if(RTC_AlarmStruct->AlarmTime.Hours > 12 || RTC_AlarmStruct->AlarmTime.Hours <= 0)
+            if(hours > 12 || hours <= 0)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            RTC_AlarmStruct->AlarmTime.TimeFormat = RTC_ALMB_TIME_FORMAT_AM;
-            if(RTC_AlarmStruct->AlarmTime.Hours > 23)
+            timeFormat = RTC_ALMB_TIME_FORMAT_AM;
+            if(hours > 23)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
-          if(RTC_AlarmStruct->AlarmTime.Minutes >= 60 || RTC_AlarmStruct->AlarmTime.Seconds >= 60)
+          if(minutes >= 60 || seconds >= 60)
           {
             return E_RESULT_INVALID_PARAM;
           }
 
-          if (RTC_AlarmStruct->AlarmDateWeekDaySel.B == RTC_ALMB_DATEWEEKDAYSEL_DATE)
+          if (alarmDateWeekDaySel == RTC_ALMB_DATEWEEKDAYSEL_DATE)
           {
-            if(RTC_AlarmStruct->AlarmDateWeekDay.day < 1 || RTC_AlarmStruct->AlarmDateWeekDay.day > 31)
+            if(alarmDateWeekDay < 1 || alarmDateWeekDay > 31)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            if(RTC_AlarmStruct->AlarmDateWeekDay.week < RTC_WEEKDAY_MONDAY || RTC_AlarmStruct->AlarmDateWeekDay.week > RTC_WEEKDAY_SUNDAY)
+            if(alarmDateWeekDay < RTC_WEEKDAY_MONDAY || alarmDateWeekDay > RTC_WEEKDAY_SUNDAY)
             {
               return E_RESULT_INVALID_PARAM;
             }
@@ -5284,34 +5145,34 @@ public:
         {
           if (rtcGetHourFormat() != RTC_HOURFORMAT_24HOUR)
           {
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Hours) > 12 || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Hours) <= 0)
+            if(rtcConvertBcd2Bin(hours) > 12 || rtcConvertBcd2Bin(hours) <= 0)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            RTC_AlarmStruct->AlarmTime.TimeFormat = RTC_ALMB_TIME_FORMAT_AM;
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Hours) > 23)
+            timeFormat = RTC_ALMB_TIME_FORMAT_AM;
+            if(rtcConvertBcd2Bin(hours) > 23)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
-          if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Minutes) >= 60 || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmTime.Seconds) >= 60)
+          if(rtcConvertBcd2Bin(minutes) >= 60 || rtcConvertBcd2Bin(seconds) >= 60)
           {
             return E_RESULT_INVALID_PARAM;
           }
 
-          if (RTC_AlarmStruct->AlarmDateWeekDaySel.B == RTC_ALMB_DATEWEEKDAYSEL_DATE)
+          if (alarmDateWeekDaySel == RTC_ALMB_DATEWEEKDAYSEL_DATE)
           {
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.day) < 1 || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.day) > 31)
+            if(rtcConvertBcd2Bin(alarmDateWeekDay) < 1 || rtcConvertBcd2Bin(alarmDateWeekDay) > 31)
             {
               return E_RESULT_INVALID_PARAM;
             }
           }
           else
           {
-            if(rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.week) < RTC_WEEKDAY_MONDAY || rtcConvertBcd2Bin(RTC_AlarmStruct->AlarmDateWeekDay.week) > RTC_WEEKDAY_SUNDAY)
+            if(rtcConvertBcd2Bin(alarmDateWeekDay) < RTC_WEEKDAY_MONDAY || rtcConvertBcd2Bin(alarmDateWeekDay) > RTC_WEEKDAY_SUNDAY)
             {
               return E_RESULT_INVALID_PARAM;
             }
@@ -5320,43 +5181,44 @@ public:
 
         /* Disable the write protection for RTC registers */
         rtcDisableWriteProtection();
-
+        rtcALMBDisable();
+        while(!rtcIsActiveFlagALRBW());
         /* Select weekday selection */
-        if (RTC_AlarmStruct->AlarmDateWeekDaySel.B == RTC_ALMB_DATEWEEKDAYSEL_DATE)
+        if (alarmDateWeekDaySel == RTC_ALMB_DATEWEEKDAYSEL_DATE)
         {
           /* Set the date for ALARM */
           rtcALMBDisableWeekday();
-          if (RTC_Format != RTC_FORMAT_BIN)
+          if (rtcDataFormat_ != RTC_FORMAT_BIN)
           {
-            rtcALMBSetDay(RTC_AlarmStruct->AlarmDateWeekDay.day);
+            rtcALMBSetDay(alarmDateWeekDay);
           }
           else
           {
-            rtcALMBSetDay(rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmDateWeekDay.day));
+            rtcALMBSetDay(rtcConvertBin2Bcd(alarmDateWeekDay));
           }
         }
         else
         {
           /* Set the week day for ALARM */
           rtcALMBEnableWeekday();
-          rtcALMBSetWeekDay(RTC_AlarmStruct->AlarmDateWeekDay.week);
+          rtcALMBSetWeekDay((RTCWeekDay)alarmDateWeekDay);
         }
 
         /* Configure the Alarm register */
-        if (RTC_Format != RTC_FORMAT_BIN)
+        if (rtcDataFormat_ != RTC_FORMAT_BIN)
         {
-          rtcALMBConfigTime((RTCAlarmBTimeFormat)RTC_AlarmStruct->AlarmTime.TimeFormat, RTC_AlarmStruct->AlarmTime.Hours,
-                                RTC_AlarmStruct->AlarmTime.Minutes, RTC_AlarmStruct->AlarmTime.Seconds);
+          rtcALMBConfigTime(timeFormat, hours,
+                                minutes, seconds);
         }
         else
         {
-          rtcALMBConfigTime((RTCAlarmBTimeFormat)RTC_AlarmStruct->AlarmTime.TimeFormat,
-                                rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmTime.Hours),
-                                rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmTime.Minutes),
-                                rtcConvertBin2Bcd(RTC_AlarmStruct->AlarmTime.Seconds));
+          rtcALMBConfigTime(timeFormat,
+                                rtcConvertBin2Bcd(hours),
+                                rtcConvertBin2Bcd(minutes),
+                                rtcConvertBin2Bcd(seconds));
         }
         /* Set ALARM mask */
-        rtcALMBSetMask(RTC_AlarmStruct->AlarmMask.B);
+        rtcALMBSetMask(alarmMask);
 
         /* Enable the write protection for RTC registers */
         rtcEnableWriteProtection();
@@ -5443,7 +5305,36 @@ public:
 
         return (status);
     }
-
+    uint8_t rtcConvertBin2Bcd(uint8_t val)
+    {
+        return (uint8_t)((((val) / 10U) << 4U) | ((val) % 10U));
+    }
+    uint8_t rtcConvertBcd2Bin(uint8_t val)
+    {
+        return ((uint8_t)((((uint8_t)((val) & (uint8_t)0xF0) >> (uint8_t)0x4) * 10U) + ((val) & (uint8_t)0x0F)));
+    }
+    void enableIsr(RTCEnableIT it, uint32_t PreemptPriority, uint32_t SubPriority)
+    {
+        IRQn_Type type = getIrqType(it);
+        enableRTCExtiLine(it);
+        NVIC_SetPriority(type, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), PreemptPriority, SubPriority));
+        NVIC_EnableIRQ(type);
+    }
+    void disableIsr(RTCEnableIT it)
+    {
+        enableRTCExtiLine(it, false);
+    }
+    void registerInterruptCb(const RTCInterruptCb& isrcb)
+    {
+        cb_ = isrcb;
+    }
+    void unregisterInterruptCb()
+    {
+        if(cb_)
+        {
+            cb_ = RTCInterruptCb();
+        }
+    }
 private:
     inline uint32_t rtcDateGet()
     {
@@ -5455,45 +5346,65 @@ private:
                         (((((temp & RTC_DR_MT) >> RTC_DR_MT_Pos) << 4U) | ((temp & RTC_DR_MU) >> RTC_DR_MU_Pos)) << RTC_OFFSET_MONTH) | \
                         ((((temp & RTC_DR_YT) >> RTC_DR_YT_Pos) << 4U) | ((temp & RTC_DR_YU) >> RTC_DR_YU_Pos)));
     }
-    uint8_t rtcConvertBin2Bcd(uint8_t val)
+    IRQn_Type getIrqType(RTCEnableIT isrType)
     {
-        return (uint8_t)((((val) / 10U) << 4U) | ((val) % 10U));
+        IRQn_Type type = EXTI0_IRQn;
+        switch (isrType)
+        {
+        case RTC_CR_TIME_STAMP_IE:
+            type = TAMP_STAMP_IRQn;
+            break;
+        case RTC_CR_WAKEUP_IE:
+            type = RTC_WKUP_IRQn;
+            break;
+        case RTC_CR_ALARMB_IE:
+        case RTC_CR_ALARMA_IE:
+            type = RTC_Alarm_IRQn;
+            break;
+#if !defined(TAMP)
+        case RTC_TAMPCR_TAMP3_IE:
+        case RTC_TAMPCR_TAMP2_IE:
+        case RTC_TAMPCR_TAMP1_IE:
+        case RTC_TAMPCR_TAMP_IE:
+            type = TAMP_STAMP_IRQn;
+            break;
+#endif
+        default:
+            break;
+        }
+        return type;
     }
-    uint8_t rtcConvertBcd2Bin(uint8_t val)
+    void enableRTCExtiLine(RTCEnableIT isrType, bool bEnable = true)
     {
-        return ((uint8_t)((((uint8_t)((val) & (uint8_t)0xF0) >> (uint8_t)0x4) * 10U) + ((val) & (uint8_t)0x0F)));
-    }
-    RTCWeekDay rtcGetWeekDay()
-    {
-        return (RTCWeekDay)((((rtcDateGet()) >> RTC_OFFSET_WEEKDAY) & 0x000000FFU));
-    }
-    uint8_t rtcGetYear()
-    {
-        return ((rtcDateGet()) & 0x000000FFU);
-    }
-    RTCMonth rtcGetMonth()
-    {
-        return (RTCMonth)(((rtcDateGet()) >>RTC_OFFSET_MONTH) & 0x000000FFU);
-    }
-    uint8_t rtcGetDay()
-    {
-        return (((rtcDateGet()) >>RTC_OFFSET_DAY) & 0x000000FFU);
-    }
-    uint8_t rtcGetHour()
-    {
-        return (((rtcDateGet()) >> RTC_OFFSET_HOUR) & 0x000000FFU);
-    }
-    uint8_t rtcGetMinute()
-    {
-        return (((rtcDateGet()) >> RTC_OFFSET_MINUTE) & 0x000000FFU);
-    }
-    uint8_t rtcGetSecond()
-    {
-        return ((rtcDateGet()) & 0x000000FFU);
+        switch (isrType)
+        {
+        case RTC_CR_TIME_STAMP_IE:
+            EXTIx::getInstance()->extiInit(EXTILinex_0_31::EXTI_LINE_18, EXTILinex_32_63::EXTI_LINE_NONE_32_63, EXTILinex_64_95::EXTI_LINE_NONE_64_95, EXTI_MODE_IT, EXTI_TRIGGER_RISING, bEnable);
+            break;
+        case RTC_CR_WAKEUP_IE:
+            EXTIx::getInstance()->extiInit(EXTILinex_0_31::EXTI_LINE_19, EXTILinex_32_63::EXTI_LINE_NONE_32_63, EXTILinex_64_95::EXTI_LINE_NONE_64_95, EXTI_MODE_IT, EXTI_TRIGGER_RISING, bEnable);
+            break;
+        case RTC_CR_ALARMB_IE:
+        case RTC_CR_ALARMA_IE:
+            EXTIx::getInstance()->extiInit(EXTILinex_0_31::EXTI_LINE_17, EXTILinex_32_63::EXTI_LINE_NONE_32_63, EXTILinex_64_95::EXTI_LINE_NONE_64_95, EXTI_MODE_IT, EXTI_TRIGGER_RISING, bEnable);
+            break;
+#if !defined(TAMP)
+        case RTC_TAMPCR_TAMP3_IE:
+        case RTC_TAMPCR_TAMP2_IE:
+        case RTC_TAMPCR_TAMP1_IE:
+        case RTC_TAMPCR_TAMP_IE:
+            EXTIx::getInstance()->extiInit(EXTILinex_0_31::EXTI_LINE_18, EXTILinex_32_63::EXTI_LINE_NONE_32_63, EXTILinex_64_95::EXTI_LINE_NONE_64_95, EXTI_MODE_IT, EXTI_TRIGGER_RISING, bEnable);
+            break;
+#endif
+        default:
+            break;
+        }
     }
 private:
     RTC_TypeDef *rtcx_;
  #if defined (TAMP)
     TAMP_TypeDef *tampx_;
  #endif
+    RTCDataFormat rtcDataFormat_;
+    RTCInterruptCb cb_;
 };

@@ -396,7 +396,7 @@ int main(void)
     return 0;
 }
 #endif
-#if 1
+#if 0
 #include "rtc.hpp"
 #include "lptimer.hpp"
 #include "isrcommon.h"
@@ -463,6 +463,72 @@ int main(void)
 
         timer1.pwmSetDuty(TIM_CHANNEL_1,i);
         printf("--------------\r\n");
+    }
+    return 0;
+}
+#endif
+
+#if 1
+#include "rtc.hpp"
+#include "lptimer.hpp"
+#include "isrcommon.h"
+int main(void)
+{
+    if(!hwInit())
+    {
+        while(1);
+    }
+    LED led0(GPIOE, GPIO_NUM_9, false);
+    LED led1(GPIOA, GPIO_NUM_7, false);
+
+    RTCX rtc;
+    SET_BIT(PWR->CR1, PWR_CR1_DBP);
+    if(RCCControl::getInstance()->HSIIsReady())
+    {
+        printf("RTC INITT Start ...\r\n");
+        if(rtc.rtcInit(RTC_HOURFORMAT_AMPM) != E_RESULT_OK)
+        {
+            printf("rtcInit init fail\r\n");
+        }
+        if(rtc.rtcDATEInit(RTC_WEEKDAY_FRIDAY,RTC_MONTH_DECEMBER,0X29,0X16)!= E_RESULT_OK)
+        {
+            printf("rtcDATEInit init fail\r\n");
+        }
+        if(rtc.rtcTIMEInit(RTC_TIME_FORMAT_PM,0X11,0X59,0X40)!= E_RESULT_OK)
+        {
+            printf("rtcTIMEInit init fail\r\n");
+        }
+        if(rtc.rtcALMAInit(RTC_ALMA_MASK_DATEWEEKDAY,RTC_ALMA_DATEWEEKDAYSEL_DATE,0x01,RTC_ALMA_TIME_FORMAT_PM,0X11,0X59,0X50)!= E_RESULT_OK)
+        {
+            printf("rtcALMAInit init fail\r\n");
+        }
+        rtc.rtcDisableWriteProtection();
+        rtc.rtcClearFlagALRA();
+        rtc.rtcEnableITALRA();
+        rtc.rtcALMAEnable();
+        rtc.rtcEnableWriteProtection();
+        rtc.registerInterruptCb([&](RTCX* rtcx, RTCRIsrFlags flag){
+            if(flag == RTC_ISR_LALRAF)
+            {
+                printf("Alarm is runing++++++++++++++++++++++++++++++++++++++++++++++++++++++++\r\n");
+                led1.on();
+            }
+            printf("xxcxcxc\r\n");
+        });
+        rtc.enableIsr(RTC_CR_ALARMA_IE, 3,3);
+    }
+
+    while(1)
+    {
+        delayTick(1000);
+        printf("%.4d-%.2d-%.2d-%.2d %.2d:%.2d:%.2d \r\n",rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetYear()),rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetMonth()),rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetDay()),
+                rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetWeekDay()),
+                rtc.rtcConvertBcd2Bin(rtc.rtcTIMEGetHour()),
+                rtc.rtcConvertBcd2Bin(rtc.rtcTIMEGetMinute()),
+                rtc.rtcConvertBcd2Bin(rtc.rtcTIMEGetSecond()));
+        printf("Alarm %.2d:%.2d:%.2d\r\n",rtc.rtcConvertBcd2Bin(rtc.rtcALMAGetHour()), rtc.rtcConvertBcd2Bin(rtc.rtcALMAGetMinute()), rtc.rtcConvertBcd2Bin(rtc.rtcALMAGetSecond()));
+        printf("\r\n");
+        led0.reverse();
     }
     return 0;
 }

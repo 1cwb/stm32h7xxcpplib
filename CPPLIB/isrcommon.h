@@ -115,6 +115,68 @@ void unRegisterDMAIsrCb(DMA_Stream_TypeDef* stream);
 void registerBDMAIsrCb(BDMA_Channel_TypeDef* channel, DMA_ISR_CB cb, void* param);
 void unRegisterBDMAIsrCb(BDMA_Channel_TypeDef* channel);
 
+/** @defgroup EC_GET_FLAG Get Flags Defines
+  * @brief    Flags defines which can be used with RTC_ReadReg function
+  * @{
+  */
+typedef enum RTCRIsrFlags
+{
+    #if defined(TAMP)
+    RTC_SCR_LITSF        =          RTC_SCR_CITSF,
+    RTC_SCR_LTSOVF       =          RTC_SCR_CTSOVF,
+    RTC_SCR_LTSF         =          RTC_SCR_CTSF,
+    RTC_SCR_LWUTF        =          RTC_SCR_CWUTF,
+    RTC_SCR_LALRBF       =          RTC_SCR_CALRBF,
+    RTC_SCR_LALRAF       =          RTC_SCR_CALRAF,
+    RTC_ICSR_LRECALPF    =          RTC_ICSR_RECALPF,
+    RTC_ICSR_LINITF      =          RTC_ICSR_INITF,
+    RTC_ICSR_LRSF        =          RTC_ICSR_RSF,
+    RTC_ICSR_LINITS      =          RTC_ICSR_INITS,
+    RTC_ICSR_LSHPF       =          RTC_ICSR_SHPF,
+    RTC_ICSR_LWUTWF      =          RTC_ICSR_WUTWF,
+    #else
+    RTC_ISR_LITSF        =          RTC_ISR_ITSF,
+    RTC_ISR_LRECALPF     =          RTC_ISR_RECALPF,
+    RTC_ISR_LTAMP3F      =          RTC_ISR_TAMP3F,
+    RTC_ISR_LTAMP2F      =          RTC_ISR_TAMP2F,
+    RTC_ISR_LTAMP1F      =          RTC_ISR_TAMP1F,
+    RTC_ISR_LTSOVF       =          RTC_ISR_TSOVF,
+    RTC_ISR_LTSF         =          RTC_ISR_TSF,
+    RTC_ISR_LWUTF        =          RTC_ISR_WUTF,
+    RTC_ISR_LALRBF       =          RTC_ISR_ALRBF,
+    RTC_ISR_LALRAF       =          RTC_ISR_ALRAF,
+    RTC_ISR_LINITF       =          RTC_ISR_INITF,
+    RTC_ISR_LRSF         =          RTC_ISR_RSF,
+    RTC_ISR_LINITS       =          RTC_ISR_INITS,
+    RTC_ISR_LSHPF        =          RTC_ISR_SHPF,
+    RTC_ISR_LWUTWF       =          RTC_ISR_WUTWF,
+    RTC_ISR_LALRBWF      =          RTC_ISR_ALRBWF,
+    RTC_ISR_LALRAWF      =          RTC_ISR_ALRAWF
+    #endif /* TAMP */
+}RTCRIsrFlags;
+
+/** @defgroup EC_IT IT Defines
+  * @brief    IT defines which can be used with RTC_ReadReg and  RTC_WriteReg functions
+  * @{
+  */
+typedef enum RTCEnableIT
+{
+    RTC_CR_TIME_STAMP_IE     =       RTC_CR_TSIE,
+    RTC_CR_WAKEUP_IE         =       RTC_CR_WUTIE,
+    RTC_CR_ALARMB_IE         =       RTC_CR_ALRBIE,
+    RTC_CR_ALARMA_IE         =       RTC_CR_ALRAIE,
+#if !defined(TAMP)
+    RTC_TAMPCR_TAMP3_IE      =       RTC_TAMPCR_TAMP3IE,
+    RTC_TAMPCR_TAMP2_IE      =       RTC_TAMPCR_TAMP2IE,
+    RTC_TAMPCR_TAMP1_IE      =       RTC_TAMPCR_TAMP1IE,
+    RTC_TAMPCR_TAMP_IE       =       RTC_TAMPCR_TAMPIE
+#endif /* !TAMP */
+}RTCEnableIT;
+
+typedef void (*RTC_ISR_CB)(void* param, RTCRIsrFlags isrFlag);
+void registerRTCIsrCb(RTCEnableIT isrType, RTC_ISR_CB cb, void* param);
+void unRegisterRTCIsrCb(RTCEnableIT isrType);
+
 int32_t initTick(uint32_t TickPriority);
 void incTick(void);
 uint32_t getTick(void);
