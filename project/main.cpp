@@ -480,10 +480,10 @@ int main(void)
     }
     LED led0(GPIOE, GPIO_NUM_9, false);
     LED led1(GPIOA, GPIO_NUM_7, false);
-
-    RTCX rtc;
     SET_BIT(PWR->CR1, PWR_CR1_DBP);
-    if(RCCControl::getInstance()->HSIIsReady())
+    RTCX rtc;
+    
+    if(RCCControl::getInstance()->LSIIsReady())
     {
         printf("RTC INITT Start ...\r\n");
         if(rtc.rtcInit(RTC_HOURFORMAT_AMPM) != E_RESULT_OK)
@@ -498,7 +498,7 @@ int main(void)
         {
             printf("rtcTIMEInit init fail\r\n");
         }
-        if(rtc.rtcALMAInit(RTC_ALMA_MASK_DATEWEEKDAY,RTC_ALMA_DATEWEEKDAYSEL_DATE,0x01,RTC_ALMA_TIME_FORMAT_PM,0X11,0X59,0X50)!= E_RESULT_OK)
+        if(rtc.rtcALMAInit(RTC_ALMA_MASK_DATEWEEKDAY,RTC_ALMA_DATEWEEKDAYSEL_DATE,0x01,RTC_ALMA_TIME_FORMAT_PM,0X11,0X59,0X52)!= E_RESULT_OK)
         {
             printf("rtcALMAInit init fail\r\n");
         }
@@ -516,6 +516,10 @@ int main(void)
             printf("xxcxcxc\r\n");
         });
         rtc.enableIsr(RTC_CR_ALARMA_IE, 3,3);
+    }
+    else
+    {
+        printf("LSI NOT READY =================== \r\n");
     }
 
     while(1)

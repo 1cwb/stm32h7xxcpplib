@@ -2222,20 +2222,21 @@ void unRegisterRTCIsrCb(RTCEnableIT isrType)
 void TAMP_STAMP_IRQHandler(void)
 {
 	WRITE_REG(EXTI->PR1, EXTI_IMR1_IM18);
-	if((READ_BIT(RTC->CR, RTC_CR_TSIE) == (RTC_CR_TSIE)) && (READ_BIT(RTC->ISR, RTC_ISR_ITSF) == (RTC_ISR_ITSF)))
+	if((READ_BIT(RTC->CR, RTC_CR_TSIE) == (RTC_CR_TSIE)) && ((READ_BIT(RTC->ISR, RTC_ISR_ITSF) == (RTC_ISR_ITSF)) || (READ_BIT(RTC->ISR, RTC_ISR_TSF) == (RTC_ISR_TSF))))
 	{
-		WRITE_REG(RTC->ISR, (~((RTC_ISR_ITSF | RTC_ISR_INIT) & 0x0000FFFFU) | (RTC->ISR & RTC_ISR_INIT)));
+		RTCRIsrFlags flag = (READ_BIT(RTC->ISR, RTC_ISR_ITSF) == (RTC_ISR_ITSF)) ? RTC_ISR_LITSF : RTC_ISR_LTSF;
+		WRITE_REG(RTC->ISR, (~((RTC_ISR_ITSF | RTC_ISR_INIT | RTC_ISR_TSF) & 0x0000FFFFU) | (RTC->ISR & RTC_ISR_INIT)));
 		if(RTCIsrCbBuff[2].cb && RTCIsrCbBuff[2].param)
 		{
-			RTCIsrCbBuff[2].cb(RTCIsrCbBuff[2].param, RTC_ISR_LITSF);
+			RTCIsrCbBuff[2].cb(RTCIsrCbBuff[2].param, flag);
 		}
 	}
-	if((READ_BIT(RTC->CR, RTC_CR_TSIE) == (RTC_CR_TSIE)) && (READ_BIT(RTC->ISR, RTC_ISR_TSF) == (RTC_ISR_TSF)))
+	if((READ_BIT(RTC->ISR, RTC_ISR_TSOVF) == (RTC_ISR_TSOVF)))
 	{
-		WRITE_REG(RTC->ISR, (~((RTC_ISR_TSF | RTC_ISR_INIT) & 0x0000FFFFU) | (RTC->ISR & RTC_ISR_INIT)));
+		WRITE_REG(RTC->ISR, (~((RTC_ISR_TSOVF | RTC_ISR_INIT) & 0x0000FFFFU) | (RTC->ISR & RTC_ISR_INIT)));
 		if(RTCIsrCbBuff[2].cb && RTCIsrCbBuff[2].param)
 		{
-			RTCIsrCbBuff[2].cb(RTCIsrCbBuff[2].param, RTC_ISR_LTSF);
+			RTCIsrCbBuff[2].cb(RTCIsrCbBuff[2].param, RTC_ISR_LTSOVF);
 		}
 	}
 	if((READ_BIT(RTC->TAMPCR, RTC_TAMPCR_TAMP3IE) == (RTC_TAMPCR_TAMP3IE)) && (READ_BIT(RTC->ISR, RTC_ISR_TAMP3F) == (RTC_ISR_TAMP3F)))
@@ -2260,22 +2261,6 @@ void TAMP_STAMP_IRQHandler(void)
 		if(RTCIsrCbBuff[2].cb && RTCIsrCbBuff[2].param)
 		{
 			RTCIsrCbBuff[2].cb(RTCIsrCbBuff[2].param, RTC_ISR_LTAMP1F);
-		}
-	}
-	/*if((READ_BIT(RTC->TAMPCR, RTC_TAMPCR_TAMPIE) == (RTC_TAMPCR_TAMPIE)))
-	{
-		
-	}
-	if((READ_BIT(RTC->ISR, RTC_ISR_RECALPF) == (RTC_ISR_RECALPF)))
-	{
-
-	}*/
-	if((READ_BIT(RTC->ISR, RTC_ISR_TSOVF) == (RTC_ISR_TSOVF)))
-	{
-		WRITE_REG(RTC->ISR, (~((RTC_ISR_TSOVF | RTC_ISR_INIT) & 0x0000FFFFU) | (RTC->ISR & RTC_ISR_INIT)));
-		if(RTCIsrCbBuff[2].cb && RTCIsrCbBuff[2].param)
-		{
-			RTCIsrCbBuff[2].cb(RTCIsrCbBuff[2].param, RTC_ISR_LTSOVF);
 		}
 	}
 }

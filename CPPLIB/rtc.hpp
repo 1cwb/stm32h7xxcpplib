@@ -463,8 +463,6 @@ public:
  #ifndef TAMP
     RTCX(RTC_TypeDef* rtcx = RTC, RCCRTCClkSrc src = RCC_RTC_CLK_SRC_LSI) : rtcx_(rtcx)
     {
-        RCCControl::getInstance()->ForceBackupDomainReset();
-        RCCControl::getInstance()->ReleaseBackupDomainReset();
         rtcDeInit();
         RCCControl::getInstance()->SetRTCClockSource(src);
         RCCControl::getInstance()->EnableRTC();
@@ -5056,8 +5054,6 @@ public:
 
         /* Disable the write protection for RTC registers */
         rtcDisableWriteProtection();
-        rtcALMADisable();
-        while(!rtcIsActiveFlagALRAW());
 
         /* Select weekday selection */
         if (alarmDateWeekDaySel == RTC_ALMA_DATEWEEKDAYSEL_DATE)
@@ -5181,8 +5177,7 @@ public:
 
         /* Disable the write protection for RTC registers */
         rtcDisableWriteProtection();
-        rtcALMBDisable();
-        while(!rtcIsActiveFlagALRBW());
+
         /* Select weekday selection */
         if (alarmDateWeekDaySel == RTC_ALMB_DATEWEEKDAYSEL_DATE)
         {
