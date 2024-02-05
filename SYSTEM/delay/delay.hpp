@@ -16,7 +16,7 @@ void delayUs(uint32_t nus)
 	told=SysTick->VAL;        				
 	while(1)
 	{
-		tnow=SysTick->VAL;	
+		tnow=SysTick->VAL;
 		if(tnow!=told)
 		{	    
 			if(tnow<told)tcnt+=told-tnow;

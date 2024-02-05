@@ -128,7 +128,7 @@ bool hwInit()
     }
     SystemCoreClockUpdate();
     initTick(TICK_INT_PRIORITY);
-    delayInit(RCCControl::getInstance()->GetSystemClockFreq());
+    delayInit(RCCControl::getInstance()->GetSystemClockFreq()/1000000);//1us
 
     GPIO usartGpio(GPIOA, GPIO_NUM_9 | GPIO_NUM_10, GPIO_MODE_AF_PP, GPIO_SPEED_MID, GPIO_PUPD_PU);
     usartGpio.setAF(GPIO_AF7_USART1);

@@ -524,7 +524,7 @@ int main(void)
 
     while(1)
     {
-        delayTick(1000);
+        delayMs(1000);
         printf("%.4d-%.2d-%.2d-%.2d %.2d:%.2d:%.2d \r\n",rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetYear()),rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetMonth()),rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetDay()),
                 rtc.rtcConvertBcd2Bin(rtc.rtcDATEGetWeekDay()),
                 rtc.rtcConvertBcd2Bin(rtc.rtcTIMEGetHour()),
