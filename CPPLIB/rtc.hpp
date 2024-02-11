@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "cortex.hpp"
 #include "exti.hpp"
+#include "pwr.hpp"
 
 /* Masks Definition */
 #define RTC_INIT_MASK              0xFFFFFFFFU
@@ -463,6 +464,7 @@ public:
  #ifndef TAMP
     RTCX(RTC_TypeDef* rtcx = RTC, RCCRTCClkSrc src = RCC_RTC_CLK_SRC_LSI) : rtcx_(rtcx)
     {
+        PWRX::getInstance()->pwrEnableBkUpAccess();
         rtcDeInit();
         RCCControl::getInstance()->SetRTCClockSource(src);
         RCCControl::getInstance()->EnableRTC();

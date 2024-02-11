@@ -480,7 +480,6 @@ int main(void)
     }
     LED led0(GPIOE, GPIO_NUM_9, false);
     LED led1(GPIOA, GPIO_NUM_7, false);
-    SET_BIT(PWR->CR1, PWR_CR1_DBP);
     RTCX rtc;
     
     if(RCCControl::getInstance()->LSIIsReady())
