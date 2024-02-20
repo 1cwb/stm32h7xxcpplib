@@ -1,13 +1,13 @@
 #include "mpu.hpp"
 #include <stdio.h>
 #include <stdlib.h>
-#include "delay.hpp"
+#include "delay.h"
 #include "w25qxx.h"
 #include "sdram.h"
 #include "gpio.hpp"
 #include "usart.hpp"
 #include "rcc.hpp"
-#include "systeminit.hpp"
+#include "systeminit.h"
 #include "led.hpp"
 #include "iwdg.hpp"
 #include "timer.hpp"
@@ -543,27 +543,20 @@ int main(void)
 #include "isrcommon.h"
 #include "mthread.hpp"
 #include "mhw.hpp"
+
 int main(void)
 {
-    if(!hwInit())
-    {
-        while(1);
-    }
     LED led0(GPIOE, GPIO_NUM_9, false);
     LED led1(GPIOA, GPIO_NUM_7, false);
-    uint8_t data[512];
-    mthread th1;
-    printf("th1.extiaddr = %p\r\n",th1.threadExti);
-    th1.init("xxx1",[](void* p){},nullptr,data,512,0,10);
-    long v = HW::hwInterruptDisable();
-    printf("disable interrupt now\r\n");
-    HW::hwInterruptEnable(v);
     printf("Enabele interrupt now\r\n");
+    led0.on();
+    led1.on();
     while(1)
     {
         printf("do while now\r\n");
         //delayMs(1000);
-        delayTick(1000);
+        //delayTick(1000);
+        //mthread::threadDelay(200);
         printf("can run intr\r\n");
         led0.reverse();
     }

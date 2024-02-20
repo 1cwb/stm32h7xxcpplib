@@ -1,15 +1,22 @@
 #pragma once
 #include <stdio.h>
 #include <stdint.h>
+#include <cstring>
 
 #define NAME_MAX 8
 #define THREAD_PRIORITY_MAX 8
+
+#define WAITING_FOREVER              -1              /**< Block forever until get resource. */
+#define WAITING_NO                   0               /**< Non-block. */
+
+//  <i>Default: 1000   (1ms)
+#define TICK_PER_SECOND  1000
 
 #ifndef MASSERT
 #define MASSERT(x) \
 if(!(x)) \
 {        \
-    printf("error happend\r\n");\
+    printf("%s()%d error happend\r\n",__FUNCTION__,__LINE__);\
 }
 #endif
 
@@ -31,7 +38,7 @@ if(!(x)) \
  * Return the most contiguous size aligned at specified width. ALIGN(13, 4)
  * would return 16.
  */
-#define ALIGN(size, align)           (((size) + (align) - 1) & ~((align) - 1))
+#define M_ALIGN(size, align)           (((size) + (align) - 1) & ~((align) - 1))
 
 /**
  * @ingroup BasicDef
@@ -40,7 +47,22 @@ if(!(x)) \
  * Return the down number of aligned at specified width. ALIGN_DOWN(13, 4)
  * would return 12.
  */
-#define ALIGN_DOWN(size, align)      ((size) & ~((align) - 1))
+#define M_ALIGN_DOWN(size, align)      ((size) & ~((align) - 1))
+
+
+/* the version of GNU GCC must be greater than 4.x */
+typedef __builtin_va_list       __gnuc_va_list;
+typedef __gnuc_va_list          va_list;
+#define va_start(v,l)           __builtin_va_start(v,l)
+#define va_end(v)               __builtin_va_end(v)
+#define va_arg(v,l)             __builtin_va_arg(v,l)
+
+
+#define SECTION(x)                  __attribute__((section(x)))
+#define M_UNUSED                    __attribute__((unused))
+#define M_USED                      __attribute__((used))
+#define ALIGN(n)                    __attribute__((aligned(n)))
+#define M_WEAK                      __attribute__((weak))
 
 /* RT-Thread error code definitions */
 enum mResult
@@ -288,6 +310,8 @@ struct thread_t : public mObject_t
     void       *stackAddr;                             /**< stack address */
     uint32_t stackSize;                             /**< stack size */
     void (*extiThread)();
+    mResult (*yieldThread)();
+
     /* error code */
     int32_t    error;                                  /**< error code */
 

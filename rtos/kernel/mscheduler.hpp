@@ -181,12 +181,10 @@ public:
                 else
                 {
                     //RT_DEBUG_LOG(RT_DEBUG_SCHEDULER, ("switch in interrupt\n"));
-
                     HW::hwContextSwitchInterrupt((unsigned long)&fromThread->sp, (unsigned long)&toThread->sp);
                 }
             }
         }
-
         /* enable interrupt */
         HW::hwInterruptEnable(level);
     }
@@ -227,7 +225,7 @@ public:
     #endif
 
     #if THREAD_PRIORITY_MAX > 32
-        rt_thread_ready_table[thread->number] |= thread->high_mask;
+        threadReadyTable[thread->number] |= thread->highMask;
     #endif
         threadReadyPriorityGroup_ |= thread->numberMask;
 

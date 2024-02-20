@@ -1,8 +1,14 @@
 #pragma once
 #include "cortex.hpp"
 
-namespace CORTEXM7MPU
+class CORTEXM7MPU
 {
+public:
+    static CORTEXM7MPU* getInstance()
+    {
+        static CORTEXM7MPU mpu;
+        return &mpu;
+    }
     void mpuDisable(void)
     {
         CORTEX::getInstance()->mpuDisable();
@@ -18,6 +24,19 @@ namespace CORTEXM7MPU
         CORTEX::getInstance()->mpuConfigRegion(regionNum, 0, baseaddr, disableExec|access|texLevel|shareable|cachable|buffable|size);
         return 0;
     }
+private:
+    CORTEXM7MPU()
+    {
+
+    }
+    ~CORTEXM7MPU()
+    {
+
+    }
+    CORTEXM7MPU(const CORTEXM7MPU&) = delete;
+    CORTEXM7MPU(CORTEXM7MPU&&) = delete;
+    CORTEXM7MPU& operator=(const CORTEXM7MPU&) = delete;
+    CORTEXM7MPU& operator=(CORTEXM7MPU&&) = delete;
 };
 
 

@@ -1,16 +1,15 @@
-#pragma once
 #include "rcc.hpp"
 #include "usart.hpp"
 #include "gpio.hpp"
-#include "delay.hpp"
+#include "delay.h"
 #include "mpu.hpp"
 #include "iwdg.hpp"
 #include "wwdg.hpp"
 
 void mpuMemoryProtection(void)
 {
-    CORTEXM7MPU::mpuDisable();
-    CORTEXM7MPU::mpuSetProtection(0x20000000,
+    CORTEXM7MPU::getInstance()->mpuDisable();
+    CORTEXM7MPU::getInstance()->mpuSetProtection(0x20000000,
                         MPU_REGION_SIZE_1MB,
                         MPU_REGION_NUMBER0,
                         MPU_INSTRUCTION_ACCESS_ENABLE,
@@ -18,7 +17,7 @@ void mpuMemoryProtection(void)
                         MPU_ACCESS_NOT_SHAREABLE,
                         MPU_ACCESS_CACHEABLE,
                         MPU_ACCESS_BUFFERABLE);
-    CORTEXM7MPU::mpuSetProtection(0x90000000,
+    CORTEXM7MPU::getInstance()->mpuSetProtection(0x90000000,
                         MPU_REGION_SIZE_8MB,
                         MPU_REGION_NUMBER1,
                         MPU_INSTRUCTION_ACCESS_ENABLE,
@@ -26,7 +25,7 @@ void mpuMemoryProtection(void)
                         MPU_ACCESS_NOT_SHAREABLE,
                         MPU_ACCESS_CACHEABLE,
                         MPU_ACCESS_BUFFERABLE);
-    CORTEXM7MPU::mpuSetProtection(0xC0000000,
+    CORTEXM7MPU::getInstance()->mpuSetProtection(0xC0000000,
                         MPU_REGION_SIZE_32MB,
                         MPU_REGION_NUMBER2,
                         MPU_INSTRUCTION_ACCESS_ENABLE,
@@ -34,7 +33,7 @@ void mpuMemoryProtection(void)
                         MPU_ACCESS_NOT_SHAREABLE,
                         MPU_ACCESS_CACHEABLE,
                         MPU_ACCESS_NOT_BUFFERABLE);
-    CORTEXM7MPU::mpuEnable(MPU_CTRL_PRIVILEGED_DEFAULT);
+    CORTEXM7MPU::getInstance()->mpuEnable(MPU_CTRL_PRIVILEGED_DEFAULT);
 }
 
 eResult clockInit(uint32_t plln, uint32_t pllm, uint32_t pllp, uint32_t pllq, uint32_t pllr)

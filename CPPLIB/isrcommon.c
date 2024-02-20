@@ -2301,10 +2301,7 @@ void RTC_Alarm_IRQHandler(void)
   * @param  None
   * @retval None
   */
-void SysTick_Handler(void)
-{
-	incTick();
-}
+
 
 //for lib tick
 __IO uint32_t uwTick;

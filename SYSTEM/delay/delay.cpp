@@ -1,4 +1,3 @@
-#pragma once
 #include "common.hpp"
 
 static uint32_t fac_us=0;

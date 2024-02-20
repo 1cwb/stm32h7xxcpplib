@@ -1,14 +1,15 @@
 #pragma once
 #include "rtoscommon.hpp"
 #include "mobject.hpp"
-#include "cpuport.hpp"
-
+#include "cpuport.h"
+#include "mclock.hpp"
 class mthread
 {
 public:
     mthread()
     {
         thData_.extiThread = threadExti;
+        thData_.yieldThread = threadYield;
     }
     ~mthread()
     {
@@ -116,13 +117,12 @@ public:
         /* change thread stat */
         thData_.stat = THREAD_SUSPEND;
         /* then resume it */
-        threadResume(&thData_);
+        threadResume();
         if (threadSelf() != nullptr)
         {
             /* do a scheduling */
             mSchedule::getInstance()->schedule();
         }
-
         return M_RESULT_EOK;
     }
     /**
@@ -360,12 +360,12 @@ public:
 
             if (mObject::getInstance()->objectIsSystemobject((mObject_t*)(&thData_)))
             {
-                return threadDetach(thread);
+                return threadDetach();
             }
     #ifdef RT_USING_HEAP
             else
             {
-                return rt_thread_delete(thread);
+                return rt_thread_delete();
             }
     #endif
 
@@ -388,37 +388,36 @@ public:
      */
     static mResult threadSuspend(thread_t* thread)
     {
-        register rt_base_t temp;
+        register long temp;
 
         /* thread check */
-        RT_ASSERT(thread != RT_NULL);
-        RT_ASSERT(rt_object_get_type((rt_object_t)thread) == RT_Object_Class_Thread);
+        MASSERT(thread != nullptr);
+        MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(thread)) == M_OBJECT_CLASS_THREAD);
+        //RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread suspend:  %s\n", thread->name));
 
-        RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread suspend:  %s\n", thread->name));
-
-        if ((thread->stat & RT_THREAD_STAT_MASK) != RT_THREAD_READY)
+        if ((thread->stat & THREAD_STAT_MASK) != THREAD_READY)
         {
-            RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread suspend: thread disorder, 0x%2x\n",
-                                        thread->stat));
+            /*RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread suspend: thread disorder, 0x%2x\n",
+                                        thread->stat));*/
 
-            return -RT_ERROR;
+            return M_RESULT_ERROR;
         }
 
         /* disable interrupt */
-        temp = rt_hw_interrupt_disable();
+        temp = HW::hwInterruptDisable();
 
         /* change thread stat */
-        rt_schedule_remove_thread(thread);
-        thread->stat = RT_THREAD_SUSPEND | (thread->stat & ~RT_THREAD_STAT_MASK);
+        mSchedule::getInstance()->scheduleRemoveThread(thread);
+        thread->stat = THREAD_SUSPEND | (thread->stat & ~THREAD_STAT_MASK);
 
-        /* stop thread timer anyway */
-        rt_timer_stop(&(thread->thread_timer));
+        /* stop thread timer anyway *///tony Fix me
+        //rt_timer_stop(&(thread->thread_timer));
 
         /* enable interrupt */
-        rt_hw_interrupt_enable(temp);
+        HW::hwInterruptEnable(temp);
 
-        RT_OBJECT_HOOK_CALL(rt_thread_suspend_hook, (thread));
-        return RT_EOK;
+        //RT_OBJECT_HOOK_CALL(rt_thread_suspend_hook, (thread));
+        return M_RESULT_EOK;
     }
 
     /**
@@ -428,40 +427,40 @@ public:
      *
      * @return the operation status, RT_EOK on OK, -RT_ERROR on error
      */
-    rt_err_t rt_thread_resume(rt_thread_t thread)
+    mResult threadResume()
     {
-        register rt_base_t temp;
+        register long temp;
 
         /* thread check */
-        RT_ASSERT(thread != RT_NULL);
-        RT_ASSERT(rt_object_get_type((rt_object_t)thread) == RT_Object_Class_Thread);
+        MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&thData_)) == M_OBJECT_CLASS_THREAD);
 
-        RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread resume:  %s\n", thread->name));
+        //RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread resume:  %s\n", thread->name));
 
-        if ((thread->stat & RT_THREAD_STAT_MASK) != RT_THREAD_SUSPEND)
+        if ((thData_.stat & THREAD_STAT_MASK) != THREAD_SUSPEND)
         {
-            RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread resume: thread disorder, %d\n",
-                                        thread->stat));
+            /*RT_DEBUG_LOG(RT_DEBUG_THREAD, ("thread resume: thread disorder, %d\n",
+                                        thread->stat));*/
 
-            return -RT_ERROR;
+            return M_RESULT_ERROR;
         }
 
         /* disable interrupt */
-        temp = rt_hw_interrupt_disable();
+        temp = HW::hwInterruptDisable();
 
         /* remove from suspend list */
-        rt_list_remove(&(thread->tlist));
+        thData_.tlist.removeSelf();
 
-        rt_timer_stop(&thread->thread_timer);
+        //tony fix me
+        //rt_timer_stop(&thData_.thread_timer);
 
         /* enable interrupt */
-        rt_hw_interrupt_enable(temp);
+        HW::hwInterruptEnable(temp);
 
         /* insert to schedule ready list */
-        rt_schedule_insert_thread(thread);
+        mSchedule::getInstance()->scheduleInsertThread(&thData_);
 
-        RT_OBJECT_HOOK_CALL(rt_thread_resume_hook, (thread));
-        return RT_EOK;
+        //RT_OBJECT_HOOK_CALL(rt_thread_resume_hook, (thread));
+        return M_RESULT_EOK;
     }
 
     /**
@@ -470,28 +469,28 @@ public:
      *
      * @param parameter the parameter of thread timeout function
      */
-    void rt_thread_timeout(void *parameter)
+    static void threadTimeout(void *parameter)
     {
-        struct rt_thread *thread;
+        struct thread_t *thread;
 
-        thread = (struct rt_thread *)parameter;
+        thread = (struct thread_t *)parameter;
 
         /* thread check */
-        RT_ASSERT(thread != RT_NULL);
-        RT_ASSERT((thread->stat & RT_THREAD_STAT_MASK) == RT_THREAD_SUSPEND);
-        RT_ASSERT(rt_object_get_type((rt_object_t)thread) == RT_Object_Class_Thread);
+        MASSERT(thread != nullptr);
+        MASSERT((thread->stat & THREAD_STAT_MASK) == THREAD_SUSPEND);
+        MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(thread)) == M_OBJECT_CLASS_THREAD);
 
         /* set error number */
-        thread->error = -RT_ETIMEOUT;
+        thread->error = -M_RESULT_ETIMEOUT;
 
         /* remove from suspend list */
-        rt_list_remove(&(thread->tlist));
+        thread->tlist.removeSelf();
 
         /* insert to schedule ready list */
-        rt_schedule_insert_thread(thread);
+        mSchedule::getInstance()->scheduleInsertThread(thread);
 
         /* do schedule */
-        rt_schedule();
+        mSchedule::getInstance()->schedule();
     }
 
     /**
@@ -503,9 +502,9 @@ public:
      *
      * @note please don't invoke this function in interrupt status.
      */
-    rt_thread_t rt_thread_find(char *name)
+    static thread_t* threadFind(char *name)
     {
-        return (rt_thread_t)rt_object_find(name, RT_Object_Class_Thread);
+        return (thread_t*)mObject::getInstance()->objectFind(name, M_OBJECT_CLASS_THREAD);
     }
     /**
      * This function will detach a thread. The thread object will be removed from
@@ -515,47 +514,46 @@ public:
      *
      * @return the operation status, RT_EOK on OK, -RT_ERROR on error
      */
-    rt_err_t rt_thread_detach(rt_thread_t thread)
+    mResult threadDetach()
     {
-        rt_base_t lock;
+        long lock;
 
         /* thread check */
-        RT_ASSERT(thread != RT_NULL);
-        RT_ASSERT(rt_object_get_type((rt_object_t)thread) == RT_Object_Class_Thread);
-        RT_ASSERT(rt_object_is_systemobject((rt_object_t)thread));
+        MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&thData_)) == M_OBJECT_CLASS_THREAD);
+        MASSERT(mObject::getInstance()->objectIsSystemobject((mObject_t*)(&thData_)));
 
-        if ((thread->stat & RT_THREAD_STAT_MASK) == RT_THREAD_CLOSE)
-            return RT_EOK;
+        if ((thData_.stat & THREAD_STAT_MASK) == THREAD_CLOSE)
+            return M_RESULT_EOK;
 
-        if ((thread->stat & RT_THREAD_STAT_MASK) != RT_THREAD_INIT)
+        if ((thData_.stat & THREAD_STAT_MASK) != THREAD_INIT)
         {
             /* remove from schedule */
-            rt_schedule_remove_thread(thread);
+            mSchedule::getInstance()->scheduleRemoveThread(&thData_);
         }
 
-        _thread_cleanup_execute(thread);
+        threadCleanupExecute(&thData_);
 
-        /* release thread timer */
-        rt_timer_detach(&(thread->thread_timer));
+        /* release thread timer *///tony Fix me
+        //rt_timer_detach(&(thData_.threadTimer));
 
         /* change stat */
-        thread->stat = RT_THREAD_CLOSE;
+        thData_.stat = THREAD_CLOSE;
 
-        if (rt_object_is_systemobject((rt_object_t)thread) == RT_TRUE)
+        if (mObject::getInstance()->objectIsSystemobject((mObject_t*)(&thData_)))
         {
-            rt_object_detach((rt_object_t)thread);
+            mObject::getInstance()->objectDetach((mObject_t*)(&thData_));
         }
         else
         {
             /* disable interrupt */
-            lock = rt_hw_interrupt_disable();
+            lock = HW::hwInterruptDisable();
             /* insert to defunct thread list */
-            rt_list_insert_after(&rt_thread_defunct, &(thread->tlist));
+            thData_.tlist.insertAfterTo(mSchedule::getInstance()->getThreadDefunct());
             /* enable interrupt */
-            rt_hw_interrupt_enable(lock);
+            HW::hwInterruptEnable(lock);
         }
 
-        return RT_EOK;
+        return M_RESULT_EOK;
     }
 private:
     mResult threadInit( const char       *name,
@@ -586,6 +584,7 @@ private:
         thData_.sp = (void *)CPUPORT::hwStackInit(thData_.entry, thData_.parameter,
                                             (uint8_t *)((char *)thData_.stackAddr + thData_.stackSize - sizeof(unsigned long)),
                                             (void *)this);
+        printf("tony %s init sp = %p\r\n",name,thData_.sp);
     #endif
 
         /* priority init */

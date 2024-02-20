@@ -98,7 +98,7 @@ LoopFillZerobss:
 
   
 /* Call the application's entry point.*/
-  bl  main
+  bl  entry
   bx  lr
 .size  Reset_Handler, .-Reset_Handler
 

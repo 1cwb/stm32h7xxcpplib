@@ -1722,7 +1722,7 @@ enum RCCCKGAPerType
     RCC_CKGA_PERIPH_JTAG       =    RCC_CKGAENR_JTAGCKG
     #endif
 };
-
+static const uint8_t PrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9};
 class RCCControl
 {
 public:
@@ -8805,6 +8805,4 @@ private:
     }
 #endif /* RCC_D3CFGR_D3PPRE */
 private:
-    static const uint8_t PrescTable[16];
 };
-const uint8_t RCCControl::PrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9};

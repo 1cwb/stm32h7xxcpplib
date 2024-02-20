@@ -174,6 +174,7 @@ public:
         /* initialize object's parameters */
         /* set object type to static */
         object->type = type | M_OBJECT_CLASS_STATIC;
+
         /* copy name */
         strncpy(object->name, name, NAME_MAX);
 
@@ -216,6 +217,21 @@ public:
         HW::hwInterruptEnable(temp);
     }
     /**
+     * This function will return the type of object without
+     * RT_Object_Class_Static flag.
+     *
+     * @param object the specified object to be get type.
+     *
+     * @return the type of object.
+     */
+    uint8_t objectGetType(mObject_t* object)
+    {
+        /* object check */
+        MASSERT(object != nullptr);
+
+        return object->type & ~M_OBJECT_CLASS_STATIC;
+    }
+    /**
      * This function will judge the object is system object or not.
      * Normally, the system object is a static object and the type
      * of object set to RT_Object_Class_Static.
@@ -235,20 +251,55 @@ public:
         return false;
     }
     /**
-     * This function will return the type of object without
-     * RT_Object_Class_Static flag.
+     * This function will find specified name object from object
+     * container.
      *
-     * @param object the specified object to be get type.
+     * @param name the specified name of object.
+     * @param type the type of object
      *
-     * @return the type of object.
+     * @return the found object or RT_NULL if there is no this object
+     * in object container.
+     *
+     * @note this function shall not be invoked in interrupt status.
      */
-    uint8_t objectGetType(mObject_t* object)
+    mObject_t* objectFind(const char *name, mObjectClassType type)
     {
-        /* object check */
-        MASSERT(object != nullptr);
+        struct mObject_t *object = nullptr;
+        struct mList_t *node = nullptr;
+        struct mObjectInformation_t *information = nullptr;
 
-        return object->type & ~M_OBJECT_CLASS_STATIC;
+        information = mObject::objectGetInformation(type);
+
+        /* parameter check */
+        if ((name == nullptr) || (information == nullptr)) return nullptr;
+
+        /* which is invoke in interrupt status */
+        //DEBUG_NOT_IN_INTERRUPT;
+
+        /* enter critical */
+        mSchedule::getInstance()->enterCritical();
+
+        /* try to find object */
+        for(node = information->objectList.next; node != &(information->objectList); node = node->next)
+        {
+            object = listEntry(node, mObject_t, list);
+            if (strncmp(object->name, name, NAME_MAX) == 0)
+            {
+                /* leave critical */
+                mSchedule::getInstance()->exitCritical();
+
+                return object;
+            }
+        }
+
+        /* leave critical */
+        mSchedule::getInstance()->exitCritical();
+
+        return nullptr;
     }
+
+    /**@}*/
+
 private:
     void objectInfoInit()
     {
