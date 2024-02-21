@@ -7,12 +7,12 @@
 #include "mIdle.hpp"
 #include "board.h"
 
-#define MAIN_THREAD_STACK_SIZE 512
+#define MAIN_THREAD_STACK_SIZE 1024
+#define MAIN_THREAD_PRIORITY 0
+#define MAIN_THREAD_TICK_TIME 20
 #ifndef RT_USING_HEAP
 /* if there is not enable heap, we should use static thread and stack. */
-ALIGN(8)
-static uint8_t mainStack[MAIN_THREAD_STACK_SIZE];
-static struct thread_t mainThread;
+ALIGN(4) static uint8_t mainStack[MAIN_THREAD_STACK_SIZE];
 #endif
 
 void mainThreadEntry(void *parameter)
@@ -47,7 +47,7 @@ public:
         mResult result;
         printf("mainth this = %p, mainThread_ = %p\r\n",this, &mainThread_);
         result = mainThread_.init("main", mainThreadEntry, nullptr,
-                                mainStack, sizeof(mainStack), 7, 20);
+                                mainStack, sizeof(mainStack), MAIN_THREAD_PRIORITY, MAIN_THREAD_TICK_TIME);
         MASSERT(result == M_RESULT_EOK);
 
         /* if not define RT_USING_HEAP, using to eliminate the warning */

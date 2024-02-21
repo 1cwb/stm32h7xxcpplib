@@ -3,8 +3,11 @@
 #include "mobject.hpp"
 #include "cpuport.h"
 #include "mclock.hpp"
+#include <functional>
+
 class mthread
 {
+    using mThreadCallbackFunc = std::function<void()>;
 public:
     mthread()
     {
@@ -54,6 +57,16 @@ public:
 
         /* enable interrupt */
         HW::hwInterruptEnable(level);
+    }
+    mResult init(const char       *name,
+                 void             *stackStart,
+                 uint32_t         stackSize,
+                 uint8_t          priority,
+                 uint32_t         tick,
+                 const mThreadCallbackFunc& func)
+    {
+        cb_ = std::move(func);
+        return this->init(name, threadFunc, (void*)this, stackStart, stackSize,priority,tick);
     }
     mResult init(const char       *name,
                  void (*entry)(void *parameter),
@@ -584,7 +597,6 @@ private:
         thData_.sp = (void *)CPUPORT::hwStackInit(thData_.entry, thData_.parameter,
                                             (uint8_t *)((char *)thData_.stackAddr + thData_.stackSize - sizeof(unsigned long)),
                                             (void *)this);
-        printf("tony %s init sp = %p\r\n",name,thData_.sp);
     #endif
 
         /* priority init */
@@ -637,6 +649,18 @@ private:
 
         HW::hwInterruptEnable(level);
     }
+    static void threadFunc(void* p)
+    {
+        mthread* thread = reinterpret_cast<mthread*>(p);
+        if(thread)
+        {
+            if(thread->cb_)
+            {
+                thread->cb_();
+            }
+        }
+    }
 private:
     thread_t thData_;
+    mThreadCallbackFunc cb_;
 };

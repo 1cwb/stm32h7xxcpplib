@@ -543,7 +543,10 @@ int main(void)
 #include "isrcommon.h"
 #include "mthread.hpp"
 #include "mhw.hpp"
-
+ALIGN(4) static uint8_t buff1[512] = {0};
+ALIGN(4) static uint8_t buff2[512] = {0};
+ALIGN(4) static uint8_t buff3[512] = {0};
+ALIGN(4) static uint8_t buff4[512] = {0};
 int main(void)
 {
     LED led0(GPIOE, GPIO_NUM_9, false);
@@ -551,6 +554,41 @@ int main(void)
     printf("Enabele interrupt now\r\n");
     led0.on();
     led1.on();
+
+    mthread th1;
+    th1.init("th1", buff1, 512, 0, 20,[&](){
+        while(1)
+        {
+            printf("-------111-------\r\n");
+            led0.on();
+        }
+    });
+    th1.startup();
+        mthread th2;
+    th2.init("th2", buff2, 512, 0, 20,[](){
+        while(1)
+        {
+            printf("-------2222-------\r\n");
+        }
+    });
+    th2.startup();
+        mthread th3;
+    th3.init("th1", buff3, 512, 0, 20,[&](){
+        while(1)
+        {
+            printf("--------3333------\r\n");
+            led0.off();
+        }
+    });
+    th3.startup();
+        mthread th4;
+    th4.init("th1", buff4, 512, 0, 20,[](){
+        while(1)
+        {
+            printf("--------4444------\r\n");
+        }
+    });
+    th4.startup();
     while(1)
     {
         printf("do while now\r\n");
