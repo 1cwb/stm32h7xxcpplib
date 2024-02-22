@@ -78,7 +78,7 @@ public:
     {
         /* thread check */
         MASSERT(stackStart != nullptr);
-
+        //printf("[%s] stack addr = %p\r\n",name,stackStart);
         /* initialize thread object */
         mObject::getInstance()->objectInit((mObject_t*)this, M_OBJECT_CLASS_THREAD, name);
 

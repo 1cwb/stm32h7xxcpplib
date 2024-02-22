@@ -543,24 +543,33 @@ int main(void)
 #include "isrcommon.h"
 #include "mthread.hpp"
 #include "mhw.hpp"
-ALIGN(4) static uint8_t buff1[512] = {0};
-ALIGN(4) static uint8_t buff2[512] = {0};
-ALIGN(4) static uint8_t buff3[512] = {0};
-ALIGN(4) static uint8_t buff4[512] = {0};
+ALIGN(4) static uint8_t buff1[512];
+ALIGN(4) static uint8_t buff2[512];
+ALIGN(4) static uint8_t buff3[512];
+ALIGN(4) static uint8_t buff4[512];
 int main(void)
 {
     LED led0(GPIOE, GPIO_NUM_9, false);
     LED led1(GPIOA, GPIO_NUM_7, false);
-    printf("Enabele interrupt now\r\n");
     led0.on();
     led1.on();
 
     mthread th1;
-    th1.init("th1", buff1, 512, 0, 20,[&](){
+    th1.init("th1", buff1, 512, 0, 40,[&](){
+        mObject_t* threadobj[6] = {nullptr};
         while(1)
         {
             printf("-------111-------\r\n");
             led0.on();
+            
+            mObject::getInstance()->objectGetPointers(M_OBJECT_CLASS_THREAD, threadobj, 6);
+            for(auto it : threadobj)
+            {
+                if(it)
+                {
+                    printf("[%s] stack used %ld\r\n",it->name, ((((thread_t*)(it))->stackSize - ((uint32_t)((thread_t*)(it))->sp - (uint32_t)((thread_t*)(it))->stackAddr))*100/((thread_t*)(it))->stackSize));
+                }
+            }
         }
     });
     th1.startup();
@@ -573,7 +582,7 @@ int main(void)
     });
     th2.startup();
         mthread th3;
-    th3.init("th1", buff3, 512, 0, 20,[&](){
+    th3.init("th3", buff3, 512, 0, 20,[&](){
         while(1)
         {
             printf("--------3333------\r\n");
@@ -582,7 +591,7 @@ int main(void)
     });
     th3.startup();
         mthread th4;
-    th4.init("th1", buff4, 512, 0, 20,[](){
+    th4.init("th4", buff4, 512, 0, 20,[](){
         while(1)
         {
             printf("--------4444------\r\n");
