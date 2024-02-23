@@ -6,13 +6,14 @@
 #include "mscheduler.hpp"
 #include "mIdle.hpp"
 #include "board.h"
+#include "common.hpp"
 
 #define MAIN_THREAD_STACK_SIZE 1024*10
 #define MAIN_THREAD_PRIORITY 0
 #define MAIN_THREAD_TICK_TIME 20
 #ifndef RT_USING_HEAP
 /* if there is not enable heap, we should use static thread and stack. */
-ALIGN(4) __attribute__((section(".dtcmram"))) static uint8_t mainStack[MAIN_THREAD_STACK_SIZE];
+DTCM_MEM_ALIGN(4) static uint8_t mainStack[MAIN_THREAD_STACK_SIZE];
 #endif
 
 void mainThreadEntry(void *parameter)
