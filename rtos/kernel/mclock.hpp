@@ -56,8 +56,7 @@ public:
             thread->yieldThread();
         }
 
-        /* check timer *///Tony Fix me
-        //rt_timer_check();
+        /* check timer */
         if(cb_)
         {
             cb_();

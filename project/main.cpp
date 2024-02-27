@@ -555,13 +555,23 @@ int main(void)
     LED led1(GPIOA, GPIO_NUM_7, false);
     led0.on();
     led1.on();
+    mTimer tim1;
+    tim1.init("time1",3000,TIMER_FLAG_PERIODIC,[&](){
+        printf("tim1 is on time now\r\n");
+    });
+    tim1.start();
+    mTimer tim2;
+    tim2.init("time2",4000,TIMER_FLAG_PERIODIC,[&](){
+        printf("tim2 is on time now\r\n");
+    });
+    tim2.start();
     mthread th1;
     th1.init("th1", buff1, 512, 0, 40,[&](){
         mObject_t* threadobj[6] = {nullptr};
         while(1)
         {
             mthread::threadDelay(100);
-            printf("-------111-------\r\n");
+            //printf("-------111-------\r\n");
             led0.on();
             
             /*mObject::getInstance()->objectGetPointers(M_OBJECT_CLASS_THREAD, threadobj, 6);
@@ -586,7 +596,7 @@ int main(void)
     th2.startup();
         mthread th3;
     th3.init("th3", buff3, 512, 0, 20,[&](){
-        //while(1)
+        while(1)
         {
             printf("--------3333------\r\n");
             led0.off();
@@ -595,7 +605,7 @@ int main(void)
     th3.startup();
         mthread th4;
     th4.init("th4", buff4, 512, 0, 20,[](){
-        //while(1)
+        while(1)
         {
             printf("--------4444------\r\n");
         }
@@ -603,13 +613,8 @@ int main(void)
     th4.startup();
     while(1)
     {
-        printf("do while now\r\n");
-        //delayMs(1000);
-        //delayTick(1000);
         mthread::threadDelay(1000);
-        printf("can run intr\r\n");
         led1.reverse();
-        //mthread::threadDelay(1000);
     }
     return 0;
 }

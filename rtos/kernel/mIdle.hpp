@@ -1,7 +1,7 @@
 #pragma once
 #include "mthread.hpp"
 
-#define IDLE_THREAD_STACK_SIZE  512
+#define IDLE_THREAD_STACK_SIZE  1024
 ALIGN(4) static uint8_t threadStack[IDLE_THREAD_STACK_SIZE];
 
 class mIdle
@@ -25,7 +25,7 @@ public:
                     {
                         while(true)
                         {
-                            printf("idle run...\r\n");
+
                         }
                     });
 

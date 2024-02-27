@@ -580,9 +580,6 @@ private:
                         uint8_t          priority,
                         uint32_t         tick)
     {
-        /* init thread list */
-        //rt_list_init(&(thData_.tlist));
-
         thData_.entry = (void *)entry;
         thData_.parameter = parameter;
 
@@ -629,13 +626,6 @@ private:
         thData_.userData = 0;
 
         /* initialize thread timer */
-        
-        /*rt_timer_init(&(thData_.thread_timer),
-                    thData_.name,
-                    rt_thread_timeout,
-                    thread,
-                    0,
-                    RT_TIMER_FLAG_ONE_SHOT);*/
         thTimer_.init(thData_.name,threadTimeout,this,0,TIMER_FLAG_ONE_SHOT);
         //RT_OBJECT_HOOK_CALL(rt_thread_inited_hook, (thread));
 

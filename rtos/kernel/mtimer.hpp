@@ -3,12 +3,14 @@
 #include "mhw.hpp"
 #include "mobject.hpp"
 #include "mclock.hpp"
+#include <functional>
 
 /* hard timer list */
 static mList_t timerListTotal[TIMER_SKIP_LIST_LEVEL];
 
 class mTimer
 {
+    using mTimerCallBack = std::function<void()>;
 public:
     mTimer()
     {
@@ -26,6 +28,26 @@ public:
     mTimer& operator=(const mTimer&) = delete;
     mTimer& operator=(mTimer&&) = delete;
 
+    static void mTimerCommonCallbackFunc(void* p)
+    {
+        if(p)
+        {
+            mTimer* ptimer = reinterpret_cast<mTimer*>(p);
+            if(ptimer->cb_)
+            {
+                ptimer->cb_();
+            }
+        }
+    }
+
+    void init(  const char *name,
+                uint32_t   time,
+                mTimerStateFlag   flag,
+                const mTimerCallBack& cb)
+    {
+        cb_ = std::move(cb);
+        init(name, mTimerCommonCallbackFunc, this, time, flag);
+    }
     /**
      * This function will initialize a timer, normally this function is used to
      * initialize a static timer object.
@@ -114,18 +136,8 @@ public:
         MASSERT(timer_.initTick < TICK_MAX / 2);
         timer_.timeoutTick = mClock::getInstance()->tickGet() + timer_.initTick;
 
-    #ifdef RT_USING_TIMER_SOFT
-        if (timer->parent.flag & RT_TIMER_FLAG_SOFT_TIMER)
-        {
-            /* insert timer to soft timer list */
-            timer_list = rt_soft_timer_list;
-        }
-        else
-    #endif
-        {
-            /* insert timer to system timer list */
-            timerList = timerListTotal;
-        }
+        /* insert timer to system timer list */
+        timerList = timerListTotal;
 
         rowHead[0]  = &timerList[0];
         for (rowLvl = 0; rowLvl < TIMER_SKIP_LIST_LEVEL; rowLvl++)
@@ -186,21 +198,6 @@ public:
 
         /* enable interrupt */
         HW::hwInterruptEnable(level);
-
-    #ifdef RT_USING_TIMER_SOFT
-        if (timer->parent.flag & RT_TIMER_FLAG_SOFT_TIMER)
-        {
-            /* check whether timer thread is ready */
-            if ((soft_timer_status == RT_SOFT_TIMER_IDLE) &&
-            ((timer_thread.stat & RT_THREAD_STAT_MASK) == RT_THREAD_SUSPEND))
-            {
-                /* resume timer thread to check soft timer */
-                rt_thread_resume(&timer_thread);
-                rt_schedule();
-            }
-        }
-    #endif
-
         return M_RESULT_EOK;
     }
 
@@ -422,4 +419,5 @@ private:
 
 private:
     mTimer_t timer_;
+    mTimerCallBack cb_;
 };
