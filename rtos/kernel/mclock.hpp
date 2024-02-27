@@ -2,9 +2,11 @@
 #include "rtoscommon.hpp"
 #include "mhw.hpp"
 #include "mscheduler.hpp"
+//#include "mtimer.hpp"
 
 class mClock
 {
+    using mTimerCheckCallBack = void (*)();
 public:
     static mClock* getInstance()
     {
@@ -56,6 +58,10 @@ public:
 
         /* check timer *///Tony Fix me
         //rt_timer_check();
+        if(cb_)
+        {
+            cb_();
+        }
     }
     /**
      * This function will calculate the tick from millisecond.
@@ -84,7 +90,10 @@ public:
         /* return the calculated tick */
         return tick;
     }
-
+    mTimerCheckCallBack& getRegisterCb()
+    {
+        return cb_;
+    }
 private:
     mClock() : tick(0)
     {
@@ -100,4 +109,5 @@ private:
 
 
     uint32_t tick;
+    mTimerCheckCallBack cb_;
 };

@@ -337,7 +337,7 @@ private:
         _OBJ_CONTAINER_INIT(M_OBJECT_INFO_DEVICE, M_OBJECT_CLASS_DEVICE, mDevice_t);
 #endif
     /* initialize object container - timer */
-        //_OBJ_CONTAINER_INIT(M_OBJECT_INFO_TIMER, M_OBJECT_CLASS_TIMER, mTimer_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_TIMER, M_OBJECT_CLASS_TIMER, mTimer_t);
     }
 private:
 

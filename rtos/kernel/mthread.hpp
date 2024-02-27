@@ -4,6 +4,7 @@
 #include "cpuport.h"
 #include "mclock.hpp"
 #include <functional>
+#include <mtimer.hpp>
 
 class mthread
 {
@@ -39,9 +40,9 @@ public:
         /* change stat */
         thread->stat = THREAD_CLOSE;
 
-        /* remove it from timer list */ //TONY fix me
-        //rt_timer_detach(&thread->thread_timer);
-
+        /* remove it from timer list */
+        reinterpret_cast<mthread*>(thread)->getThTimer()->timerDetach();
+        
         if (mObject::getInstance()->objectIsSystemobject((mObject_t*)thread))
         {
             mObject::getInstance()->objectDetach((mObject_t*)thread);
@@ -201,9 +202,9 @@ public:
         /* suspend thread */
         threadSuspend(thread);
 
-        /* reset the timeout of thread timer and start it */ //tony fix me
-        //rt_timer_control(&(thread->thread_timer), RT_TIMER_CTRL_SET_TIME, &tick);
-        //rt_timer_start(&(thread->thread_timer));
+        /* reset the timeout of thread timer and start it */
+        reinterpret_cast<mthread*>(thread)->getThTimer()->timerControl(TIMER_CTRL_SET_TIME, &tick);
+        reinterpret_cast<mthread*>(thread)->getThTimer()->start();
 
         /* enable interrupt */
         HW::hwInterruptEnable(temp);
@@ -259,10 +260,9 @@ public:
             /* suspend thread */
             threadSuspend(thread);
 
-            /* reset the timeout of thread timer and start it *///tony Fix me
-            //rt_timer_control(&(thread->thread_timer), RT_TIMER_CTRL_SET_TIME, tick);
-            //rt_timer_start(&(thread->thread_timer));
-
+            /* reset the timeout of thread timer and start it */
+            reinterpret_cast<mthread*>(thread)->getThTimer()->timerControl(TIMER_CTRL_SET_TIME, tick);
+            reinterpret_cast<mthread*>(thread)->getThTimer()->start();
             /* enable interrupt */
             HW::hwInterruptEnable(level);
 
@@ -423,8 +423,8 @@ public:
         mSchedule::getInstance()->scheduleRemoveThread(thread);
         thread->stat = THREAD_SUSPEND | (thread->stat & ~THREAD_STAT_MASK);
 
-        /* stop thread timer anyway *///tony Fix me
-        //rt_timer_stop(&(thread->thread_timer));
+        /* stop thread timer anyway */
+        reinterpret_cast<mthread*>(thread)->getThTimer()->stop();
 
         /* enable interrupt */
         HW::hwInterruptEnable(temp);
@@ -463,8 +463,7 @@ public:
         /* remove from suspend list */
         thData_.tlist.removeSelf();
 
-        //tony fix me
-        //rt_timer_stop(&thData_.thread_timer);
+        thTimer_.stop();
 
         /* enable interrupt */
         HW::hwInterruptEnable(temp);
@@ -546,8 +545,8 @@ public:
 
         threadCleanupExecute(&thData_);
 
-        /* release thread timer *///tony Fix me
-        //rt_timer_detach(&(thData_.threadTimer));
+        /* release thread timer */
+        thTimer_.timerDetach();
 
         /* change stat */
         thData_.stat = THREAD_CLOSE;
@@ -567,6 +566,10 @@ public:
         }
 
         return M_RESULT_EOK;
+    }
+    mTimer* getThTimer()
+    {
+        return &thTimer_;
     }
 private:
     mResult threadInit( const char       *name,
@@ -626,14 +629,15 @@ private:
         thData_.userData = 0;
 
         /* initialize thread timer */
+        
         /*rt_timer_init(&(thData_.thread_timer),
                     thData_.name,
                     rt_thread_timeout,
                     thread,
                     0,
-                    RT_TIMER_FLAG_ONE_SHOT);
-
-        RT_OBJECT_HOOK_CALL(rt_thread_inited_hook, (thread));*/
+                    RT_TIMER_FLAG_ONE_SHOT);*/
+        thTimer_.init(thData_.name,threadTimeout,this,0,TIMER_FLAG_ONE_SHOT);
+        //RT_OBJECT_HOOK_CALL(rt_thread_inited_hook, (thread));
 
         return M_RESULT_EOK;
     }
@@ -662,5 +666,6 @@ private:
     }
 private:
     thread_t thData_;
+    mTimer thTimer_;
     mThreadCallbackFunc cb_;
 };

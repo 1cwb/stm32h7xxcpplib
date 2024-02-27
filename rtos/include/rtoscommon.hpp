@@ -2,15 +2,30 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <cstring>
+#include <limits>
 
 #define NAME_MAX 8
 #define THREAD_PRIORITY_MAX 8
+
+#define TIMER_SKIP_LIST_LEVEL          1
+#define TIMER_SKIP_LIST_MASK         0x3
 
 #define WAITING_FOREVER              -1              /**< Block forever until get resource. */
 #define WAITING_NO                   0               /**< Non-block. */
 
 //  <i>Default: 1000   (1ms)
 #define TICK_PER_SECOND  1000
+
+/* maximum value of base type */
+#define TICK_MAX                     UINT32_MAX   /**< Maxium number of tick */
+
+/* maximum value of ipc type */
+#define SEM_VALUE_MAX                UINT16_MAX   /**< Maxium number of semaphore .value */
+#define MUTEX_VALUE_MAX              UINT16_MAX   /**< Maxium number of mutex .value */
+#define MUTEX_HOLD_MAX               UINT8_MAX    /**< Maxium number of mutex .hold */
+#define MB_ENTRY_MAX                 UINT16_MAX   /**< Maxium number of mailbox .entry */
+#define MQ_ENTRY_MAX                 UINT16_MAX   /**< Maxium number of message queue .entry */
+
 
 #ifndef MASSERT
 #define MASSERT(x) \
@@ -290,17 +305,49 @@ struct mObjectInformation_t
     mList_t                 objectList;              /**< object list */
     size_t                  objectSize;              /**< object size */
 };
+
+/**
+ * clock & timer macros
+ */
+enum mTimerStateFlag
+{
+    TIMER_STATE_FLAG_DEACTIVATED    =   0x0,             /**< timer is deactive */
+    TIMER_STATE_FLAG_ACTIVATED      =   0x1,             /**< timer is active */
+    TIMER_FLAG_ONE_SHOT       =   0x0,             /**< one shot timer */
+    TIMER_FLAG_PERIODIC       =   0x2,             /**< periodic timer */
+    TIMER_FLAG_HARD_TIMER     =   0x0,             /**< hard timer,the timer's callback function will be called in tick isr. */
+    TIMER_FLAG_SOFT_TIMER     =   0x4,             /**< soft timer,the timer's callback function will be called in timer thread. */
+};
+
+enum mTimerCtrl
+{
+    TIMER_CTRL_SET_TIME       =   0x0,             /**< set timer control command */
+    TIMER_CTRL_GET_TIME       =   0x1,             /**< get timer control command */
+    TIMER_CTRL_SET_ONESHOT    =   0x2,             /**< change timer to one shot */
+    TIMER_CTRL_SET_PERIODIC   =   0x3,             /**< change timer to periodic */
+    TIMER_CTRL_GET_STATE      =   0x4,             /**< get timer run state active or deactive*/
+};
+
+/**
+ * timer structure
+ */
+struct mTimer_t : public mObject_t
+{
+    //struct rt_object parent;                          /**< inherit from rt_object */
+    mList_t        row[TIMER_SKIP_LIST_LEVEL];
+
+    void (*timeoutFunc)(void *parameter);               /**< timeout function */
+    void            *parameter;                         /**< timeout function's parameter */
+
+    uint32_t        initTick;                           /**< timer timeout tick */
+    uint32_t        timeoutTick;                        /**< timeout tick */
+};
+
 /**
  * Thread structure
  */
 struct thread_t : public mObject_t
 {
-    /* rt object */
-    //char     name[NAME_MAX];                         /**< the name of thread */
-    //uint8_t  type;                                   /**< type of object */
-    //uint8_t  flags;                                  /**< thread's flags */
-
-    //mList_t   list;                                   /**< the object list */
     mList_t   tlist;                                  /**< the thread list */
 
     /* stack point and entry */
@@ -335,17 +382,11 @@ struct thread_t : public mObject_t
     unsigned long  initTick;                              /**< thread's initialized tick */
     unsigned long  remainingTick;                         /**< remaining tick */
 
-    //struct rt_timer thread_timer;                       /**< built-in thread timer */
-
     void (*cleanup)(struct thread_t *tid);             /**< cleanup function when thread exit */
 
     uint32_t userData;                              /**< private user data beyond this thread */
 };
 
-extern "C"
-{
-//long hwInterruptDisable(void);
-//void hwInterruptEnable(long level);
-};
+
 
 #define rt_kprintf printf
