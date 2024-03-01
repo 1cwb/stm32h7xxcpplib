@@ -46,6 +46,8 @@ if(!(x)) \
 #define listEntry(node, type, member) \
     containerof(node, type, member)
 
+#define M_ALIGN_SIZE  4
+
 /**
  * @ingroup BasicDef
  *
@@ -303,7 +305,7 @@ struct mObjectInformation_t
 {
     enum mObjectClassType type;                     /**< object class type */
     mList_t                 objectList;              /**< object list */
-    size_t                  objectSize;              /**< object size */
+    //size_t                  objectSize;              /**< object size */
 };
 
 /**
@@ -387,6 +389,35 @@ struct thread_t : public mObject_t
     uint32_t userData;                              /**< private user data beyond this thread */
 };
 
+/**
+ * IPC flags and control command definitions
+ */
+enum mIpcFlag
+{
+    IPC_FLAG_FIFO        =        0x00,            /**< FIFOed IPC. @ref IPC. */
+    IPC_FLAG_PRIO        =        0x01            /**< PRIOed IPC. @ref IPC. */
+};
 
+enum mIpcCmd
+{
+    IPC_CMD_UNKNOWN      =        0x00,            /**< unknown IPC command */
+    IPC_CMD_RESET        =        0x01            /**< reset IPC object */
+};
+
+/**
+ * Base structure of IPC object
+ */
+struct mIpcObject_t : public mObject_t
+{
+    mList_t      suspendThread;                    /**< threads pended on this resource */
+};
+/**
+ * Semaphore structure
+ */
+struct mSemaphore_t : public mIpcObject_t
+{
+    uint16_t          value;                         /**< value of semaphore. */
+    uint16_t          reserved;                      /**< reserved field */
+};
 
 #define rt_kprintf printf

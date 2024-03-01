@@ -11,10 +11,9 @@
 #define MAIN_THREAD_STACK_SIZE 1024*10
 #define MAIN_THREAD_PRIORITY 0
 #define MAIN_THREAD_TICK_TIME 20
-#ifndef RT_USING_HEAP
+
 /* if there is not enable heap, we should use static thread and stack. */
-DTCM_MEM_ALIGN(4) static uint8_t mainStack[MAIN_THREAD_STACK_SIZE];
-#endif
+DTCM_MEM_ALIGN(M_ALIGN_SIZE) static uint8_t mainStack[MAIN_THREAD_STACK_SIZE];
 
 void mainThreadEntry(void *parameter)
 {
@@ -40,11 +39,6 @@ public:
     }
     void applicationInit(void)
     {
-    #ifdef RT_USING_HEAP
-        tid = rt_thread_create("main", mainThread_entry, RT_NULL,
-                            RT_mainThread_STACK_SIZE, RT_mainThread_PRIORITY, 20);
-        RT_ASSERT(tid != RT_NULL);
-    #else
         mResult result;
         result = mainThread_.init("main", mainThreadEntry, nullptr,
                                 mainStack, sizeof(mainStack), MAIN_THREAD_PRIORITY, MAIN_THREAD_TICK_TIME);
@@ -52,8 +46,6 @@ public:
 
         /* if not define RT_USING_HEAP, using to eliminate the warning */
         (void)result;
-    #endif
-
         mainThread_.startup();
     }
 private:

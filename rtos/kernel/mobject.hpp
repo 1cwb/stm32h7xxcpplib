@@ -2,6 +2,10 @@
 #include "rtoscommon.hpp"
 #include "mscheduler.hpp"
 #include "mhw.hpp"
+#include "mipc.h"
+
+#define M_USING_SEMAPHORE
+
 enum mObjectInfoType
 {
     M_OBJECT_INFO_THREAD = 0,                         /**< The object is a thread. */
@@ -33,10 +37,9 @@ enum mObjectInfoType
     M_OBJECT_INFO_UNKNOWN,                            /**< The object is unknown. */
 };
 
-#define _OBJ_CONTAINER_INIT(infoType, classType, module)     \
+#define _OBJ_CONTAINER_INIT(infoType, classType)     \
     {\
         objectContainer[infoType].type = classType;\
-        objectContainer[infoType].objectSize = sizeof(module);\
     }
 
 class mObject
@@ -217,6 +220,81 @@ public:
         HW::hwInterruptEnable(temp);
     }
     /**
+     * This function will allocate an object from object system
+     *
+     * @param type the type of object
+     * @param name the object name. In system, the object's name must be unique.
+     *
+     * @return object
+     */
+    mResult objectAdd(struct mObject_t *object, const mObjectClassType type, const char *name)
+    {
+        register long temp;
+        struct mObjectInformation_t *information;
+
+        //RT_DEBUG_NOT_IN_INTERRUPT;
+        if (object == nullptr)
+        {
+            /* no memory can be allocated */
+            return M_RESULT_ERROR;
+        }
+        /* get object information */
+        information = objectGetInformation(type);
+        MASSERT(information != nullptr);
+
+        /* clean memory data of object */
+        //memset(object, 0x0, information->objectSize);
+
+        /* initialize object's parameters */
+
+        /* set object type */
+        object->type = type;
+
+        /* set object flag */
+        object->flag = 0;
+
+        /* copy name */
+        strncpy(object->name, name, NAME_MAX);
+
+        /* lock interrupt */
+        temp = HW::hwInterruptDisable();
+
+        /* insert object into information object list */
+        object->list.insertAfterTo(&(information->objectList));
+
+        /* unlock interrupt */
+        HW::hwInterruptEnable(temp);
+
+        /* return object */
+        return M_RESULT_EOK;
+    }
+
+    /**
+     * This function will delete an object and release object memory.
+     *
+     * @param object the specified object to be deleted.
+     */
+    void objectRemove(struct mObject_t* object)
+    {
+        register long temp;
+
+        /* object check */
+        MASSERT(object != nullptr);
+        MASSERT(!(object->type & M_OBJECT_CLASS_STATIC));
+
+        /* reset object type */
+        object->type = M_OBJECT_CLASS_NULL;
+
+        /* lock interrupt */
+        temp = HW::hwInterruptDisable();
+
+        /* remove from old list */
+        object->list.removeSelf();
+
+        /* unlock interrupt */
+        HW::hwInterruptEnable(temp);
+    }
+    /**
      * This function will return the type of object without
      * RT_Object_Class_Static flag.
      *
@@ -303,41 +381,41 @@ public:
 private:
     void objectInfoInit()
     {
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_THREAD, M_OBJECT_CLASS_THREAD, thread_t);
-#ifdef USING_SEMAPHORE
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_THREAD, M_OBJECT_CLASS_THREAD);
+#ifdef M_USING_SEMAPHORE
     /* initialize object container - semaphore */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_SEMAPHORE, M_OBJECT_CLASS_SEMAPHORE, mSemaphone);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_SEMAPHORE, M_OBJECT_CLASS_SEMAPHORE);
 #endif
-#ifdef USING_MUTEX
+#ifdef M_USING_MUTEX
     /* initialize object container - mutex */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MUTEX, M_OBJECT_CLASS_MUTEX, mMutex_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MUTEX, M_OBJECT_CLASS_MUTEX);
 #endif
-#ifdef USING_EVENT
+#ifdef M_USING_EVENT
     /* initialize object container - event */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_EVENT, M_OBJECT_CLASS_EVENT, mEvent_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_EVENT, M_OBJECT_CLASS_EVENT);
 #endif
-#ifdef USING_MAILBOX
+#ifdef M_USING_MAILBOX
     /* initialize object container - mailbox */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MAILBOX, M_OBJECT_CLASS_MAILBOX, mMailBox_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MAILBOX, M_OBJECT_CLASS_MAILBOX);
 #endif
-#ifdef USING_MESSAGEQUEUE
+#ifdef M_USING_MESSAGEQUEUE
     /* initialize object container - message queue */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MESSAGEQUEUE, M_OBJECT_CLASS_MESSAGEQUEUE, mMesageQueue_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MESSAGEQUEUE, M_OBJECT_CLASS_MESSAGEQUEUE);
 #endif
-#ifdef USING_MEMHEAP
+#ifdef M_USING_MEMHEAP
     /* initialize object container - memory heap */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MEMHEAP, M_OBJECT_CLASS_MEMHEAP, mMemHeap_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MEMHEAP, M_OBJECT_CLASS_MEMHEAP);
 #endif
-#ifdef USING_MEMPOOL
+#ifdef M_USING_MEMPOOL
     /* initialize object container - memory pool */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MEMPOOL, M_OBJECT_CLASS_MEMPOLL, mMemPool_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MEMPOOL, M_OBJECT_CLASS_MEMPOLL);
 #endif
-#ifdef USING_DEVICE
+#ifdef M_USING_DEVICE
     /* initialize object container - device */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_DEVICE, M_OBJECT_CLASS_DEVICE, mDevice_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_DEVICE, M_OBJECT_CLASS_DEVICE);
 #endif
     /* initialize object container - timer */
-        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_TIMER, M_OBJECT_CLASS_TIMER, mTimer_t);
+        _OBJ_CONTAINER_INIT(M_OBJECT_INFO_TIMER, M_OBJECT_CLASS_TIMER);
     }
 private:
 

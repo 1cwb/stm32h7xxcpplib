@@ -66,7 +66,7 @@ public:
                 mTimerStateFlag   flag)
     {
         /* timer object initialization */
-        mObject::getInstance()->objectInit((mObject_t*)&timer_, M_OBJECT_CLASS_TIMER, name);
+        mObject::getInstance()->objectInit((mObject_t*)this, M_OBJECT_CLASS_TIMER, name);
 
         timerInit(timeout, parameter, time, flag);
     }

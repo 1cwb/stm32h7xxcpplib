@@ -5,6 +5,7 @@
 #include "mclock.hpp"
 #include <functional>
 #include <mtimer.hpp>
+#include "mmem.h"
 
 class mthread
 {
@@ -58,6 +59,69 @@ public:
 
         /* enable interrupt */
         HW::hwInterruptEnable(level);
+    }
+    static mthread* create(const char       *name,
+                                    uint32_t         stackSize,
+                                    uint8_t          priority,
+                                    uint32_t         tick,
+                                    const mThreadCallbackFunc& func)
+    {
+        mthread* pth = new mthread;
+        if(pth)
+        {
+            if(pth->threadCreate(name, stackSize, priority, tick, std::move(func)) != M_RESULT_EOK)
+            {
+                delete pth;
+                return nullptr;
+            }
+            return pth;
+        }
+        return nullptr;
+    }
+
+    /**
+     * This function will delete a thread. The thread object will be removed from
+     * thread queue and deleted from system object management in the idle thread.
+     *
+     * @param thread the thread to be deleted
+     *
+     * @return the operation status, RT_EOK on OK, -RT_ERROR on error
+     */
+    mResult threadDelete()
+    {
+        long lock;
+
+        /* thread check */
+        MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&thData_)) == M_OBJECT_CLASS_THREAD);
+        MASSERT(mObject::getInstance()->objectIsSystemobject((mObject_t*)(&thData_)) == false);
+
+        if ((thData_.stat & THREAD_STAT_MASK) == THREAD_CLOSE)
+        {
+            return M_RESULT_EOK;   
+        }
+
+        if ((thData_.stat & THREAD_STAT_MASK) != THREAD_INIT)
+        {
+            /* remove from schedule */
+            mSchedule::getInstance()->scheduleRemoveThread(&thData_);
+        }
+        threadCleanupExecute(&thData_);
+
+        /* release thread timer */
+        thTimer_.timerDetach();
+
+        /* disable interrupt */
+        lock = HW::hwInterruptDisable();
+
+        /* change stat */
+        thData_.stat = THREAD_CLOSE;
+
+        /* insert to defunct thread list */
+        thData_.tlist.insertAfterTo(mSchedule::getInstance()->getThreadDefunct());
+        /* enable interrupt */
+        HW::hwInterruptEnable(lock);
+
+        return M_RESULT_EOK;
     }
     mResult init(const char       *name,
                  void             *stackStart,
@@ -370,18 +434,14 @@ public:
             return startup();
 
         case THREAD_CTRL_CLOSE:
-
             if (mObject::getInstance()->objectIsSystemobject((mObject_t*)(&thData_)))
             {
                 return threadDetach();
             }
-    #ifdef RT_USING_HEAP
             else
             {
-                return rt_thread_delete();
+                return threadDelete();
             }
-    #endif
-
         default:
             break;
         }
@@ -571,6 +631,10 @@ public:
     {
         return &thTimer_;
     }
+    char* name() const
+    {
+        return ((mObject_t*)&thData_)->name;
+    }
 private:
     mResult threadInit( const char       *name,
                         void (*entry)(void *parameter),
@@ -630,6 +694,53 @@ private:
         //RT_OBJECT_HOOK_CALL(rt_thread_inited_hook, (thread));
 
         return M_RESULT_EOK;
+    }
+    mResult threadCreate(const char       *name,
+                 uint32_t         stackSize,
+                 uint8_t          priority,
+                 uint32_t         tick,
+                 const mThreadCallbackFunc& func)
+    {
+        cb_ = std::move(func);
+        return this->threadCreate(name, threadFunc, (void*)this, stackSize,priority,tick);
+    }
+    /**
+     * This function will create a thread object and allocate thread object memory
+     * and stack.
+     *
+     * @param name the name of thread, which shall be unique
+     * @param entry the entry function of thread
+     * @param parameter the parameter of thread enter function
+     * @param stack_size the size of thread stack
+     * @param priority the priority of thread
+     * @param tick the time slice if there are same priority thread
+     *
+     * @return the created thread object
+     */
+    mResult threadCreate(const char *name,
+                                void (*entry)(void *parameter),
+                                void       *parameter,
+                                uint32_t stackSize,
+                                uint8_t  priority,
+                                uint32_t tick)
+    {
+        //struct rt_thread *thread;
+        void *stackStart;
+        mObject::getInstance()->objectAdd((mObject_t*)this, M_OBJECT_CLASS_THREAD, name);
+        stackStart = new uint8_t[stackSize];
+        if (stackStart == nullptr)
+        {
+            /* allocate stack failure */
+            mObject::getInstance()->objectRemove((mObject_t*)this);
+            return M_RESULT_ERROR;
+        }
+        return threadInit(name,
+                        entry,
+                        parameter,
+                        stackStart,
+                        stackSize,
+                        priority,
+                        tick);
     }
     /* must be invoke witch rt_hw_interrupt_disable */
     static void threadCleanupExecute(thread_t* thread)

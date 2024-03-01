@@ -544,11 +544,11 @@ int main(void)
 #include "mthread.hpp"
 #include "mhw.hpp"
 #include "mtimer.hpp"
+#include "mmem.h"
+#include <functional>
 
 ALIGN(4) static uint8_t buff1[512];
 ALIGN(4) static uint8_t buff2[512];
-ALIGN(4) static uint8_t buff3[512];
-ALIGN(4) static uint8_t buff4[512];
 int main(void)
 {
     LED led0(GPIOE, GPIO_NUM_9, false);
@@ -556,24 +556,21 @@ int main(void)
     led0.on();
     led1.on();
     mTimer tim1;
-    tim1.init("time1",3000,TIMER_FLAG_PERIODIC,[&](){
-        printf("tim1 is on time now\r\n");
+    tim1.init("time1",100,TIMER_FLAG_PERIODIC,[&](){
+        led0.reverse();
     });
     tim1.start();
     mTimer tim2;
-    tim2.init("time2",4000,TIMER_FLAG_PERIODIC,[&](){
-        printf("tim2 is on time now\r\n");
+    tim2.init("time2",200,TIMER_FLAG_PERIODIC,[&](){
+        led1.reverse();
     });
     tim2.start();
     mthread th1;
     th1.init("th1", buff1, 512, 0, 40,[&](){
-        mObject_t* threadobj[6] = {nullptr};
+        //mObject_t* threadobj[6] = {nullptr};
         while(1)
         {
-            mthread::threadDelay(100);
-            //printf("-------111-------\r\n");
-            led0.on();
-            
+            mthread::threadDelay(10);
             /*mObject::getInstance()->objectGetPointers(M_OBJECT_CLASS_THREAD, threadobj, 6);
             for(auto it : threadobj)
             {
@@ -589,32 +586,38 @@ int main(void)
     th2.init("th2", buff2, 512, 0, 20,[](){
         while(1)
         {
-            printf("-------2222-------\r\n");
-            mthread::threadDelay(100);
+            mthread::threadDelay(10);
         }
     });
     th2.startup();
-        mthread th3;
-    th3.init("th3", buff3, 512, 0, 20,[&](){
-        while(1)
+    printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
+    mthread* th3 = mthread::create("th3",512,0,20,[&](){
+        //while(1)
         {
-            printf("--------3333------\r\n");
-            led0.off();
+            printf("-------33333333333-------\r\n");
+            mthread::threadDelay(1000);
+            printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
+            printf("thread exit now\r\n");
         }
     });
-    th3.startup();
-        mthread th4;
-    th4.init("th4", buff4, 512, 0, 20,[](){
-        while(1)
-        {
-            printf("--------4444------\r\n");
-        }
-    });
-    th4.startup();
+    if(th3)
+    {
+        th3->startup();
+    }
+    uint8_t* po = new uint8_t[51*1024];
+    if(po)
+    {
+        printf("mallo ok po = %p\r\n",po);
+    }
+    else
+    {
+        printf("p i s nu ll p t r\r\n");
+    }
     while(1)
     {
         mthread::threadDelay(1000);
-        led1.reverse();
+        printf("#\r\n");
+        printf("after del p total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
     }
     return 0;
 }

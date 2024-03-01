@@ -4,8 +4,11 @@
 #include "mirq.hpp"
 #include "mclock.hpp"
 #include "systeminit.h"
-//#include "mcomponents.hpp"
+#include "common.hpp"
+#include "mmem.h"
 
+#define MEM_HEAP_SIZE 50 * 1024 // 256K
+D2_MEM_ALIGN(M_ALIGN_SIZE) static uint8_t memHeap[MEM_HEAP_SIZE];
 
 extern "C" void SysTick_Handler(void)
 {
@@ -21,4 +24,5 @@ void boardInit(void)
     {
         while(1);
     }
+    mMem::getInstance()->init(memHeap, memHeap + MEM_HEAP_SIZE);
 }
