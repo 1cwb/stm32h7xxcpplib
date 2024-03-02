@@ -1,6 +1,6 @@
 #pragma once
-#include "rtoscommon.hpp"
-#include "mobject.hpp"
+#include "rtoscommon.h"
+#include "mobject.h"
 
 class mIpc
 {

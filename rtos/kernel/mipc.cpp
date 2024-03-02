@@ -1,5 +1,5 @@
 #include "mipc.h"
-#include "mthread.hpp"
+#include "mthread.h"
 
 /**
  * This function will initialize an IPC object

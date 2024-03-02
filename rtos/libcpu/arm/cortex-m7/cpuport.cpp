@@ -1,4 +1,4 @@
-#include "rtoscommon.hpp"
+#include "rtoscommon.h"
 #include "cpuport.h"
 
 #if               ( /* GNU */(defined ( __GNUC__ ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)))

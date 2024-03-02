@@ -1,5 +1,5 @@
 #pragma once
-#include "rtoscommon.hpp"
+#include "rtoscommon.h"
 #include "mipc.h"
 
 struct heapMem_t

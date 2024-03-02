@@ -541,9 +541,9 @@ int main(void)
 #include "rtc.hpp"
 #include "lptimer.hpp"
 #include "isrcommon.h"
-#include "mthread.hpp"
-#include "mhw.hpp"
-#include "mtimer.hpp"
+#include "mthread.h"
+#include "mhw.h"
+#include "mtimer.h"
 #include "mmem.h"
 #include <functional>
 

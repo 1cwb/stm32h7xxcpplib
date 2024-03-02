@@ -1,5 +1,5 @@
 #pragma once
-#include "rtoscommon.hpp"
+#include "rtoscommon.h"
 
 #if               ( /* GNU */(defined ( __GNUC__ ) && defined ( __VFP_FP__ ) && !defined(__SOFTFP__)))
 #define USE_FPU   1

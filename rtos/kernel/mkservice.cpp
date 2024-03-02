@@ -1,7 +1,5 @@
-#pragma once
-#include "rtoscommon.hpp"
-
-static const uint8_t __lowest_bit_bitmap[] =
+#include "mkservice.h"
+const uint8_t mKservice::__lowest_bit_bitmap[] =
 {
     /* 00 */ 0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
     /* 10 */ 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
@@ -20,28 +18,7 @@ static const uint8_t __lowest_bit_bitmap[] =
     /* E0 */ 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
     /* F0 */ 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
 };
-
-class mKservice
-{
-public:
-    static mKservice* getInstance()
-    {
-        static mKservice service;
-        return &service;
-    }
-
-#ifndef RT_USING_CPU_FFS
-/**
- * This function finds the first bit set (beginning with the least significant bit)
- * in value and return the index of that bit.
- *
- * Bits are numbered starting at 1 (the least significant bit).  A return value of
- * zero from any of these functions means that the argument was zero.
- *
- * @return return the index of the first bit set. If value is 0, then this function
- * shall return 0.
- */
-int __rt_ffs(int value)
+int mKservice::__rt_ffs(int value)
 {
     if (value == 0) return 0;
 
@@ -56,18 +33,3 @@ int __rt_ffs(int value)
 
     return __lowest_bit_bitmap[(value & 0xff000000) >> 24] + 25;
 }
-#endif
-
-private:
-    mKservice()
-    {
-    }
-    ~mKservice()
-    {
-
-    }
-    mKservice(const mKservice&) = delete;
-    mKservice(mKservice&&) = delete;
-    mKservice& operator=(const mKservice&) = delete;
-    mKservice& operator=(mKservice&&) = delete;
-};
