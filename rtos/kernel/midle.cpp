@@ -1,4 +1,5 @@
 #include "mIdle.h"
+#include "rtoscommon.h"
 ALIGN(M_ALIGN_SIZE) uint8_t mIdle::threadStack[IDLE_THREAD_STACK_SIZE];
 
 void mIdle::threadIdleInit(void)
@@ -43,8 +44,8 @@ void mIdle::exec()
         thread = listEntry(mSchedule::getInstance()->getThreadDefunct()->next, struct thread_t, tlist);
         /* remove defunct thread */
         thread->tlist.removeSelf();
+        mObject::getInstance()->objectRemove((mObject_t*)thread);
         /* release thread's stack */
-        printf("delete thread now\r\n");
         delete [] reinterpret_cast<uint8_t*>(thread->stackAddr);
         /* delete thread object */
         delete reinterpret_cast<mthread*>(thread);

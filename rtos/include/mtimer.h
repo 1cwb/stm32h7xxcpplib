@@ -27,6 +27,22 @@ public:
 
     static void mTimerCommonCallbackFunc(void* p);
 
+    static mTimer* create(const char *name,
+                uint32_t   time,
+                mTimerStateFlag   flag,
+                const mTimerCallBack& cb);
+    mResult timerCreate(const char *name,
+            uint32_t   time,
+            mTimerStateFlag   flag,
+            const mTimerCallBack& cb);
+    /**
+     * This function will delete a timer and release timer memory
+     *
+     * @param timer the timer to be deleted
+     *
+     * @return the operation status, RT_EOK on OK; RT_ERROR on error
+     */
+    mResult timerDelete();
     void init(  const char *name,
                 uint32_t   time,
                 mTimerStateFlag   flag,
@@ -97,8 +113,23 @@ private:
     /* the fist timer always in the last row */
     uint32_t timerListNextTimeout(mList_t timerList[]);
 
-    static inline void timerRemove(mTimer_t* timer);
-
+    static void timerRemove(mTimer_t* timer);
+    /**
+     * This function will create a timer
+     *
+     * @param name the name of timer
+     * @param timeout the timeout function
+     * @param parameter the parameter of timeout function
+     * @param time the tick of timer
+     * @param flag the flag of timer
+     *
+     * @return the created timer object
+     */
+    mResult timerCreate(const char *name,
+                            void (*timeout)(void *parameter),
+                            void       *parameter,
+                            unsigned long   time,
+                            mTimerStateFlag  flag);
 
 private:
     mTimer_t timer_;

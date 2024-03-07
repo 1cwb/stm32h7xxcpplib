@@ -546,78 +546,48 @@ int main(void)
 #include "mtimer.h"
 #include "mmem.h"
 #include <functional>
+#include <list>
+#include <vector>
+#include <map>
+#include <string>
 
-ALIGN(4) static uint8_t buff1[512];
-ALIGN(4) static uint8_t buff2[512];
 int main(void)
 {
     LED led0(GPIOE, GPIO_NUM_9, false);
     LED led1(GPIOA, GPIO_NUM_7, false);
     led0.on();
     led1.on();
-    mTimer tim1;
-    tim1.init("time1",100,TIMER_FLAG_PERIODIC,[&](){
-        led0.reverse();
-    });
-    tim1.start();
-    mTimer tim2;
-    tim2.init("time2",200,TIMER_FLAG_PERIODIC,[&](){
-        led1.reverse();
-    });
-    tim2.start();
-    mthread th1;
-    th1.init("th1", buff1, 512, 0, 40,[&](){
-        //mObject_t* threadobj[6] = {nullptr};
-        while(1)
-        {
-            mthread::threadDelay(10);
-            /*mObject::getInstance()->objectGetPointers(M_OBJECT_CLASS_THREAD, threadobj, 6);
-            for(auto it : threadobj)
-            {
-                if(it)
-                {
-                    printf("[%s] stack used %ld\r\n",it->name, ((((thread_t*)(it))->stackSize - ((uint32_t)((thread_t*)(it))->sp - (uint32_t)((thread_t*)(it))->stackAddr))*100/((thread_t*)(it))->stackSize));
-                }
-            }*/
-        }
-    });
-    th1.startup();
-        mthread th2;
-    th2.init("th2", buff2, 512, 0, 20,[](){
-        while(1)
-        {
-            mthread::threadDelay(10);
-        }
-    });
-    th2.startup();
-    printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
     mthread* th3 = mthread::create("th3",512,0,20,[&](){
-        //while(1)
+        std::list<int, mMemAllocator<int>> list1;
+        //using MyString = std::basic_string<char, std::char_traits<char>, mMemAllocator<char>>;
+        while(1)
         {
-            printf("-------33333333333-------\r\n");
-            mthread::threadDelay(1000);
+            mthread::threadDelay(200);
             printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
-            printf("thread exit now\r\n");
+            led0.reverse();
         }
     });
     if(th3)
     {
         th3->startup();
     }
-    uint8_t* po = new uint8_t[51*1024];
-    if(po)
-    {
-        printf("mallo ok po = %p\r\n",po);
-    }
-    else
-    {
-        printf("p i s nu ll p t r\r\n");
-    }
+    int i = 0;
+    mTimer* tim1 = mTimer::create("tim1", 1000, TIMER_FLAG_PERIODIC, [&](){
+        i++;
+        printf("timer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r\n");
+        if(i == 3)
+        {
+            printf("timer 1 will be delete\r\n");
+            tim1->stop();
+            tim1->timerDelete();
+        }
+    });
+    tim1->start();
     while(1)
     {
-        mthread::threadDelay(1000);
-        printf("#\r\n");
-        printf("after del p total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
+        mthread::threadDelay(500);
+        led1.reverse();
+        printf("thread (%s) is run \r\n",mthread::threadSelf()->name);
     }
     return 0;
 }

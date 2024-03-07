@@ -13,6 +13,80 @@ void mTimer::mTimerCommonCallbackFunc(void* p)
     }
 }
 
+mTimer* mTimer::create(const char *name,
+            uint32_t   time,
+            mTimerStateFlag   flag,
+            const mTimerCallBack& cb)
+{
+    mTimer* timer = new mTimer;
+    if(timer)
+    {
+        timer->timerCreate(name, time, flag, cb);
+        return timer;
+    }
+    return nullptr;
+}
+
+mResult mTimer::timerCreate(const char *name,
+            uint32_t   time,
+            mTimerStateFlag   flag,
+            const mTimerCallBack& cb)
+{
+    cb_ = std::move(cb);
+    return timerCreate(name, mTimerCommonCallbackFunc, this, time, flag);
+}
+/**
+ * This function will create a timer
+ *
+ * @param name the name of timer
+ * @param timeout the timeout function
+ * @param parameter the parameter of timeout function
+ * @param time the tick of timer
+ * @param flag the flag of timer
+ *
+ * @return the created timer object
+ */
+mResult mTimer::timerCreate(const char *name,
+                        void (*timeout)(void *parameter),
+                        void       *parameter,
+                        unsigned long   time,
+                        mTimerStateFlag  flag)
+{
+    /* allocate a object */
+    mObject::getInstance()->objectAdd((mObject_t*)this, M_OBJECT_CLASS_TIMER, name);
+    timerInit(timeout, parameter, time, flag);
+
+    return M_RESULT_EOK;
+}
+/**
+ * This function will delete a timer and release timer memory
+ *
+ * @param timer the timer to be deleted
+ *
+ * @return the operation status, RT_EOK on OK; RT_ERROR on error
+ */
+mResult mTimer::timerDelete()
+{
+    register long level;
+
+    /* timer check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&timer_)) == M_OBJECT_CLASS_TIMER);
+    MASSERT(!mObject::getInstance()->objectIsSystemobject((mObject_t*)(&timer_)));
+
+    /* disable interrupt */
+    level = HW::hwInterruptDisable();
+
+    timerRemove(&timer_);
+    /* stop timer */
+    timer_.flag &= ~TIMER_STATE_FLAG_ACTIVATED;
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(level);
+
+    mObject::getInstance()->objectRemove((mObject_t*)this);
+    delete this;
+    return M_RESULT_EOK;
+}
 void mTimer::init(  const char *name,
             uint32_t   time,
             mTimerStateFlag   flag,
