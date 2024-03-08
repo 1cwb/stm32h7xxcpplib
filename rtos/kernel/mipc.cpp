@@ -142,7 +142,7 @@ mResult mIpc::ipcListResumeAll(mIpcObject_t* ipcObj)
  *
  * @see rt_sem_init
  */
-mResult mSemaphore::semCreate(const char *name, uint32_t value, mIpcFlag flag)
+mResult mSemaphore::semCreateEx(const char *name, uint32_t value, mIpcFlag flag)
 {
     //RT_DEBUG_NOT_IN_INTERRUPT;
     MASSERT(value < 0x10000U);

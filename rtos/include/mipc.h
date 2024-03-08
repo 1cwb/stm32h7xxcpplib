@@ -78,7 +78,7 @@ public:
         mSemaphore* sem = new mSemaphore;
         if(sem)
         {
-            sem->semCreate(name, value, flag);
+            sem->semCreateEx(name, value, flag);
             return sem;
         }
         return nullptr;
@@ -168,7 +168,7 @@ private:
      *
      * @see rt_sem_init
      */
-    mResult semCreate(const char *name, uint32_t value, mIpcFlag flag);
+    mResult semCreateEx(const char *name, uint32_t value, mIpcFlag flag);
 
 private:
     mSemaphore_t sem_;

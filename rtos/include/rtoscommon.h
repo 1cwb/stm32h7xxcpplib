@@ -420,4 +420,17 @@ struct mSemaphore_t : public mIpcObject_t
     uint16_t          reserved;                      /**< reserved field */
 };
 
+/**
+ * Mutual exclusion (mutex) structure
+ */
+struct mMutex_t : public mIpcObject_t
+{
+    uint16_t          value;                         /**< value of mutex */
+
+    uint8_t           originalPriority;             /**< priority of last thread hold the mutex */
+    uint8_t           hold;                          /**< numbers of thread hold the mutex */
+
+    struct thread_t   *owner;                       /**< current owner of mutex */
+};
+
 #define rt_kprintf printf
