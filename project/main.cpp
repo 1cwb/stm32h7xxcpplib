@@ -550,13 +550,13 @@ int main(void)
 #include <vector>
 #include <map>
 #include <string>
-
+uint32_t bliink[] = {2000,200,100,200};
 int main(void)
 {
     LED led0(GPIOE, GPIO_NUM_9, false);
     LED led1(GPIOA, GPIO_NUM_7, false);
-    led0.on();
-    led1.on();
+    led0.off();
+    led1.off();
     mthread* th3 = mthread::create("th3",512,0,20,[&](){
         std::list<int, mMemAllocator<int>> list1;
         //using MyString = std::basic_string<char, std::char_traits<char>, mMemAllocator<char>>;
@@ -564,7 +564,7 @@ int main(void)
         {
             mthread::threadDelay(200);
             printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
-            led0.reverse();
+            //led0.reverse();
         }
     });
     if(th3)
@@ -572,21 +572,21 @@ int main(void)
         th3->startup();
     }
     int i = 0;
-    mTimer* tim1 = mTimer::create("tim1", 1000, TIMER_FLAG_PERIODIC, [&](){
+    mTimer* tim1 = mTimer::create("tim1", bliink[0], TIMER_FLAG_PERIODIC, [&](){
         i++;
-        printf("timer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\r\n");
-        if(i == 3)
+        if(i == 4)
         {
-            printf("timer 1 will be delete\r\n");
-            tim1->stop();
-            tim1->timerDelete();
+            i = 0;
         }
+        tim1->setTimerAndStart(bliink[i]);
+        led1.reverse();
+        led0.reverse();
     });
     tim1->start();
     while(1)
     {
         mthread::threadDelay(500);
-        led1.reverse();
+        //led0.reverse();
         printf("thread (%s) is run \r\n",mthread::threadSelf()->name);
     }
     return 0;

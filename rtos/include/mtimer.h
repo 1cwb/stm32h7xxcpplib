@@ -88,17 +88,19 @@ public:
      * @return the operation status, RT_EOK on OK, -RT_ERROR on error
      */
     mResult stop();
-/**
- * This function will get or set some options of the timer
- *
- * @param timer the timer to be get or set
- * @param cmd the control command
- * @param arg the argument
- *
- * @return RT_EOK
- */
-mResult timerControl(mTimerCtrl cmd, void *arg);
-
+    /**
+     * This function will get or set some options of the timer
+     *
+     * @param timer the timer to be get or set
+     * @param cmd the control command
+     * @param arg the argument
+     *
+     * @return RT_EOK
+     */
+    mResult timerControl(mTimerCtrl cmd, void *arg);
+    void setTimerAndStart(uint32_t timout);
+    uint32_t getTime();
+    bool isTimerActived();
     /**
      * This function will check timer list, if a timeout event happens, the
      * corresponding timeout function will be invoked.

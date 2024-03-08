@@ -1,6 +1,5 @@
 #pragma once
 #include "rtoscommon.h"
-#include "mobject.h"
 
 class mIpc
 {
@@ -23,7 +22,7 @@ public:
      *
      * @return the operation status, RT_EOK on successful
      */
-    inline mResult ipcObjectInit(mIpcObject_t* ipcObj);
+    mResult ipcObjectInit(mIpcObject_t* ipcObj);
     /**
      * This function will suspend a thread to a specified list. IPC object or some
      * double-queue object (mailbox etc.) contains this kind of list.
@@ -35,7 +34,7 @@ public:
      *
      * @return the operation status, RT_EOK on successful
      */
-    inline mResult ipcListSuspend(mIpcObject_t* ipcObj, struct thread_t *thread, mIpcFlag flag);
+    mResult ipcListSuspend(mIpcObject_t* ipcObj, struct thread_t *thread, mIpcFlag flag);
 
     /**
      * This function will resume the first thread in the list of a IPC object:
@@ -46,7 +45,7 @@ public:
      *
      * @return the operation status, RT_EOK on successful
      */
-    inline mResult ipcListResume(mIpcObject_t* ipcObj);
+    mResult ipcListResume(mIpcObject_t* ipcObj);
 
     /**
      * This function will resume all suspended threads in a list, including
@@ -56,12 +55,44 @@ public:
      *
      * @return the operation status, RT_EOK on successful
      */
-    inline mResult ipcListResumeAll(mIpcObject_t* ipcObj);
+    mResult ipcListResumeAll(mIpcObject_t* ipcObj);
 };
 
 class mSemaphore : public mIpc
 {
 public:
+    mSemaphore()
+    {
+    }
+    ~mSemaphore()
+    {
+
+    }
+    mSemaphore(const mSemaphore&) = delete;
+    mSemaphore(mSemaphore&&) = delete;
+    mSemaphore& operator=(const mSemaphore&) = delete;
+    mSemaphore& operator=(mSemaphore&&) = delete;
+
+    static mSemaphore* semCreate(const char *name, uint32_t value, mIpcFlag flag)
+    {
+        mSemaphore* sem = new mSemaphore;
+        if(sem)
+        {
+            sem->semCreate(name, value, flag);
+            return sem;
+        }
+        return nullptr;
+    }
+    /**
+     * This function will delete a semaphore object and release the memory
+     *
+     * @param sem the semaphore object
+     *
+     * @return the error code
+     *
+     * @see rt_sem_detach
+     */
+    mResult semDelete();
         /**
      * This function will initialize a semaphore and put it under control of
      * resource management.
@@ -123,7 +154,22 @@ public:
      *
      * @return the error code
      */
-    mResult rt_sem_control(mIpcCmd cmd, void *arg);
+    mResult semControl(mIpcCmd cmd, void *arg);
+private:
+
+        /**
+     * This function will create a semaphore from system resource
+     *
+     * @param name the name of semaphore
+     * @param value the initial value of semaphore
+     * @param flag the flag of semaphore
+     *
+     * @return the created semaphore, RT_NULL on error happen
+     *
+     * @see rt_sem_init
+     */
+    mResult semCreate(const char *name, uint32_t value, mIpcFlag flag);
+
 private:
     mSemaphore_t sem_;
 };

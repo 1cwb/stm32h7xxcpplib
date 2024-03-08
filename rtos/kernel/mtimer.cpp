@@ -72,7 +72,10 @@ mResult mTimer::timerDelete()
     /* timer check */
     MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&timer_)) == M_OBJECT_CLASS_TIMER);
     MASSERT(!mObject::getInstance()->objectIsSystemobject((mObject_t*)(&timer_)));
-
+    if(mObject::getInstance()->objectIsSystemobject((mObject_t*)this))
+    {
+        return M_RESULT_ERROR;
+    }
     /* disable interrupt */
     level = HW::hwInterruptDisable();
 
@@ -292,49 +295,66 @@ mResult mTimer::stop()
  */
 mResult mTimer::timerControl(mTimerCtrl cmd, void *arg)
 {
-register long level;
+    register long level;
 
-/* timer check */
-MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&timer_)) == M_OBJECT_CLASS_TIMER);
+    /* timer check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&timer_)) == M_OBJECT_CLASS_TIMER);
 
-level = HW::hwInterruptDisable();
-switch (cmd)
-{
-case TIMER_CTRL_GET_TIME:
-    *(uint32_t *)arg = timer_.initTick;
-    break;
-
-case TIMER_CTRL_SET_TIME:
-    timer_.initTick = *(uint32_t *)arg;
-    break;
-
-case TIMER_CTRL_SET_ONESHOT:
-    timer_.flag &= ~TIMER_FLAG_PERIODIC;
-    break;
-
-case TIMER_CTRL_SET_PERIODIC:
-    timer_.flag |= TIMER_FLAG_PERIODIC;
-    break;
-
-case TIMER_CTRL_GET_STATE:
-    if(timer_.flag & TIMER_STATE_FLAG_ACTIVATED)
+    level = HW::hwInterruptDisable();
+    switch (cmd)
     {
-        /*timer is start and run*/
-        *(uint32_t *)arg = TIMER_STATE_FLAG_ACTIVATED;
-    }
-    else
-    {
-        /*timer is stop*/
-        *(uint32_t *)arg = TIMER_STATE_FLAG_DEACTIVATED;
-    }
-    break;
+    case TIMER_CTRL_GET_TIME:
+        *(uint32_t *)arg = timer_.initTick;
+        break;
 
-default:
-    break;
+    case TIMER_CTRL_SET_TIME:
+        timer_.initTick = *(uint32_t *)arg;
+        break;
+
+    case TIMER_CTRL_SET_ONESHOT:
+        timer_.flag &= ~TIMER_FLAG_PERIODIC;
+        break;
+
+    case TIMER_CTRL_SET_PERIODIC:
+        timer_.flag |= TIMER_FLAG_PERIODIC;
+        break;
+
+    case TIMER_CTRL_GET_STATE:
+        if(timer_.flag & TIMER_STATE_FLAG_ACTIVATED)
+        {
+            /*timer is start and run*/
+            *(uint32_t *)arg = TIMER_STATE_FLAG_ACTIVATED;
+        }
+        else
+        {
+            /*timer is stop*/
+            *(uint32_t *)arg = TIMER_STATE_FLAG_DEACTIVATED;
+        }
+        break;
+
+    default:
+        break;
+    }
+    HW::hwInterruptEnable(level);
+    return M_RESULT_EOK;
 }
-HW::hwInterruptEnable(level);
 
-return M_RESULT_EOK;
+void mTimer::setTimerAndStart(uint32_t timout)
+{
+    timerControl(TIMER_CTRL_SET_TIME, (void*)&timout);
+    start();
+}
+uint32_t mTimer::getTime()
+{
+    uint32_t time = 0;
+    timerControl(TIMER_CTRL_GET_TIME, (void*)&time);
+    return time;
+}
+bool mTimer::isTimerActived()
+{
+    uint32_t state = TIMER_STATE_FLAG_DEACTIVATED;
+    timerControl(TIMER_CTRL_GET_STATE, (void*)&state);
+    return state == TIMER_STATE_FLAG_ACTIVATED ? true : false;
 }
 
 /**

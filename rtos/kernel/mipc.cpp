@@ -8,7 +8,7 @@
  *
  * @return the operation status, RT_EOK on successful
  */
-inline mResult mIpc::ipcObjectInit(mIpcObject_t* ipcObj)
+mResult mIpc::ipcObjectInit(mIpcObject_t* ipcObj)
 {
     return M_RESULT_EOK;
 }
@@ -23,7 +23,7 @@ inline mResult mIpc::ipcObjectInit(mIpcObject_t* ipcObj)
  *
  * @return the operation status, RT_EOK on successful
  */
-inline mResult  mIpc::ipcListSuspend(mIpcObject_t* ipcObj, struct thread_t *thread, mIpcFlag flag)
+mResult  mIpc::ipcListSuspend(mIpcObject_t* ipcObj, struct thread_t *thread, mIpcFlag flag)
 {
     /* suspend thread */
     mthread::threadSuspend(thread);
@@ -79,7 +79,7 @@ inline mResult  mIpc::ipcListSuspend(mIpcObject_t* ipcObj, struct thread_t *thre
  *
  * @return the operation status, RT_EOK on successful
  */
-inline mResult  mIpc::ipcListResume(mIpcObject_t* ipcObj)
+mResult  mIpc::ipcListResume(mIpcObject_t* ipcObj)
 {
     struct thread_t *thread;
 
@@ -101,7 +101,7 @@ inline mResult  mIpc::ipcListResume(mIpcObject_t* ipcObj)
  *
  * @return the operation status, RT_EOK on successful
  */
-inline mResult mIpc::ipcListResumeAll(mIpcObject_t* ipcObj)
+mResult mIpc::ipcListResumeAll(mIpcObject_t* ipcObj)
 {
     struct thread_t *thread;
     register unsigned long temp;
@@ -130,6 +130,64 @@ inline mResult mIpc::ipcListResumeAll(mIpcObject_t* ipcObj)
 
     return M_RESULT_EOK;
 }
+
+/**
+ * This function will create a semaphore from system resource
+ *
+ * @param name the name of semaphore
+ * @param value the initial value of semaphore
+ * @param flag the flag of semaphore
+ *
+ * @return the created semaphore, RT_NULL on error happen
+ *
+ * @see rt_sem_init
+ */
+mResult mSemaphore::semCreate(const char *name, uint32_t value, mIpcFlag flag)
+{
+    //RT_DEBUG_NOT_IN_INTERRUPT;
+    MASSERT(value < 0x10000U);
+
+    /* initialize ipc object */
+    mObject::getInstance()->objectAdd((mObject_t*)this, M_OBJECT_CLASS_SEMAPHORE, name);
+    /* set initial value */
+    sem_.value = value;
+
+    /* set parent */
+    sem_.flag = flag;
+
+    return M_RESULT_EOK;
+}
+
+/**
+ * This function will delete a semaphore object and release the memory
+ *
+ * @param sem the semaphore object
+ *
+ * @return the error code
+ *
+ * @see rt_sem_detach
+ */
+mResult mSemaphore::semDelete()
+{
+    //RT_DEBUG_NOT_IN_INTERRUPT;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_SEMAPHORE);
+    MASSERT(!mObject::getInstance()->objectIsSystemobject((mObject_t*)this));
+
+    if(mObject::getInstance()->objectIsSystemobject((mObject_t*)this))
+    {
+        return M_RESULT_ERROR;
+    }
+    /* wakeup all suspended threads */
+    ipcListResumeAll(reinterpret_cast<mIpcObject_t*>(&sem_));
+
+    /* delete semaphore object */
+    delete this;
+
+    return M_RESULT_EOK;
+}
+
     /**
  * This function will initialize a semaphore and put it under control of
  * resource management.
@@ -344,7 +402,7 @@ mResult  mSemaphore::semRelease()
  *
  * @return the error code
  */
-mResult  mSemaphore::rt_sem_control(mIpcCmd cmd, void *arg)
+mResult  mSemaphore::semControl(mIpcCmd cmd, void *arg)
 {
     long level;
 

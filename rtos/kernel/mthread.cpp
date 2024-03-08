@@ -69,7 +69,10 @@ mResult mthread::threadDelete()
     /* thread check */
     MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(&thData_)) == M_OBJECT_CLASS_THREAD);
     MASSERT(mObject::getInstance()->objectIsSystemobject((mObject_t*)(&thData_)) == false);
-
+    if(mObject::getInstance()->objectIsSystemobject((mObject_t*)this))
+    {
+        return M_RESULT_ERROR;
+    }
     if ((thData_.stat & THREAD_STAT_MASK) == THREAD_CLOSE)
     {
         return M_RESULT_EOK;   
