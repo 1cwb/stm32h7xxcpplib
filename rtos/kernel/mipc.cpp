@@ -115,7 +115,7 @@ mResult mIpc::ipcListResumeAll(mIpcObject_t* ipcObj)
         /* get next suspended thread */
         thread = listEntry(ipcObj->suspendThread.next, struct thread_t, tlist);
         /* set error code to RT_ERROR */
-        thread->error = -M_RESULT_ERROR;
+        thread->error = M_RESULT_ERROR;
 
         /*
         * resume thread
@@ -180,7 +180,7 @@ mResult mSemaphore::semDelete()
         return M_RESULT_ERROR;
     }
     /* wakeup all suspended threads */
-    ipcListResumeAll(reinterpret_cast<mIpcObject_t*>(&sem_));
+    ipcListResumeAll(reinterpret_cast<mIpcObject_t*>(this));
 
     /* delete semaphore object */
     delete this;
@@ -232,7 +232,7 @@ mResult  mSemaphore::detach()
     MASSERT(mObject::getInstance()->objectIsSystemobject((mObject_t*)&sem_));
 
     /* wakeup all suspended threads */
-    ipcListResumeAll(reinterpret_cast<mIpcObject_t*>(&sem_));
+    ipcListResumeAll(reinterpret_cast<mIpcObject_t*>(this));
 
     /* detach semaphore object */
     mObject::getInstance()->objectDetach((mObject_t*)this);
@@ -420,7 +420,7 @@ mResult  mSemaphore::semControl(mIpcCmd cmd, void *arg)
         level = HW::hwInterruptDisable();
 
         /* resume all waiting thread */
-        ipcListResumeAll((mIpcObject_t*)&sem_);
+        ipcListResumeAll((mIpcObject_t*)this);
 
         /* set new value */
         sem_.value = (uint16_t)value;
@@ -434,4 +434,310 @@ mResult  mSemaphore::semControl(mIpcCmd cmd, void *arg)
     }
 
     return M_RESULT_ERROR;
+}
+
+/**
+ * This function will initialize a mutex and put it under control of resource
+ * management.
+ *
+ * @param mutex the mutex object
+ * @param name the name of mutex
+ * @param flag the flag of mutex
+ *
+ * @return the operation status, RT_EOK on successful
+ */
+mResult mMutex::init(const char *name, uint8_t flag)
+{
+    /* initialize object */
+    mObject::getInstance()->objectInit((mObject_t*)(this),M_OBJECT_CLASS_MUTEX, name);
+
+    /* initialize ipc object */
+    ipcObjectInit((mIpcObject_t*) (this));
+
+    mutex_.value = 1;
+    mutex_.owner = nullptr;
+    mutex_.originalPriority = 0xFF;
+    mutex_.hold = 0;
+
+    /* set flag */
+    mutex_.flag = flag;
+
+    return M_RESULT_EOK;
+}
+/**
+ * This function will detach a mutex from resource management
+ *
+ * @param mutex the mutex object
+ *
+ * @return the operation status, RT_EOK on successful
+ *
+ * @see rt_mutex_delete
+ */
+mResult mMutex::detach()
+{
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_MUTEX);
+    MASSERT(mObject::getInstance()->objectIsSystemobject((mObject_t*)this));
+
+    /* wakeup all suspended threads */
+    ipcListResumeAll((mIpcObject_t*)this);
+
+    /* detach semaphore object */
+    mObject::getInstance()->objectDetach((mObject_t*)(this));
+
+    return M_RESULT_EOK;
+}
+/**
+ * This function will take a mutex, if the mutex is unavailable, the
+ * thread shall wait for a specified time.
+ *
+ * @param mutex the mutex object
+ * @param time the waiting time
+ *
+ * @return the error code
+ */
+mResult mMutex::mutexTake(int32_t time)
+{
+    register long temp;
+    struct thread_t *thread;
+
+    /* this function must not be used in interrupt even if time = 0 */
+    //RT_DEBUG_IN_THREAD_CONTEXT;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_MUTEX);
+
+    /* get current thread */
+    thread = mthread::threadSelf();
+
+    /* disable interrupt */
+    temp = HW::hwInterruptDisable();
+
+    /*RT_DEBUG_LOG(RT_DEBUG_IPC,
+                 ("mutex_take: current thread %s, mutex value: %d, hold: %d\n",
+                  thread->name, mutex->value, mutex->hold));*/
+
+    /* reset thread error */
+    thread->error = M_RESULT_EOK;
+
+    if (mutex_.owner == thread)
+    {
+        if(mutex_.hold < MUTEX_HOLD_MAX)
+        {
+            /* it's the same thread */
+            mutex_.hold ++;
+        }
+        else
+        {
+            HW::hwInterruptEnable(temp); /* enable interrupt */
+            return M_RESULT_EFULL; /* value overflowed */
+        }
+    }
+    else
+    {
+        /* The value of mutex is 1 in initial status. Therefore, if the
+         * value is great than 0, it indicates the mutex is avaible.
+         */
+        if (mutex_.value > 0)
+        {
+            /* mutex is available */
+            mutex_.value --;
+
+            /* set mutex owner and original priority */
+            mutex_.owner             = thread;
+            mutex_.originalPriority = thread->currentPriority;
+            if(mutex_.hold < MUTEX_HOLD_MAX)
+            {
+                mutex_.hold ++;
+            }
+            else
+            {
+                HW::hwInterruptEnable(temp); /* enable interrupt */
+                return M_RESULT_EFULL; /* value overflowed */
+            }
+        }
+        else
+        {
+            /* no waiting, return with timeout */
+            if (time == 0)
+            {
+                /* set error as timeout */
+                thread->error = M_RESULT_ETIMEOUT;
+
+                /* enable interrupt */
+                HW::hwInterruptEnable(temp);
+
+                return M_RESULT_EFULL;
+            }
+            else
+            {
+                /* mutex is unavailable, push to suspend list */
+                /*RT_DEBUG_LOG(RT_DEBUG_IPC, ("mutex_take: suspend thread: %s\n",
+                                            thread->name));*/
+
+                /* change the owner thread priority of mutex */
+                if (thread->currentPriority < mutex_.owner->currentPriority)
+                {
+                    /* change the owner thread priority */
+                    reinterpret_cast<mthread*>(mutex_.owner)->threadControl(THREAD_CTRL_CHANGE_PRIORITY, &thread->currentPriority);
+                }
+
+                /* suspend current thread */
+                ipcListSuspend((mIpcObject_t*)this , thread, (mIpcFlag)mutex_.flag);
+                
+                /* has waiting time, start thread timer */
+                if (time > 0)
+                {
+                    /*RT_DEBUG_LOG(RT_DEBUG_IPC,
+                                 ("mutex_take: start the timer of thread:%s\n",
+                                  thread->name));*/
+
+                    /* reset the timeout of thread timer and start it */
+                    reinterpret_cast<mthread*>(thread)->getThTimer()->setTimerAndStart(time);
+                }
+
+                /* enable interrupt */
+                HW::hwInterruptEnable(temp);
+
+                /* do schedule */
+                mSchedule::getInstance()->schedule();
+
+                if (thread->error != M_RESULT_EOK)
+                {
+                    /* return error */
+                    return thread->error;
+                }
+                else
+                {
+                    /* the mutex is taken successfully. */
+                    /* disable interrupt */
+                    temp = HW::hwInterruptDisable();
+                }
+            }
+        }
+    }
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(temp);
+
+    //RT_OBJECT_HOOK_CALL(rt_object_take_hook, (&(mutex->parent.parent)));
+
+    return M_RESULT_EOK;
+}
+
+/**
+ * This function will release a mutex, if there are threads suspended on mutex,
+ * it will be waked up.
+ *
+ * @param mutex the mutex object
+ *
+ * @return the error code
+ */
+mResult mMutex::mutexRelease()
+{
+    register long temp;
+    struct thread_t *thread;
+    bool needSchedule;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_MUTEX);
+
+    needSchedule = false;
+
+    /* only thread could release mutex because we need test the ownership */
+    //RT_DEBUG_IN_THREAD_CONTEXT;
+
+    /* get current thread */
+    thread = mthread::threadSelf();
+
+    /* disable interrupt */
+    temp = HW::hwInterruptDisable();
+
+    /*RT_DEBUG_LOG(RT_DEBUG_IPC,
+                 ("mutex_release:current thread %s, mutex value: %d, hold: %d\n",
+                  thread->name, mutex->value, mutex->hold));*/
+
+    //RT_OBJECT_HOOK_CALL(rt_object_put_hook, (&(mutex->parent.parent)));
+
+    /* mutex only can be released by owner */
+    if (thread != mutex_.owner)
+    {
+        thread->error = M_RESULT_ERROR;
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(temp);
+
+        return M_RESULT_ERROR;
+    }
+
+    /* decrease hold */
+    mutex_.hold --;
+    /* if no hold */
+    if (mutex_.hold == 0)
+    {
+        /* change the owner thread to original priority */
+        if (mutex_.originalPriority != mutex_.owner->currentPriority)
+        {
+            reinterpret_cast<mthread*>(mutex_.owner)->threadControl(THREAD_CTRL_CHANGE_PRIORITY, &mutex_.originalPriority);
+
+        }
+
+        /* wakeup suspended thread */
+        if (!mutex_.suspendThread.isEmpty())
+        {
+            /* get suspended thread */
+            thread = listEntry(mutex_.suspendThread.next,
+                                   struct thread_t,
+                                   tlist);
+
+            /*RT_DEBUG_LOG(RT_DEBUG_IPC, ("mutex_release: resume thread: %s\n",
+                                        thread->name));*/
+
+            /* set new owner and priority */
+            mutex_.owner             = thread;
+            mutex_.originalPriority = thread->currentPriority;
+            if(mutex_.hold < MUTEX_HOLD_MAX)
+            {
+                mutex_.hold ++;
+            }
+            else
+            {
+                HW::hwInterruptEnable(temp); /* enable interrupt */
+                return M_RESULT_EFULL; /* value overflowed */
+            }
+
+            /* resume thread */
+            ipcListResume((mIpcObject_t*)(this));
+
+            needSchedule = true;
+        }
+        else
+        {
+            if(mutex_.value < MUTEX_VALUE_MAX)
+            {
+                /* increase value */
+                mutex_.value ++;
+            }
+            else
+            {
+                HW::hwInterruptEnable(temp); /* enable interrupt */
+                return M_RESULT_EFULL; /* value overflowed */
+            }
+
+            /* clear owner */
+            mutex_.owner             = nullptr;
+            mutex_.originalPriority = 0xff;
+        }
+    }
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(temp);
+
+    /* perform a schedule */
+    if (needSchedule == true)
+    {
+        mSchedule::getInstance()->schedule();
+    }
+
+    return M_RESULT_EOK;
 }

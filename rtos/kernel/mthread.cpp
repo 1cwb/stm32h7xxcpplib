@@ -531,7 +531,7 @@ void mthread::threadTimeout(void *parameter)
     MASSERT(mObject::getInstance()->objectGetType((mObject_t*)(thread)) == M_OBJECT_CLASS_THREAD);
 
     /* set error number */
-    thread->error = -M_RESULT_ETIMEOUT;
+    thread->error = M_RESULT_ETIMEOUT;
 
     /* remove from suspend list */
     thread->tlist.removeSelf();

@@ -327,18 +327,12 @@ mObject_t* mObject::objectFind(const char *name, mObjectClassType type)
 void mObject::objectInfoInit()
 {
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_THREAD, M_OBJECT_CLASS_THREAD);
-#ifdef M_USING_SEMAPHORE
 /* initialize object container - semaphore */
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_SEMAPHORE, M_OBJECT_CLASS_SEMAPHORE);
-#endif
-#ifdef M_USING_MUTEX
 /* initialize object container - mutex */
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MUTEX, M_OBJECT_CLASS_MUTEX);
-#endif
-#ifdef M_USING_EVENT
 /* initialize object container - event */
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_EVENT, M_OBJECT_CLASS_EVENT);
-#endif
 #ifdef M_USING_MAILBOX
 /* initialize object container - mailbox */
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MAILBOX, M_OBJECT_CLASS_MAILBOX);

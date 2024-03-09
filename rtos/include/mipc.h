@@ -173,3 +173,63 @@ private:
 private:
     mSemaphore_t sem_;
 };
+
+class mMutex : public mIpc
+{
+public:
+    mMutex()
+    {
+    }
+    ~mMutex()
+    {
+
+    }
+    mMutex(const mMutex&) = delete;
+    mMutex(mMutex&&) = delete;
+    mMutex& operator=(const mMutex&) = delete;
+    mMutex& operator=(mMutex&&) = delete;
+
+    /**
+     * This function will initialize a mutex and put it under control of resource
+     * management.
+     *
+     * @param mutex the mutex object
+     * @param name the name of mutex
+     * @param flag the flag of mutex
+     *
+     * @return the operation status, RT_EOK on successful
+     */
+    mResult init(const char *name, uint8_t flag);
+
+    /**
+     * This function will detach a mutex from resource management
+     *
+     * @param mutex the mutex object
+     *
+     * @return the operation status, RT_EOK on successful
+     *
+     * @see rt_mutex_delete
+     */
+    mResult detach();
+    /**
+     * This function will take a mutex, if the mutex is unavailable, the
+     * thread shall wait for a specified time.
+     *
+     * @param mutex the mutex object
+     * @param time the waiting time
+     *
+     * @return the error code
+     */
+    mResult mutexTake(int32_t time);
+    /**
+     * This function will release a mutex, if there are threads suspended on mutex,
+     * it will be waked up.
+     *
+     * @param mutex the mutex object
+     *
+     * @return the error code
+     */
+    mResult mutexRelease();
+private:
+    mMutex_t mutex_;
+};

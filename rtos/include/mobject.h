@@ -4,20 +4,13 @@
 #include "mhw.h"
 #include "mipc.h"
 
-#define M_USING_SEMAPHORE
 
 enum mObjectInfoType
 {
     M_OBJECT_INFO_THREAD = 0,                         /**< The object is a thread. */
-#ifdef M_USING_SEMAPHORE
     M_OBJECT_INFO_SEMAPHORE,                          /**< The object is a semaphore. */
-#endif
-#ifdef M_USING_MUTEX
     M_OBJECT_INFO_MUTEX,                              /**< The object is a mutex. */
-#endif
-#ifdef M_USING_EVENT
     M_OBJECT_INFO_EVENT,                              /**< The object is a event. */
-#endif
 #ifdef M_USING_MAILBOX
     M_OBJECT_INFO_MAILBOX,                            /**< The object is a mail box. */
 #endif

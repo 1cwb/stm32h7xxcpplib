@@ -362,7 +362,7 @@ struct thread_t : public mObject_t
     mResult (*yieldThread)();
 
     /* error code */
-    int32_t    error;                                  /**< error code */
+    mResult    error;                                  /**< error code */
 
     uint8_t  stat;                                   /**< thread status */
 
