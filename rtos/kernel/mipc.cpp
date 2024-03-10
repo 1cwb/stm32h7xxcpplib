@@ -305,8 +305,7 @@ mResult  mSemaphore::semTake(int32_t time)
                                             thread->name));*/
 
                 /* reset the timeout of thread timer and start it */
-                reinterpret_cast<mthread*>(thread)->getThTimer()->timerControl(TIMER_CTRL_SET_TIME, &time);
-                reinterpret_cast<mthread*>(thread)->getThTimer()->start();
+                reinterpret_cast<mthread*>(thread)->getThTimer()->setTimerAndStart(time);
             }
 
             /* enable interrupt */
@@ -446,7 +445,7 @@ mResult  mSemaphore::semControl(mIpcCmd cmd, void *arg)
  *
  * @return the operation status, RT_EOK on successful
  */
-mResult mMutex::init(const char *name, uint8_t flag)
+mResult mMutex::init(const char *name, mIpcFlag flag)
 {
     /* initialize object */
     mObject::getInstance()->objectInit((mObject_t*)(this),M_OBJECT_CLASS_MUTEX, name);
@@ -679,7 +678,6 @@ mResult mMutex::mutexRelease()
         if (mutex_.originalPriority != mutex_.owner->currentPriority)
         {
             reinterpret_cast<mthread*>(mutex_.owner)->threadControl(THREAD_CTRL_CHANGE_PRIORITY, &mutex_.originalPriority);
-
         }
 
         /* wakeup suspended thread */

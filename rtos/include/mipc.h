@@ -199,7 +199,7 @@ public:
      *
      * @return the operation status, RT_EOK on successful
      */
-    mResult init(const char *name, uint8_t flag);
+    mResult init(const char *name, mIpcFlag flag);
 
     /**
      * This function will detach a mutex from resource management

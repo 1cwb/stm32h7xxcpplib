@@ -557,13 +557,17 @@ int main(void)
     LED led1(GPIOA, GPIO_NUM_7, false);
     led0.off();
     led1.off();
+    mMutex mtx1;
+    mtx1.init("mutex1",IPC_FLAG_PRIO);
     mthread* th3 = mthread::create("th3",512,0,20,[&](){
-        std::list<int, mMemAllocator<int>> list1;
         //using MyString = std::basic_string<char, std::char_traits<char>, mMemAllocator<char>>;
         while(1)
         {
-            mthread::threadDelay(200);
+            mtx1.mutexTake(0xffffffff);
+            mthread::threadDelay(10000);
+            printf("thread xxxx is %s\r\n",mthread::threadSelf()->name);
             printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
+            mtx1.mutexRelease();
             //led0.reverse();
         }
     });
@@ -571,6 +575,24 @@ int main(void)
     {
         th3->startup();
     }
+
+    mthread* th4 = mthread::create("th4",512,0,20,[&](){
+        //using MyString = std::basic_string<char, std::char_traits<char>, mMemAllocator<char>>;
+        while(1)
+        {
+            mtx1.mutexTake(0xffffffff);
+            mthread::threadDelay(200);
+            printf("thread xxxx is %s\r\n",mthread::threadSelf()->name);
+            printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
+            mtx1.mutexRelease();
+            //led0.reverse();
+        }
+    });
+    if(th4)
+    {
+        th4->startup();
+    }
+
     int i = 0;
     mTimer* tim1 = mTimer::create("tim1", bliink[0], TIMER_FLAG_PERIODIC, [&](){
         i++;
@@ -587,7 +609,7 @@ int main(void)
     {
         mthread::threadDelay(500);
         //led0.reverse();
-        printf("thread (%s) is run \r\n",mthread::threadSelf()->name);
+        //printf("thread (%s) is run \r\n",mthread::threadSelf()->name);
     }
     return 0;
 }
