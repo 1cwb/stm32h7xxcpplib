@@ -233,3 +233,81 @@ public:
 private:
     mMutex_t mutex_;
 };
+
+class mEvent : public mIpc
+{
+public:
+    mEvent()
+    {
+    }
+    ~mEvent()
+    {
+
+    }
+    mEvent(const mEvent&) = delete;
+    mEvent(mEvent&&) = delete;
+    mEvent& operator=(const mEvent&) = delete;
+    mEvent& operator=(mEvent&&) = delete;
+
+    /**
+     * This function will initialize an event and put it under control of resource
+     * management.
+     *
+     * @param event the event object
+     * @param name the name of event
+     * @param flag the flag of event
+     *
+     * @return the operation status, RT_EOK on successful
+     */
+    mResult init(const char *name, mIpcFlag flag);
+
+    /**
+     * This function will detach an event object from resource management
+     *
+     * @param event the event object
+     *
+     * @return the operation status, RT_EOK on successful
+     */
+    mResult detach();
+    /**
+     * This function will send an event to the event object, if there are threads
+     * suspended on event object, it will be waked up.
+     *
+     * @param event the event object
+     * @param set the event set
+     *
+     * @return the error code
+     */
+    mResult send(uint32_t set);
+
+    /**
+     * This function will receive an event from event object, if the event is
+     * unavailable, the thread shall wait for a specified time.
+     *
+     * @param event the fast event object
+     * @param set the interested event set
+     * @param option the receive option, either RT_EVENT_FLAG_AND or
+     *        RT_EVENT_FLAG_OR should be set.
+     * @param timeout the waiting time
+     * @param recved the received event, if you don't care, RT_NULL can be set.
+     *
+     * @return the error code
+     */
+    mResult recv(uint32_t  set,
+                    uint8_t   option,
+                    int32_t   timeout,
+                    uint32_t *recved);
+
+    /**
+     * This function can get or set some extra attributions of an event object.
+     *
+     * @param event the event object
+     * @param cmd the execution command
+     * @param arg the execution argument
+     *
+     * @return the error code
+     */
+    mResult control(mIpcCmd cmd, void *arg);
+private:
+    mEvent_t event_;
+};

@@ -375,11 +375,9 @@ struct thread_t : public mObject_t
 #endif
     uint32_t numberMask;
 
-#if defined(USING_EVENT)
     /* thread event */
-    uint32_t event_set;
-    uint8_t  event_info;
-#endif
+    uint32_t eventSet;
+    uint8_t  eventInfo;
 
     unsigned long  initTick;                              /**< thread's initialized tick */
     unsigned long  remainingTick;                         /**< remaining tick */
@@ -431,6 +429,24 @@ struct mMutex_t : public mIpcObject_t
     uint8_t           hold;                          /**< numbers of thread hold the mutex */
 
     struct thread_t   *owner;                       /**< current owner of mutex */
+};
+
+/**
+ * flag defintions in event
+ */
+enum mEventFlag
+{
+    EVENT_FLAG_AND         =      0x01,            /**< logic and */
+    EVENT_FLAG_OR          =      0x02,            /**< logic or */
+    EVENT_FLAG_CLEAR       =      0x04,            /**< clear flag */
+};
+
+/*
+ * event structure
+ */
+struct mEvent_t : public mIpcObject_t
+{
+    uint32_t          set;                           /**< event set */
 };
 
 #define rt_kprintf printf

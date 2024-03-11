@@ -739,3 +739,334 @@ mResult mMutex::mutexRelease()
 
     return M_RESULT_EOK;
 }
+
+/**
+ * This function will initialize an event and put it under control of resource
+ * management.
+ *
+ * @param event the event object
+ * @param name the name of event
+ * @param flag the flag of event
+ *
+ * @return the operation status, RT_EOK on successful
+ */
+mResult mEvent::init(const char *name, mIpcFlag flag)
+{
+    /* initialize object */
+    mObject::getInstance()->objectInit((mObject_t*)this, M_OBJECT_CLASS_EVENT, name);
+
+    /* set parent flag */
+    event_.flag = flag;
+
+    /* initialize ipc object */
+    ipcObjectInit((mIpcObject_t*) this);
+
+    /* initialize event */
+    event_.set = 0;
+
+    return M_RESULT_EOK;
+}
+
+/**
+ * This function will detach an event object from resource management
+ *
+ * @param event the event object
+ *
+ * @return the operation status, RT_EOK on successful
+ */
+mResult mEvent::detach()
+{
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_EVENT);
+    MASSERT(mObject::getInstance()->objectIsSystemobject((mObject_t*)this));
+
+    /* resume all suspended thread */
+    ipcListResumeAll((mIpcObject_t*)this);
+    /* detach event object */
+    mObject::getInstance()->objectDetach((mObject_t*)this);
+
+    return M_RESULT_EOK;
+}
+
+/**
+ * This function will send an event to the event object, if there are threads
+ * suspended on event object, it will be waked up.
+ *
+ * @param event the event object
+ * @param set the event set
+ *
+ * @return the error code
+ */
+mResult mEvent::send(uint32_t set)
+{
+    struct mList_t *n;
+    struct thread_t *thread;
+    register unsigned long level;
+    register long status;
+    bool needSchedule;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_EVENT);
+
+    if (set == 0)
+    {
+        return M_RESULT_ERROR;
+    }
+
+    needSchedule = false;
+
+    /* disable interrupt */
+    level = HW::hwInterruptDisable();
+
+    /* set event */
+    event_.set |= set;
+
+    //RT_OBJECT_HOOK_CALL(rt_object_put_hook, (&(event_.parent.parent)));
+
+    if (!event_.suspendThread.isEmpty())
+    {
+        /* search thread list to resume thread */
+        n = event_.suspendThread.next;
+        while (n != &(event_.suspendThread))
+        {
+            /* get thread */
+            thread = listEntry(n, struct thread_t, tlist);
+
+            status = M_RESULT_ERROR;
+            if (thread->eventInfo & EVENT_FLAG_AND)
+            {
+                if ((thread->eventSet & event_.set) == thread->eventSet)
+                {
+                    /* received an AND event */
+                    status = M_RESULT_EOK;
+                }
+            }
+            else if (thread->eventInfo & EVENT_FLAG_OR)
+            {
+                if (thread->eventSet & event_.set)
+                {
+                    /* save the received event set */
+                    thread->eventSet = thread->eventSet & event_.set;
+
+                    /* received an OR event */
+                    status = M_RESULT_EOK;
+                }
+            }
+            else
+            {
+                /* enable interrupt */
+                HW::hwInterruptEnable(level);
+
+                return M_RESULT_EINVAL;
+            }
+
+            /* move node to the next */
+            n = n->next;
+
+            /* condition is satisfied, resume thread */
+            if (status == M_RESULT_EOK)
+            {
+                /* clear event */
+                if (thread->eventInfo & EVENT_FLAG_CLEAR)
+                {
+                    event_.set &= ~thread->eventSet;
+                }
+
+                /* resume thread, and thread list breaks out */
+                reinterpret_cast<mthread*>(thread)->threadResume();
+
+                /* need do a scheduling */
+                needSchedule = true;
+            }
+        }
+    }
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(level);
+
+    /* do a schedule */
+    if (needSchedule == true)
+    {
+        mSchedule::getInstance()->schedule();
+    }
+
+    return M_RESULT_EOK;
+}
+
+/**
+ * This function will receive an event from event object, if the event is
+ * unavailable, the thread shall wait for a specified time.
+ *
+ * @param event the fast event object
+ * @param set the interested event set
+ * @param option the receive option, either RT_EVENT_FLAG_AND or
+ *        RT_EVENT_FLAG_OR should be set.
+ * @param timeout the waiting time
+ * @param recved the received event, if you don't care, RT_NULL can be set.
+ *
+ * @return the error code
+ */
+mResult mEvent::recv(uint32_t  set,
+                    uint8_t   option,
+                    int32_t   timeout,
+                    uint32_t *recved)
+{
+    struct thread_t *thread;
+    register long level;
+    register long status;
+
+    //RT_DEBUG_IN_THREAD_CONTEXT;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_EVENT);
+
+    if (set == 0)
+    {
+        return M_RESULT_ERROR;
+    }
+
+    /* initialize status */
+    status = M_RESULT_ERROR;
+    /* get current thread */
+    thread = mthread::threadSelf();
+    /* reset thread error */
+    thread->error = M_RESULT_EOK;
+
+    //RT_OBJECT_HOOK_CALL(rt_object_trytake_hook, (&(event_.parent.parent)));
+
+    /* disable interrupt */
+    level = HW::hwInterruptDisable();
+
+    /* check event set */
+    if (option & EVENT_FLAG_AND)
+    {
+        if ((event_.set & set) == set)
+        {
+            status = M_RESULT_EOK;
+        }
+    }
+    else if (option & EVENT_FLAG_OR)
+    {
+        if (event_.set & set)
+        {
+            status = M_RESULT_EOK;
+        }
+    }
+    else
+    {
+        /* either RT_EVENT_FLAG_AND or RT_EVENT_FLAG_OR should be set */
+        MASSERT(0);
+    }
+
+    if (status == M_RESULT_EOK)
+    {
+        /* set received event */
+        if (recved)
+        {
+            *recved = (event_.set & set);
+        }
+
+        /* fill thread event info */
+        thread->eventSet = (event_.set & set);
+        thread->eventInfo = option;
+
+        /* received event */
+        if (option & EVENT_FLAG_CLEAR)
+        {
+            event_.set &= ~set;
+        }
+    }
+    else if (timeout == 0)
+    {
+        /* no waiting */
+        thread->error = M_RESULT_ETIMEOUT;
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(level);
+
+        return M_RESULT_ETIMEOUT;
+    }
+    else
+    {
+        /* fill thread event info */
+        thread->eventSet  = set;
+        thread->eventInfo = option;
+
+        /* put thread to suspended thread list */
+        ipcListSuspend((mIpcObject_t*)this,
+                            thread,
+                            (mIpcFlag)event_.flag);
+
+        /* if there is a waiting timeout, active thread timer */
+        if (timeout > 0)
+        {
+            /* reset the timeout of thread timer and start it */
+            reinterpret_cast<mthread*>(thread)->getThTimer()->setTimerAndStart(timeout);
+        }
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(level);
+
+        /* do a schedule */
+        mSchedule::getInstance()->schedule();
+
+        if (thread->error != M_RESULT_EOK)
+        {
+            /* return error */
+            return thread->error;
+        }
+
+        /* received an event, disable interrupt to protect */
+        level = HW::hwInterruptDisable();
+
+        /* set received event */
+        if (recved)
+        {
+            *recved = thread->eventSet;
+        }
+    }
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(level);
+
+    //RT_OBJECT_HOOK_CALL(rt_object_take_hook, (&(event_.parent.parent)));
+
+    return thread->error;
+}
+
+/**
+ * This function can get or set some extra attributions of an event object.
+ *
+ * @param event the event object
+ * @param cmd the execution command
+ * @param arg the execution argument
+ *
+ * @return the error code
+ */
+mResult mEvent::control(mIpcCmd cmd, void *arg)
+{
+    long level;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_EVENT);
+
+    if (cmd == IPC_CMD_RESET)
+    {
+        /* disable interrupt */
+        level = HW::hwInterruptDisable();
+
+        /* resume all waiting thread */
+        ipcListResumeAll((mIpcObject_t*)this);
+
+        /* initialize event set */
+        event_.set = 0;
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(level);
+
+        mSchedule::getInstance()->schedule();
+
+        return M_RESULT_EOK;
+    }
+
+    return M_RESULT_ERROR;
+}
