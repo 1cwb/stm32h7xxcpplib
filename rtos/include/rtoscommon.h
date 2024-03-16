@@ -449,4 +449,23 @@ struct mEvent_t : public mIpcObject_t
     uint32_t          set;                           /**< event set */
 };
 
+/**
+ * message queue structure
+ */
+struct mMessagequeue_t : public mIpcObject_t
+{
+    uint8_t             *msgPool;                      /**< start address of message queue */
+
+    uint16_t            msgSize;                      /**< message size of each message */
+    uint16_t            maxMsgs;                      /**< max number of messages */
+
+    uint16_t            entry;                         /**< index of messages in the queue */
+
+    void                *msgQueueHead;                /**< list head */
+    void                *msgQueueTail;                /**< list tail */
+    void                *msgQueueFree;                /**< pointer indicated the free node of queue */
+
+    mList_t             suspendSenderThread;         /**< sender thread suspended on this message queue */
+};
+
 #define rt_kprintf printf

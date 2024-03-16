@@ -35,7 +35,7 @@ public:
      * @return the operation status, RT_EOK on successful
      */
     mResult ipcListSuspend(mIpcObject_t* ipcObj, struct thread_t *thread, mIpcFlag flag);
-
+    mResult ipcListSuspend(mList_t* list, struct thread_t *thread, mIpcFlag flag);
     /**
      * This function will resume the first thread in the list of a IPC object:
      * - remove the thread from suspend queue of IPC object
@@ -56,6 +56,7 @@ public:
      * @return the operation status, RT_EOK on successful
      */
     mResult ipcListResumeAll(mIpcObject_t* ipcObj);
+    mResult ipcListResumeAll(mList_t *list);
 };
 
 class mSemaphore : public mIpc
@@ -310,4 +311,65 @@ public:
     mResult control(mIpcCmd cmd, void *arg);
 private:
     mEvent_t event_;
+};
+
+
+class mMessagequeue : public mIpc
+{
+    struct mqMessage_t
+    {
+        struct mqMessage_t *next;
+    };
+public:
+    mMessagequeue() : bInited_(false)
+    {
+    }
+    ~mMessagequeue()
+    {
+
+    }
+    mMessagequeue(const mMessagequeue&) = delete;
+    mMessagequeue(mMessagequeue&&) = delete;
+    mMessagequeue& operator=(const mMessagequeue&) = delete;
+    mMessagequeue& operator=(mMessagequeue&&) = delete;
+    /**
+     * This function will initialize a message queue and put it under control of
+     * resource management.
+     *
+     * @param mq the message object
+     * @param name the name of message queue
+     * @param msgpool the beginning address of buffer to save messages
+     * @param msg_size the maximum size of message
+     * @param pool_size the size of buffer to save messages
+     * @param flag the flag of message queue
+     *
+     * @return the operation status, RT_EOK on successful
+     */
+    mResult init(const char *name,
+                    uint32_t   msgSize,
+                    uint32_t   poolSize,
+                    mIpcFlag   flag);
+    /**
+     * This function will detach a message queue object from resource management
+     *
+     * @param mq the message queue object
+     *
+     * @return the operation status, RT_EOK on successful
+     */
+    mResult detach();
+    /**
+     * This function will send a message to message queue object. If the message queue is full,
+     * current thread will be suspended until timeout.
+     *
+     * @param mq the message queue object
+     * @param buffer the message
+     * @param size the size of buffer
+     * @param timeout the waiting time
+     *
+     * @return the error code
+     */
+    mResult sendWait(const void *buffer, uint32_t size, int32_t timeout);
+private:
+    mMessagequeue_t msg_;
+    bool bInited_;
 };
