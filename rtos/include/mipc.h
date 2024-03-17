@@ -368,7 +368,53 @@ public:
      *
      * @return the error code
      */
-    mResult sendWait(const void *buffer, uint32_t size, int32_t timeout);
+    /**
+     * This function will send a message to message queue object, if there are
+     * threads suspended on message queue object, it will be waked up.
+     *
+     * @param mq the message queue object
+     * @param buffer the message
+     * @param size the size of buffer
+     *
+     * @return the error code
+     */
+    mResult mMessagequeue::sendWait(const void *buffer, uint32_t size);
+    /**
+     * This function will send an urgent message to message queue object, which
+     * means the message will be inserted to the head of message queue. If there
+     * are threads suspended on message queue object, it will be waked up.
+     *
+     * @param mq the message queue object
+     * @param buffer the message
+     * @param size the size of buffer
+     *
+     * @return the error code
+     */
+    mResult urgent(const void *buffer, uint32_t size);
+    /**
+     * This function will receive a message from message queue object, if there is
+     * no message in message queue object, the thread shall wait for a specified
+     * time.
+     *
+     * @param mq the message queue object
+     * @param buffer the received message will be saved in
+     * @param size the size of buffer
+     * @param timeout the waiting time
+     *
+     * @return the error code
+     */
+    mResult recv( void *buffer, uint32_t  size, int32_t timeout);
+    /**
+     * This function can get or set some extra attributions of a message queue
+     * object.
+     *
+     * @param mq the message queue object
+     * @param cmd the execution command
+     * @param arg the execution argument
+     *
+     * @return the error code
+     */
+    mResult control(int cmd, void *arg);
 private:
     mMessagequeue_t msg_;
     bool bInited_;

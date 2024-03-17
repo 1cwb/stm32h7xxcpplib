@@ -6,7 +6,7 @@
  *
  * @param ipc the IPC object
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult mIpc::ipcObjectInit(mIpcObject_t* ipcObj)
 {
@@ -21,7 +21,7 @@ mResult mIpc::ipcObjectInit(mIpcObject_t* ipcObj)
  * @param flag the IPC object flag,
  *        which shall be RT_IPC_FLAG_FIFO/RT_IPC_FLAG_PRIO.
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult  mIpc::ipcListSuspend(mIpcObject_t* ipcObj, struct thread_t *thread, mIpcFlag flag)
 {
@@ -122,7 +122,7 @@ mResult  mIpc::ipcListSuspend(mList_t* list, struct thread_t *thread, mIpcFlag f
  *
  * @param list the thread list
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult  mIpc::ipcListResume(mIpcObject_t* ipcObj)
 {
@@ -144,7 +144,7 @@ mResult  mIpc::ipcListResume(mIpcObject_t* ipcObj)
  *
  * @param list of the threads to resume
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult mIpc::ipcListResumeAll(mIpcObject_t* ipcObj)
 {
@@ -212,7 +212,7 @@ mResult mIpc::ipcListResumeAll(mList_t *list)
  * @param value the initial value of semaphore
  * @param flag the flag of semaphore
  *
- * @return the created semaphore, RT_NULL on error happen
+ * @return the created semaphore, nullptr on error happen
  *
  * @see rt_sem_init
  */
@@ -271,7 +271,7 @@ mResult mSemaphore::semDelete()
  * @param value the initial value of semaphore
  * @param flag the flag of semaphore
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult  mSemaphore::init(const char *name, uint32_t value, mIpcFlag flag)
 {
@@ -295,7 +295,7 @@ mResult  mSemaphore::init(const char *name, uint32_t value, mIpcFlag flag)
  *
  * @param sem the semaphore object
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  *
  * @see rt_sem_delete
  */
@@ -517,7 +517,7 @@ mResult  mSemaphore::semControl(mIpcCmd cmd, void *arg)
  * @param name the name of mutex
  * @param flag the flag of mutex
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult mMutex::init(const char *name, mIpcFlag flag)
 {
@@ -542,7 +542,7 @@ mResult mMutex::init(const char *name, mIpcFlag flag)
  *
  * @param mutex the mutex object
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  *
  * @see rt_mutex_delete
  */
@@ -822,7 +822,7 @@ mResult mMutex::mutexRelease()
  * @param name the name of event
  * @param flag the flag of event
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult mEvent::init(const char *name, mIpcFlag flag)
 {
@@ -846,7 +846,7 @@ mResult mEvent::init(const char *name, mIpcFlag flag)
  *
  * @param event the event object
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult mEvent::detach()
 {
@@ -975,7 +975,7 @@ mResult mEvent::send(uint32_t set)
  * @param option the receive option, either RT_EVENT_FLAG_AND or
  *        RT_EVENT_FLAG_OR should be set.
  * @param timeout the waiting time
- * @param recved the received event, if you don't care, RT_NULL can be set.
+ * @param recved the received event, if you don't care, nullptr can be set.
  *
  * @return the error code
  */
@@ -1156,7 +1156,7 @@ mResult mEvent::control(mIpcCmd cmd, void *arg)
  * @param pool_size the size of buffer to save messages
  * @param flag the flag of message queue
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult mMessagequeue::init(const char *name,
                 uint32_t   msgSize,
@@ -1213,7 +1213,7 @@ mResult mMessagequeue::init(const char *name,
  *
  * @param mq the message queue object
  *
- * @return the operation status, RT_EOK on successful
+ * @return the operation status, M_RESULT_EOK on successful
  */
 mResult mMessagequeue::detach()
 {
@@ -1267,14 +1267,16 @@ mResult mMessagequeue::sendWait(const void *buffer, uint32_t size, int32_t timeo
 
     /* greater than one message size */
     if (size > msg_.msgSize)
+    {
         return M_RESULT_ERROR;
+    }
 
     /* initialize delta tick */
     tickDelta = 0;
     /* get current thread */
     thread = mthread::threadSelf();
 
-    //RT_OBJECT_HOOK_CALL(rt_object_put_hook, (&(mq->parent.parent)));
+    //RT_OBJECT_HOOK_CALL(rt_object_put_hook, (&(msg_.parent.parent)));
 
     /* disable interrupt */
     temp = HW::hwInterruptDisable();
@@ -1372,7 +1374,9 @@ mResult mMessagequeue::sendWait(const void *buffer, uint32_t size, int32_t timeo
     msg_.msgQueueTail = msg;
     /* if the head is empty, set head */
     if (msg_.msgQueueHead == nullptr)
+    {
         msg_.msgQueueHead = msg;
+    }
 
     if(msg_.entry < MQ_ENTRY_MAX)
     {
@@ -1402,4 +1406,322 @@ mResult mMessagequeue::sendWait(const void *buffer, uint32_t size, int32_t timeo
     HW::hwInterruptEnable(temp);
 
     return M_RESULT_EOK;
+}
+/**
+ * This function will send a message to message queue object, if there are
+ * threads suspended on message queue object, it will be waked up.
+ *
+ * @param mq the message queue object
+ * @param buffer the message
+ * @param size the size of buffer
+ *
+ * @return the error code
+ */
+mResult mMessagequeue::sendWait(const void *buffer, uint32_t size)
+{
+    return sendWait(buffer, size, 0);
+}
+/**
+ * This function will send an urgent message to message queue object, which
+ * means the message will be inserted to the head of message queue. If there
+ * are threads suspended on message queue object, it will be waked up.
+ *
+ * @param mq the message queue object
+ * @param buffer the message
+ * @param size the size of buffer
+ *
+ * @return the error code
+ */
+mResult mMessagequeue::urgent(const void *buffer, uint32_t size)
+{
+    register long temp;
+    struct mqMessage_t *msg;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_MESSAGEQUEUE);
+    MASSERT(buffer != nullptr);
+    MASSERT(size != 0);
+
+    /* greater than one message size */
+    if (size > msg_.msgSize)
+        return M_RESULT_ERROR;
+
+    //RT_OBJECT_HOOK_CALL(rt_object_put_hook, (&(msg_.parent.parent)));
+
+    /* disable interrupt */
+    temp = HW::hwInterruptDisable();
+
+    /* get a free list, there must be an empty item */
+    msg = (struct mqMessage_t *)msg_.msgQueueFree;
+    /* message queue is full */
+    if (msg == nullptr)
+    {
+        /* enable interrupt */
+        HW::hwInterruptEnable(temp);
+
+        return M_RESULT_EFULL;
+    }
+    /* move free list pointer */
+    msg_.msgQueueFree = msg->next;
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(temp);
+
+    /* copy buffer */
+    memcpy(msg + 1, buffer, size);
+
+    /* disable interrupt */
+    temp = HW::hwInterruptDisable();
+
+    /* link msg to the beginning of message queue */
+    msg->next = (struct mqMessage_t *)msg_.msgQueueHead;
+    msg_.msgQueueHead = msg;
+
+    /* if there is no tail */
+    if (msg_.msgQueueTail == nullptr)
+    {
+        msg_.msgQueueTail = msg;
+    }
+
+    if(msg_.entry < MQ_ENTRY_MAX)
+    {
+        /* increase message entry */
+        msg_.entry ++;
+    }
+    else
+    {
+        HW::hwInterruptEnable(temp); /* enable interrupt */
+        return M_RESULT_EFULL; /* value overflowed */
+    }
+
+    /* resume suspended thread */
+    if (!msg_.suspendThread.isEmpty())
+    {
+        ipcListResume((mIpcObject_t*)this);
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(temp);
+
+        mSchedule::getInstance()->schedule();
+
+        return M_RESULT_EOK;
+    }
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(temp);
+
+    return M_RESULT_EOK;
+}
+
+/**
+ * This function will receive a message from message queue object, if there is
+ * no message in message queue object, the thread shall wait for a specified
+ * time.
+ *
+ * @param mq the message queue object
+ * @param buffer the received message will be saved in
+ * @param size the size of buffer
+ * @param timeout the waiting time
+ *
+ * @return the error code
+ */
+mResult mMessagequeue::recv( void *buffer, uint32_t  size, int32_t timeout)
+{
+    struct thread_t *thread;
+    register long temp;
+    struct mqMessage_t *msg;
+    uint32_t tickDelta;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_MESSAGEQUEUE);
+    MASSERT(buffer != nullptr);
+    MASSERT(size != 0);
+
+    /* initialize delta tick */
+    tickDelta = 0;
+    /* get current thread */
+    thread = mthread::threadSelf();
+    //RT_OBJECT_HOOK_CALL(rt_object_trytake_hook, (&(msg_.parent.parent)));
+
+    /* disable interrupt */
+    temp = HW::hwInterruptDisable();
+
+    /* for non-blocking call */
+    if (msg_.entry == 0 && timeout == 0)
+    {
+        HW::hwInterruptEnable(temp);
+
+        return M_RESULT_ETIMEOUT;
+    }
+
+    /* message queue is empty */
+    while (msg_.entry == 0)
+    {
+        //RT_DEBUG_IN_THREAD_CONTEXT;
+
+        /* reset error number in thread */
+        thread->error = M_RESULT_EOK;
+
+        /* no waiting, return timeout */
+        if (timeout == 0)
+        {
+            /* enable interrupt */
+            HW::hwInterruptEnable(temp);
+
+            thread->error = M_RESULT_ETIMEOUT;
+
+            return M_RESULT_ETIMEOUT;
+        }
+
+        /* suspend current thread */
+        ipcListSuspend((mIpcObject_t*)this, thread, (mIpcFlag)msg_.flag);
+
+        /* has waiting time, start thread timer */
+        if (timeout > 0)
+        {
+            /* get the start tick of timer */
+            tickDelta = mClock::getInstance()->tickGet();
+
+            /*RT_DEBUG_LOG(RT_DEBUG_IPC, ("set thread:%s to timer list\n",
+                                        thread->name));*/
+
+            /* reset the timeout of thread timer and start it */
+            reinterpret_cast<mthread*>(thread)->getThTimer()->setTimerAndStart(timeout);
+        }
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(temp);
+
+        /* re-schedule */
+        mSchedule::getInstance()->schedule();
+
+        /* recv message */
+        if (thread->error != M_RESULT_EOK)
+        {
+            /* return error */
+            return thread->error;
+        }
+
+        /* disable interrupt */
+        temp = HW::hwInterruptDisable();
+
+        /* if it's not waiting forever and then re-calculate timeout tick */
+        if (timeout > 0)
+        {
+            tickDelta = mClock::getInstance()->tickGet() - tickDelta;
+            timeout -= tickDelta;
+            if (timeout < 0)
+            {
+                timeout = 0;
+            }
+        }
+    }
+
+    /* get message from queue */
+    msg = (struct mqMessage_t *)msg_.msgQueueHead;
+
+    /* move message queue head */
+    msg_.msgQueueHead = msg->next;
+    /* reach queue tail, set to NULL */
+    if (msg_.msgQueueTail == msg)
+        msg_.msgQueueTail = nullptr;
+
+    /* decrease message entry */
+    if(msg_.entry > 0)
+    {
+        msg_.entry --;
+    }
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(temp);
+
+    /* copy message */
+    memcpy(buffer, msg + 1, size > msg_.msgSize ? msg_.msgSize : size);
+
+    /* disable interrupt */
+    temp = HW::hwInterruptDisable();
+    /* put message to free list */
+    msg->next = (struct mqMessage_t *)msg_.msgQueueFree;
+    msg_.msgQueueFree = msg;
+
+    /* resume suspended thread */
+    if (!msg_.suspendSenderThread.isEmpty())
+    {
+        ipcListResume(&(msg_.suspendSenderThread));
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(temp);
+
+        //RT_OBJECT_HOOK_CALL(rt_object_take_hook, (&(msg_.parent.parent)));
+
+        mSchedule::getInstance()->schedule();
+
+        return M_RESULT_EOK;
+    }
+
+    /* enable interrupt */
+    HW::hwInterruptEnable(temp);
+
+    //RT_OBJECT_HOOK_CALL(rt_object_take_hook, (&(msg_.parent.parent)));
+
+    return M_RESULT_EOK;
+}
+
+/**
+ * This function can get or set some extra attributions of a message queue
+ * object.
+ *
+ * @param mq the message queue object
+ * @param cmd the execution command
+ * @param arg the execution argument
+ *
+ * @return the error code
+ */
+mResult mMessagequeue::control(int cmd, void *arg)
+{
+    long level;
+    struct mqMessage_t *msg;
+
+    /* parameter check */
+    MASSERT(mObject::getInstance()->objectGetType((mObject_t*)this) == M_OBJECT_CLASS_MESSAGEQUEUE);
+
+    if (cmd == IPC_CMD_RESET)
+    {
+        /* disable interrupt */
+        level = HW::hwInterruptDisable();
+
+        /* resume all waiting thread */
+        ipcListResumeAll((mIpcObject_t*)this);
+        /* also resume all message queue private suspended thread */
+        ipcListResumeAll(&(msg_.suspendSenderThread));
+
+        /* release all message in the queue */
+        while (msg_.msgQueueHead != nullptr)
+        {
+            /* get message from queue */
+            msg = (struct mqMessage_t *)msg_.msgQueueHead;
+
+            /* move message queue head */
+            msg_.msgQueueHead = msg->next;
+            /* reach queue tail, set to NULL */
+            if (msg_.msgQueueTail == msg)
+                msg_.msgQueueTail = nullptr;
+
+            /* put message to free list */
+            msg->next = (struct mqMessage_t *)msg_.msgQueueFree;
+            msg_.msgQueueFree = msg;
+        }
+
+        /* clean entry */
+        msg_.entry = 0;
+
+        /* enable interrupt */
+        HW::hwInterruptEnable(level);
+
+        mSchedule::getInstance()->schedule();
+
+        return M_RESULT_EOK;
+    }
+
+    return ;
 }
