@@ -137,7 +137,19 @@ mResult  mIpc::ipcListResume(mIpcObject_t* ipcObj)
     reinterpret_cast<mthread*>(thread)->threadResume();
     return M_RESULT_EOK;
 }
+mResult  mIpc::ipcListResume(mList_t* list)
+{
+    struct thread_t *thread;
 
+    /* get thread entry */
+    thread = listEntry(list->next, struct thread_t, tlist);
+
+    //RT_DEBUG_LOG(RT_DEBUG_IPC, ("resume thread:%s\n", thread->name));
+
+    /* resume it */
+    reinterpret_cast<mthread*>(thread)->threadResume();
+    return M_RESULT_EOK;
+}
 /**
  * This function will resume all suspended threads in a list, including
  * suspend list of IPC object and private list of mailbox etc.
@@ -1417,7 +1429,7 @@ mResult mMessagequeue::sendWait(const void *buffer, uint32_t size, int32_t timeo
  *
  * @return the error code
  */
-mResult mMessagequeue::sendWait(const void *buffer, uint32_t size)
+mResult mMessagequeue::send(const void *buffer, uint32_t size)
 {
     return sendWait(buffer, size, 0);
 }
@@ -1723,5 +1735,5 @@ mResult mMessagequeue::control(int cmd, void *arg)
         return M_RESULT_EOK;
     }
 
-    return ;
+    return M_RESULT_EOK;
 }

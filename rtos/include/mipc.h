@@ -46,7 +46,7 @@ public:
      * @return the operation status, RT_EOK on successful
      */
     mResult ipcListResume(mIpcObject_t* ipcObj);
-
+    mResult  ipcListResume(mList_t* list);
     /**
      * This function will resume all suspended threads in a list, including
      * suspend list of IPC object and private list of mailbox etc.
@@ -378,7 +378,7 @@ public:
      *
      * @return the error code
      */
-    mResult mMessagequeue::sendWait(const void *buffer, uint32_t size);
+    mResult sendWait(const void *buffer, uint32_t size, int32_t timeout);
     /**
      * This function will send an urgent message to message queue object, which
      * means the message will be inserted to the head of message queue. If there
@@ -390,6 +390,17 @@ public:
      *
      * @return the error code
      */
+    /**
+     * This function will send a message to message queue object, if there are
+     * threads suspended on message queue object, it will be waked up.
+     *
+     * @param mq the message queue object
+     * @param buffer the message
+     * @param size the size of buffer
+     *
+     * @return the error code
+     */
+    mResult send(const void *buffer, uint32_t size);
     mResult urgent(const void *buffer, uint32_t size);
     /**
      * This function will receive a message from message queue object, if there is
