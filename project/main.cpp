@@ -557,22 +557,19 @@ int main(void)
     LED led1(GPIOA, GPIO_NUM_7, false);
     led0.off();
     led1.off();
-    mEvent evt1;
-    evt1.init("evt", IPC_FLAG_PRIO);
-
+    mMessagequeue msg;
+    msg.init("msg",4,40,IPC_FLAG_FIFO);
     mthread* th3 = mthread::create("th3",512,0,20,[&](){
         //using MyString = std::basic_string<char, std::char_traits<char>, mMemAllocator<char>>;
-        uint32_t bit = 0;
+        int m = 100;
         while(1)
         {
-            //mthread::threadDelay(10000);
+            mthread::threadDelay(1000);
             //printf("thread xxxx is %s\r\n",mthread::threadSelf()->name);
             //printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
             //led0.reverse();
-            evt1.recv(1 << 5,EVENT_FLAG_OR | EVENT_FLAG_CLEAR, MAX_DELAY, &bit);
-            if(bit == (1 << 5))
+            msg.send(&m,4);
             printf("get event\r\n");
-            bit = 0;
         }
     });
     if(th3)
@@ -582,13 +579,15 @@ int main(void)
 
     mthread* th4 = mthread::create("th4",512,0,20,[&](){
         //using MyString = std::basic_string<char, std::char_traits<char>, mMemAllocator<char>>;
+        int m = 0;
         while(1)
         {
-            mthread::threadDelay(2000);
-            evt1.send(1 << 5);
+            //mthread::threadDelay(2000);
             //printf("thread xxxx is %s\r\n",mthread::threadSelf()->name);
             //printf("total memoy is %lu, used = %lu\r\n",mMem::getInstance()->total(),mMem::getInstance()->used());
             //led0.reverse();
+            msg.recv(&m,4,10000);
+            printf("recv ... m = %d\r\n",m);
         }
     });
     if(th4)

@@ -14,9 +14,7 @@ enum mObjectInfoType
 #ifdef M_USING_MAILBOX
     M_OBJECT_INFO_MAILBOX,                            /**< The object is a mail box. */
 #endif
-#ifdef M_USING_MESSAGEQUEUE
     M_OBJECT_INFO_MESSAGEQUEUE,                       /**< The object is a message queue. */
-#endif
 #ifdef M_USING_MEMHEAP
     M_OBJECT_INFO_MEMHEAP,                            /**< The object is a memory heap */
 #endif

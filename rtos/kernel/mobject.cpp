@@ -337,10 +337,8 @@ void mObject::objectInfoInit()
 /* initialize object container - mailbox */
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MAILBOX, M_OBJECT_CLASS_MAILBOX);
 #endif
-#ifdef M_USING_MESSAGEQUEUE
 /* initialize object container - message queue */
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MESSAGEQUEUE, M_OBJECT_CLASS_MESSAGEQUEUE);
-#endif
 #ifdef M_USING_MEMHEAP
 /* initialize object container - memory heap */
     _OBJ_CONTAINER_INIT(M_OBJECT_INFO_MEMHEAP, M_OBJECT_CLASS_MEMHEAP);
