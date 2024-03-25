@@ -177,6 +177,50 @@ typedef void (*RTC_ISR_CB)(void* param, RTCRIsrFlags isrFlag);
 void registerRTCIsrCb(RTCEnableIT isrType, RTC_ISR_CB cb, void* param);
 void unRegisterRTCIsrCb(RTCEnableIT isrType);
 
+/** @defgroup SPI_LL_EC_GET_FLAG Get Flags Defines
+  * @brief    Flags defines which can be used with spiReadReg function
+  * @{
+  */
+typedef enum SPIisrFlags
+{
+    M_SPI_SR_RXP             =                 (SPI_SR_RXP),
+    M_SPI_SR_TXP             =                 (SPI_SR_TXP),
+    M_SPI_SR_DXP             =                 (SPI_SR_DXP),
+    M_SPI_SR_EOT             =                 (SPI_SR_EOT),
+    M_SPI_SR_TXTF            =                 (SPI_SR_TXTF),
+    M_SPI_SR_UDR             =                 (SPI_SR_UDR),
+    M_SPI_SR_CRCE            =                 (SPI_SR_CRCE),
+    M_SPI_SR_MODF            =                 (SPI_SR_MODF),
+    M_SPI_SR_OVR             =                 (SPI_SR_OVR),
+    M_SPI_SR_TIFRE           =                 (SPI_SR_TIFRE),
+    M_SPI_SR_TSERF           =                 (SPI_SR_TSERF),
+    M_SPI_SR_SUSP            =                 (SPI_SR_SUSP),
+    M_SPI_SR_TXC             =                 (SPI_SR_TXC),
+    M_SPI_SR_RXWNE           =                 (SPI_SR_RXWNE),
+}SPIisrFlags;
+
+/** @defgroup SPI_LL_EC_IT IT Defines
+  * @brief    IT defines which can be used with spiReadReg and  spiWriteReg functions
+  * @{
+  */
+typedef enum SPIITFlags
+{
+    M_SPI_IER_RXPIE         =                 (SPI_IER_RXPIE),
+    M_SPI_IER_TXPIE         =                 (SPI_IER_TXPIE),
+    M_SPI_IER_DXPIE         =                 (SPI_IER_DXPIE),
+    M_SPI_IER_EOTIE         =                 (SPI_IER_EOTIE),
+    M_SPI_IER_TXTFIE        =                 (SPI_IER_TXTFIE),
+    M_SPI_IER_UDRIE         =                 (SPI_IER_UDRIE),
+    M_SPI_IER_OVRIE         =                 (SPI_IER_OVRIE),
+    M_SPI_IER_CRCEIE        =                 (SPI_IER_CRCEIE),
+    M_SPI_IER_TIFREIE       =                 (SPI_IER_TIFREIE),
+    M_SPI_IER_MODFIE        =                 (SPI_IER_MODFIE),
+    M_SPI_IER_TSERFIE       =                 (SPI_IER_TSERFIE),
+}SPIITFlags;
+typedef void (*SPI_ISR_CB)(void* param, SPIisrFlags isrFlag);
+void registerSPIIsrCb(SPI_TypeDef* spix, SPI_ISR_CB cb, void* param);
+void unRegisterSPIIsrCb(SPI_TypeDef* spix);
+
 int32_t initTick(uint32_t TickPriority);
 void incTick(void);
 uint32_t getTick(void);

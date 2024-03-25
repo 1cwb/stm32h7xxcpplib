@@ -664,7 +664,7 @@ static uint16_t BufferCmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferL
 
   return 0;
 }
-COMMONSPI spi1(SPI1), spi6(SPI6);
+
 int main(void)
 {
     //LED led0(GPIOE, GPIO_NUM_9, false);
@@ -680,22 +680,15 @@ int main(void)
     GPIO spi1MOSIPin(GPIOB,GPIO_NUM_5, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
     spi1MOSIPin.setAF(GPIO_NUM_5,GPIO_AF5_SPI1);
 
-    NVIC_SetPriority(SPI1_IRQn, 0);
-    /* Enable SPI1_IRQn */
-    NVIC_EnableIRQ(SPI1_IRQn);
-
-    GPIO spi6CLKpin(GPIOA,GPIO_NUM_6,GPIO_MODE_AF_PP,GPIO_SPEED_HIGH,GPIO_PUPD_PD);
-    spi6CLKpin.setAF(GPIO_NUM_6,GPIO_AF8_SPI6);
-    GPIO spi6MISOPin(GPIOA,GPIO_NUM_7, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
-    spi6MISOPin.setAF(GPIO_NUM_7,GPIO_AF8_SPI6);
-    GPIO spi6MOSIPin(GPIOA,GPIO_NUM_8, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
-    spi6MOSIPin.setAF(GPIO_NUM_8,GPIO_AF8_SPI6);
-
-    NVIC_SetPriority(SPI6_IRQn, 0);
-    /* Enable SPI1_IRQn           */
-    NVIC_EnableIRQ(SPI6_IRQn);
+    GPIO spi6CLKpin(GPIOA,GPIO_NUM_5,GPIO_MODE_AF_PP,GPIO_SPEED_HIGH,GPIO_PUPD_PD);
+    spi6CLKpin.setAF(GPIO_NUM_5,GPIO_AF8_SPI6);
+    GPIO spi6MISOPin(GPIOA,GPIO_NUM_6, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    spi6MISOPin.setAF(GPIO_NUM_6,GPIO_AF8_SPI6);
+    GPIO spi6MOSIPin(GPIOA,GPIO_NUM_7, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    spi6MOSIPin.setAF(GPIO_NUM_7,GPIO_AF8_SPI6);
 
     printf("111111111111111111\r\n");
+    COMMONSPI spi1(SPI1), spi6(SPI6);
     SPIInitTypeDef spiinit;
     spiinit.BaudRate = M_SPI_BAUDRATEPRESCALER_DIV256;
     spiinit.BitOrder =M_SPI_MSB_FIRST;
@@ -710,15 +703,29 @@ int main(void)
     spi1.spiInit(&spiinit);
     spi1.spiEnableGPIOControl();
     spi1.spiEnableMasterRxAutoSuspend();
-    spi1.spiSetTransferSize(SPIx_NbDataToTransmit);
+    spi1.spiSetTransferSize(11);
     spi1.spiEnable();
     spi1.spiEnableITTXP();
-    spi1.spiEnableITRXP();
+    //spi1.spiEnableITRXP();
     spi1.spiEnableITCRCERR();
     spi1.spiEnableITUDR();
     spi1.spiEnableITOVR();
     spi1.spiEnableITEOT();
-
+    spi1.registerInterruptCb([&](COMMONSPI* spix, SPIisrFlags flag){
+        //printf("spi1 get isr flag = %d\r\n");
+        if(M_SPI_SR_TXP == flag)
+        {
+            printf("spi1 get isr flag = %d\r\n",flag);
+            spi1.spiTransmitData8('X');
+        }
+        if(M_SPI_SR_EOT == flag)
+        {
+             printf("spi1 nnnnnnnnnnnnnnnnnnnnnnn = %d\r\n",flag);
+            spi1.spiDisable();
+            spi1.spiDisableITTXP();
+        }
+    });
+    spi1.enableIsr(3,0);
  printf("22222222222222222\r\n");
     spiinit.BaudRate = M_SPI_BAUDRATEPRESCALER_DIV256;
     spiinit.BitOrder =M_SPI_MSB_FIRST;
@@ -733,20 +740,42 @@ int main(void)
     spi6.spiInit(&spiinit);
     spi6.spiDisableGPIOControl();
     spi6.spiDisableMasterRxAutoSuspend();
-    spi6.spiSetTransferSize(SPIx_NbDataToTransmit);
+    spi6.spiSetTransferSize(11);
     spi6.spiEnable();
-    spi6.spiEnableITTXP();
-    spi6.spiEnableITRXP();
-    spi6.spiEnableITCRCERR();
-    spi6.spiEnableITUDR();
-    spi6.spiEnableITOVR();
+    //spi6.spiEnableITTXP();
+    //spi6.spiEnableITRXP();
+    //spi6.spiEnableITCRCERR();
+    //spi6.spiEnableITUDR();
+    //spi6.spiEnableITOVR();
+    //
+    spi6.registerInterruptCb([&spi6](COMMONSPI* spix, SPIisrFlags flag){
+        if(M_SPI_SR_RXP == flag)
+        {
+            printf("get val = %c\r\n",spi6.spiReceiveData8());
+        }
+        if(M_SPI_SR_EOT == flag)
+        {
+            spi6.spiDisable();
+            spi6.spiDisableITTXP();
+        }
+    });
     spi6.spiEnableITEOT();
-    spi1.spiStartMasterTransfer();
+    spi6.enableIsr(3,0);
      printf("333333333333333333\r\n");
+     //while(SPI1_XfrCompleteDetect == 0);
+     //while(SPI6_XfrCompleteDetect == 0);
+     spi1.spiStartMasterTransfer();
     while(1)
     {
         //mthread::threadDelay(500);
-        delayTick(1000);
+        delayTick(100);
+        if(SPI1_TransmitIndex < 11)
+        {
+            SPI1_TransmitIndex ++;
+            //spi1.spiTransmitData8('X');
+            //spi1.spiStartMasterTransfer();
+        }
+        
             led0.reverse();
             //led1.reverse();
         //led0.reverse();
@@ -761,28 +790,30 @@ int main(void)
   * @param  None
   * @retval None
   */
+ #if 0
 extern "C" void SPI1_IRQHandler(void)
 {
     /* Check OVR/UDR flag value in ISR register */
     if(spi1.spiIsActiveFlagOVR() || spi1.spiIsActiveFlagUDR())
     {
       /* Call Error function */
-      printf("error\r\n");
+      //printf("error\r\n");
     }
     /* Check RXP flag value in ISR register */
     if(spi1.spiIsActiveFlagRXP() && spi1.spiIsActiveFlagRXP())
     {
       /* Call function Reception Callback */
       SPI1_RxBuffer[SPI1_ReceiveIndex++] = spi1.spiReceiveData8();
-      printf("spi1 recv \r\n");
+      //printf("spi1 recv \r\n");
       return;
     }
     /* Check TXP flag value in ISR register */
     if((spi1.spiIsActiveFlagTXP() && spi1.spiIsActiveFlagTXP()))
     {
       /* Call function Reception Callback */
+      //printf("spi1 send %c\r\n",SPIx_TxBuffer[SPI1_TransmitIndex]);
       spi1.spiTransmitData8(SPIx_TxBuffer[SPI1_TransmitIndex++]);
-      printf("spi1 recv send\r\n");
+      
       return;
     }
     /* Check EOT flag value in ISR register */
@@ -790,10 +821,18 @@ extern "C" void SPI1_IRQHandler(void)
     {
       /* Call function Reception Callback */
       //SPI1_EOT_Callback();
-       printf("eotxxxxx\r\n");
+       //printf("eotxxxxx\r\n");
+        spi1.spiDisable();
+        spi1.spiDisableITTXP();
+        spi1.spiDisableITRXP();
+        spi1.spiDisableITCRCERR();
+        spi1.spiDisableITOVR();
+        spi1.spiDisableITUDR();
+        spi1.spiDisableITEOT();
+        SPI6_XfrCompleteDetect = 1;
       return;
     }
-    printf("-----------spi1--\r\n");
+    //printf("-----------spi1--\r\n");
 }
 
 /**
@@ -807,14 +846,15 @@ extern "C" void SPI6_IRQHandler(void)
     if(spi6.spiIsActiveFlagOVR() || spi6.spiIsActiveFlagUDR())
     {
       /* Call Error function */
-      printf("spi6 error\r\n");
+      //printf("spi6 error\r\n");
     }
     /* Check RXP flag value in ISR register */
     if(spi6.spiIsActiveFlagRXP() && spi6.spiIsActiveFlagRXP())
     {
       /* Call function Reception Callback */
+      //printf("spi6 recv %c \r\n",SPI6_RxBuffer[SPI6_ReceiveIndex]);
       SPI6_RxBuffer[SPI6_ReceiveIndex++] = spi6.spiReceiveData8();
-      printf("spi6 recv %c \r\n",SPI6_RxBuffer[SPI6_ReceiveIndex++]);
+      
       return;
     }
     /* Check TXP flag value in ISR register */
@@ -829,8 +869,17 @@ extern "C" void SPI6_IRQHandler(void)
     if(spi6.spiIsActiveFlagEOT() && spi6.spiIsActiveFlagEOT())
     {
       /* Call function Reception Callback */
-      printf("spi6 eto\r\n");
+      //printf("spi6 eto\r\n");
+        spi6.spiDisable();
+        spi6.spiDisableITTXP();
+        spi6.spiDisableITRXP();
+        spi6.spiDisableITCRCERR();
+        spi6.spiDisableITOVR();
+        spi6.spiDisableITUDR();
+        spi6.spiDisableITEOT();
+        SPI6_XfrCompleteDetect = 1;
       return;
     }
-printf("-----------spi6--\r\n");
+//printf("-----------spi6--\r\n");
 }
+#endif

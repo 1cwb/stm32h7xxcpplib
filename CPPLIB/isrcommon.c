@@ -2296,6 +2296,184 @@ void RTC_Alarm_IRQHandler(void)
 		}
 	}
 }
+
+typedef struct spixIsrSt
+{
+	SPI_ISR_CB cb;
+	SPI_TypeDef *spix;
+	void* param;
+}spixIsrSt;
+static spixIsrSt spiIsrCbBuff[6] = {0};
+void registerSPIIsrCb(SPI_TypeDef* spix, SPI_ISR_CB cb, void* param)
+{
+	if(spix == SPI1)
+	{
+		spiIsrCbBuff[0].spix = spix;
+		spiIsrCbBuff[0].cb = cb;
+		spiIsrCbBuff[0].param = param;
+	}
+	else if(spix == SPI2)
+	{
+		spiIsrCbBuff[1].spix = spix;
+		spiIsrCbBuff[1].cb = cb;
+		spiIsrCbBuff[1].param = param;
+	}
+	else if(spix == SPI3)
+	{
+		spiIsrCbBuff[2].spix = spix;
+		spiIsrCbBuff[2].cb = cb;
+		spiIsrCbBuff[2].param = param;
+	}
+	else if(spix == SPI4)
+	{
+		spiIsrCbBuff[3].spix = spix;
+		spiIsrCbBuff[3].cb = cb;
+		spiIsrCbBuff[3].param = param;
+	}
+	else if(spix == SPI5)
+	{
+		spiIsrCbBuff[4].spix = spix;
+		spiIsrCbBuff[4].cb = cb;
+		spiIsrCbBuff[4].param = param;
+	}
+	else if(spix == SPI6)
+	{
+		spiIsrCbBuff[5].spix = spix;
+		spiIsrCbBuff[5].cb = cb;
+		spiIsrCbBuff[5].param = param;
+	}
+}
+void unRegisterSPIIsrCb(SPI_TypeDef* spix)
+{
+	if(spix == SPI1)
+	{
+		spiIsrCbBuff[0].spix = NULL;
+		spiIsrCbBuff[0].cb = NULL;
+		spiIsrCbBuff[0].param = NULL;
+	}
+	else if(spix == SPI2)
+	{
+		spiIsrCbBuff[1].spix = NULL;
+		spiIsrCbBuff[1].cb = NULL;
+		spiIsrCbBuff[1].param = NULL;
+	}
+	else if(spix == SPI3)
+	{
+		spiIsrCbBuff[2].spix = NULL;
+		spiIsrCbBuff[2].cb = NULL;
+		spiIsrCbBuff[2].param = NULL;
+	}
+	else if(spix == SPI4)
+	{
+		spiIsrCbBuff[3].spix = NULL;
+		spiIsrCbBuff[3].cb = NULL;
+		spiIsrCbBuff[3].param = NULL;
+	}
+	else if(spix == SPI5)
+	{
+		spiIsrCbBuff[4].spix = NULL;
+		spiIsrCbBuff[4].cb = NULL;
+		spiIsrCbBuff[4].param = NULL;
+	}
+	else if(spix == SPI6)
+	{
+		spiIsrCbBuff[5].spix = NULL;
+		spiIsrCbBuff[5].cb = NULL;
+		spiIsrCbBuff[5].param = NULL;
+	}
+}
+void spiIsrCallback(SPI_TypeDef *spix, SPIisrFlags flags)
+{
+	for(int i = 0; i < 5; i++)
+	{
+		if(spiIsrCbBuff[i].spix == spix)
+		{
+			if(spiIsrCbBuff[i].cb)
+			{
+				spiIsrCbBuff[i].cb(spiIsrCbBuff[i].param, flags);
+				break;
+			}
+		}
+	}
+}
+
+void commonCallback(SPI_TypeDef *spix)
+{
+	if(READ_BIT(spix->IER, SPI_IER_TXPIE) == (SPI_IER_TXPIE) && READ_BIT(spix->SR, SPI_SR_TXP) == (SPI_SR_TXP))
+	{
+		spiIsrCallback(spix, M_SPI_SR_TXP);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_RXPIE) == (SPI_IER_RXPIE) && READ_BIT(spix->SR, SPI_SR_RXP) == (SPI_SR_RXP))
+	{
+		spiIsrCallback(spix, M_SPI_SR_RXP);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_DXPIE) == (SPI_IER_DXPIE) && READ_BIT(spix->SR, SPI_SR_DXP) == (SPI_SR_DXP))
+	{
+		spiIsrCallback(spix, M_SPI_SR_DXP);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_EOTIE) == (SPI_IER_EOTIE) && READ_BIT(spix->SR, SPI_SR_EOT) == (SPI_SR_EOT))
+	{
+		SET_BIT(spix->IFCR , SPI_IFCR_EOTC);
+		SET_BIT(spix->IFCR , SPI_IFCR_TXTFC);
+		SET_BIT(spix->IFCR , SPI_IFCR_SUSPC);
+		spiIsrCallback(spix, M_SPI_SR_EOT);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_EOTIE) == (SPI_IER_EOTIE) && READ_BIT(spix->SR, SPI_SR_SUSP) == (SPI_SR_SUSP))
+	{
+		SET_BIT(spix->IFCR, SPI_IFCR_SUSPC);
+		spiIsrCallback(spix, M_SPI_SR_SUSP);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_OVRIE) == (SPI_IER_OVRIE) && READ_BIT(spix->SR, SPI_SR_OVR) == (SPI_SR_OVR))
+	{
+		SET_BIT(spix->IFCR , SPI_IFCR_OVRC);
+		spiIsrCallback(spix, M_SPI_SR_OVR);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_MODFIE) == (SPI_IER_MODFIE) && READ_BIT(spix->SR, SPI_SR_MODF) == (SPI_SR_MODF))
+	{
+		SET_BIT(spix->IFCR , SPI_IFCR_MODFC);
+		spiIsrCallback(spix, M_SPI_SR_MODF);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_TIFREIE) == (SPI_IER_TIFREIE) && READ_BIT(spix->SR, SPI_SR_TIFRE) == (SPI_SR_TIFRE))
+	{
+		SET_BIT(spix->IFCR , SPI_IFCR_TIFREC);
+		spiIsrCallback(spix, M_SPI_SR_TIFRE);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_UDRIE) == (SPI_IER_UDRIE) && READ_BIT(spix->SR, SPI_SR_UDR) == (SPI_SR_UDR))
+	{
+		SET_BIT(spix->IFCR , SPI_IFCR_UDRC);
+		spiIsrCallback(spix, M_SPI_SR_UDR);
+	}
+	if(READ_BIT(spix->IER, SPI_IER_CRCEIE) == (SPI_IER_CRCEIE) && READ_BIT(spix->SR, SPI_SR_CRCE) == (SPI_SR_CRCE))
+	{
+		SET_BIT(spix->IFCR , SPI_IFCR_CRCEC);
+		spiIsrCallback(spix, M_SPI_SR_CRCE);
+	}
+}
+
+void SPI1_IRQHandler(void)
+{
+	commonCallback(SPI1);
+}
+void SPI2_IRQHandler(void)
+{
+	commonCallback(SPI2);
+}
+void SPI3_IRQHandler(void)
+{
+	commonCallback(SPI3);
+}
+void SPI4_IRQHandler(void)
+{
+	commonCallback(SPI4);
+}
+void SPI5_IRQHandler(void)
+{
+	commonCallback(SPI5);
+}
+void SPI6_IRQHandler(void)
+{
+	commonCallback(SPI5);
+}
 /**
   * @brief  This function handles SysTick Handler.
   * @param  None

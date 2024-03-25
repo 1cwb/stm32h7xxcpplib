@@ -81,47 +81,6 @@ struct SPIInitTypeDef
   * @{
   */
 
-/** @defgroup SPI_LL_EC_GET_FLAG Get Flags Defines
-  * @brief    Flags defines which can be used with spiReadReg function
-  * @{
-  */
-enum SPIGetFlags
-{
-    M_SPI_SR_RXP             =                 (SPI_SR_RXP),
-    M_SPI_SR_TXP             =                 (SPI_SR_TXP),
-    M_SPI_SR_DXP             =                 (SPI_SR_DXP),
-    M_SPI_SR_EOT             =                 (SPI_SR_EOT),
-    M_SPI_SR_TXTF            =                 (SPI_SR_TXTF),
-    M_SPI_SR_UDR             =                 (SPI_SR_UDR),
-    M_SPI_SR_CRCE            =                 (SPI_SR_CRCE),
-    M_SPI_SR_MODF            =                 (SPI_SR_MODF),
-    M_SPI_SR_OVR             =                 (SPI_SR_OVR),
-    M_SPI_SR_TIFRE           =                 (SPI_SR_TIFRE),
-    M_SPI_SR_TSERF           =                 (SPI_SR_TSERF),
-    M_SPI_SR_SUSP            =                 (SPI_SR_SUSP),
-    M_SPI_SR_TXC             =                 (SPI_SR_TXC),
-    M_SPI_SR_RXWNE           =                 (SPI_SR_RXWNE),
-};
-
-/** @defgroup SPI_LL_EC_IT IT Defines
-  * @brief    IT defines which can be used with spiReadReg and  spiWriteReg functions
-  * @{
-  */
-enum SPIITFlags
-{
-    M_SPI_IER_RXPIE         =                 (SPI_IER_RXPIE),
-    M_SPI_IER_TXPIE         =                 (SPI_IER_TXPIE),
-    M_SPI_IER_DXPIE         =                 (SPI_IER_DXPIE),
-    M_SPI_IER_EOTIE         =                 (SPI_IER_EOTIE),
-    M_SPI_IER_TXTFIE        =                 (SPI_IER_TXTFIE),
-    M_SPI_IER_UDRIE         =                 (SPI_IER_UDRIE),
-    M_SPI_IER_OVRIE         =                 (SPI_IER_OVRIE),
-    M_SPI_IER_CRCEIE        =                 (SPI_IER_CRCEIE),
-    M_SPI_IER_TIFREIE       =                 (SPI_IER_TIFREIE),
-    M_SPI_IER_MODFIE        =                 (SPI_IER_MODFIE),
-    M_SPI_IER_TSERFIE       =                 (SPI_IER_TSERFIE),
-};
-
 /** @defgroup SPI_LL_EC_MODE Mode
   * @{
   */
@@ -438,7 +397,7 @@ enum SPIRXFifoPackLevel
 
 class COMMONSPI
 {
-    using TIMInterruptCb = std::function<void(COMMONSPI*, SPIGetFlags)>;
+    using SPIInterruptCb = std::function<void(COMMONSPI*, SPIisrFlags)>;
 public:
     COMMONSPI(SPI_TypeDef* spix) : spix_(spix)
     {
@@ -2608,7 +2567,13 @@ public:
 
         /* Activate the SPI mode (Reset I2SMOD bit in I2SCFGR register) */
         CLEAR_BIT(spix_->I2SCFGR, SPI_I2SCFGR_I2SMOD);
-
+        registerSPIIsrCb(spix_,[](void* param, SPIisrFlags isrFlag){
+            COMMONSPI* spix = reinterpret_cast<COMMONSPI*>(param);
+            if(spix && spix->spicb_)
+            {
+                spix->spicb_(spix, isrFlag);
+            }
+        },(void*)this);
         status = E_RESULT_OK;
       }
 
@@ -2640,7 +2605,59 @@ public:
             default: break;
         }
     }
+    void enableIsr(uint32_t PreemptPriority, uint32_t SubPriority)
+    {
+        if(NVIC_GetEnableIRQ(getIrqType()) == 0U)
+        {
+            NVIC_SetPriority(getIrqType(), NVIC_EncodePriority(NVIC_GetPriorityGrouping(), PreemptPriority, SubPriority));
+            NVIC_EnableIRQ(getIrqType());
+        }
+    }
+    void disableIsr()
+    {
+        NVIC_DisableIRQ(getIrqType());
+    }
+    void registerInterruptCb(const SPIInterruptCb& isrcb)
+    {
+        spicb_ = isrcb;
+    }
+    void unregisterInterruptCb()
+    {
+        if(spicb_)
+        {
+            spicb_ = SPIInterruptCb();
+        }
+    }
 private:
 
+    IRQn_Type getIrqType()
+    {
+        IRQn_Type type = TIM1_UP_IRQn;
+        switch (reinterpret_cast<uint32_t>(spix_))
+        {
+            case SPI1_BASE:
+              type = SPI1_IRQn;
+              break;
+            case SPI2_BASE:
+              type = SPI2_IRQn;
+              break;
+            case SPI3_BASE:
+              type = SPI3_IRQn;
+              break;
+            case SPI4_BASE:
+              type = SPI4_IRQn;
+              break;
+            case SPI5_BASE:
+              type = SPI5_IRQn;
+              break;
+            case SPI6_BASE:
+              type = SPI6_IRQn;
+              break;
+            default: break;
+        }
+        return type;
+    }
+
     SPI_TypeDef* spix_;
+    SPIInterruptCb spicb_;
 };
