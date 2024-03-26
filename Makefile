@@ -72,6 +72,15 @@ DEFINE    :=-DSTM32H750xx \
 			-DPLLP_VALUE=2 \
 			-DPLLQ_VALUE=4 \
 			-DPLLR_VALUE=2
+#DEFINE    :=-DSTM32H750xx \
+#			-DHSE_VALUE=25000000 \
+#			-DCSI_VALUE=4000000 \
+#			-DHSI_VALUE=64000000 \
+#			-DPLLM_VALUE=4 \
+#			-DPLLN_VALUE=400 \
+#			-DPLLP_VALUE=2 \
+#			-DPLLQ_VALUE=4 \
+#			-DPLLR_VALUE=2
 endif
 ###############################################################
 CFLAGS 				+= $(MCU_FLAGS) $(C_COMPILE_FLAGS) $(DEFINE)

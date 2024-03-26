@@ -1204,7 +1204,7 @@ public:
       *         @arg @ref spiHALF_DUPLEX_TX
       * @retval None
       */
-    inline void spiSetHalfDuplexDirection(uint32_t HalfDuplexDirection)
+    inline void spiSetHalfDuplexDirection(SPITransferMode HalfDuplexDirection)
     {
       MODIFY_REG(spix_->CR1, SPI_CR1_HDDIR, HalfDuplexDirection & SPI_CR1_HDDIR);
     }
@@ -1218,9 +1218,9 @@ public:
       *         @arg @ref spiHALF_DUPLEX_RX
       *         @arg @ref spiHALF_DUPLEX_TX
       */
-    inline uint32_t spiGetHalfDuplexDirection()
+    inline SPITransferMode spiGetHalfDuplexDirection()
     {
-      return (uint32_t)(READ_BIT(spix_->CR1, SPI_CR1_HDDIR) | SPI_CFG2_COMM);
+      return (SPITransferMode)(READ_BIT(spix_->CR1, SPI_CR1_HDDIR) | SPI_CFG2_COMM);
     }
 
     /**
@@ -2499,7 +2499,8 @@ public:
 
       return status;
     }
-    eResult spiInit(SPIInitTypeDef *SPIInitStruct)
+    eResult spiInit(SPIMode Mode, SPITransferMode TransferDirection, SPIDataWidth DataWidth = M_SPI_DATAWIDTH_8BIT, SPIBaudRatePrescaler BaudRate = M_SPI_BAUDRATEPRESCALER_DIV32, SPINSSMode NSS = M_SPI_NSS_SOFT, SPIBitOrder BitOrder = M_SPI_MSB_FIRST, 
+                    SPIPolarity ClockPolarity = M_SPI_POLARITY_HIGH, SPIPhase ClockPhase = M_SPI_PHASE_2EDGE, SPICRCCalculation CRCCalculation = M_SPI_CRCCALCULATION_DISABLE, uint32_t CRCPoly = 0)
     {
       eResult status = E_RESULT_ERROR;
       uint32_t tmp_nss;
@@ -2515,11 +2516,10 @@ public:
           * - CRC Computation Enable : SPI_CFG1_CRCEN bit
           * - Length of data frame   : SPI_CFG1_DSIZE[4:0] bits
           */
-        MODIFY_REG(spix_->CFG1, SPI_CFG1_MBR | SPI_CFG1_CRCEN | SPI_CFG1_DSIZE,
-                  SPIInitStruct->BaudRate  | SPIInitStruct->CRCCalculation | SPIInitStruct->DataWidth);
+        MODIFY_REG(spix_->CFG1, SPI_CFG1_MBR | SPI_CFG1_CRCEN | SPI_CFG1_DSIZE, BaudRate  | CRCCalculation | DataWidth);
 
-        tmp_nss  = SPIInitStruct->NSS;
-        tmp_mode = SPIInitStruct->Mode;
+        tmp_nss  = NSS;
+        tmp_mode = Mode;
         tmp_nss_polarity = spiGetNSSPolarity();
 
         /* Checks to setup Internal SS signal level and avoid a MODF Error */
@@ -2543,25 +2543,25 @@ public:
         MODIFY_REG(spix_->CFG2, SPI_CFG2_SSM   | SPI_CFG2_SSOE    |
                   SPI_CFG2_CPOL              | SPI_CFG2_CPHA    |
                   SPI_CFG2_LSBFRST           | SPI_CFG2_MASTER  | SPI_CFG2_COMM,
-                  SPIInitStruct->NSS        | SPIInitStruct->ClockPolarity                    |
-                  SPIInitStruct->ClockPhase | SPIInitStruct->BitOrder                         |
-                  SPIInitStruct->Mode       | (SPIInitStruct->TransferDirection & SPI_CFG2_COMM));
+                  NSS        | ClockPolarity                    |
+                  ClockPhase | BitOrder                         |
+                  Mode       | (TransferDirection & SPI_CFG2_COMM));
 
         /*---------------------------- SPIx CR1 Configuration ------------------------
           * Configure SPIx CR1 with parameter:
           * - Half Duplex Direction  : SPI_CR1_HDDIR bit
           */
-        MODIFY_REG(spix_->CR1, SPI_CR1_HDDIR, SPIInitStruct->TransferDirection & SPI_CR1_HDDIR);
+        MODIFY_REG(spix_->CR1, SPI_CR1_HDDIR, TransferDirection & SPI_CR1_HDDIR);
 
         /*---------------------------- SPIx CRCPOLY Configuration ----------------------
           * Configure SPIx CRCPOLY with parameter:
           * - CRCPoly                : CRCPOLY[31:0] bits
           */
-        if (SPIInitStruct->CRCCalculation == M_SPI_CRCCALCULATION_ENABLE)
+        if (CRCCalculation == M_SPI_CRCCALCULATION_ENABLE)
         {
-          if(SPIInitStruct->CRCPoly >= 1UL)
+          if(CRCPoly >= 1UL)
           {
-            spiSetCRCPolynomial(SPIInitStruct->CRCPoly);
+            spiSetCRCPolynomial(CRCPoly);
           }
         }
 
