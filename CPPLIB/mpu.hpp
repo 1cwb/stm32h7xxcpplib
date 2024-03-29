@@ -24,6 +24,10 @@ public:
         CORTEX::getInstance()->mpuConfigRegion(regionNum, 0, baseaddr, disableExec|access|texLevel|shareable|cachable|buffable|size);
         return 0;
     }
+    void invalidateDCacheByAddr(void *addr, int32_t dsize)
+    {
+        SCB_InvalidateDCache_by_Addr (addr, dsize);
+    }
 private:
     CORTEXM7MPU()
     {

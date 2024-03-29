@@ -618,7 +618,7 @@ int main(void)
 }
 #endif
 
-#if 1
+#if 0
 #include "rtc.hpp"
 #include "lptimer.hpp"
 #include "isrcommon.h"
@@ -710,6 +710,173 @@ int main(void)
     printf("spi1 clk is %u\r\n",RCCControl::getInstance()->GetSPIClockFreq(RCC_SPI123_CLKSOURCE));
     mthread::threadDelay(5000);
      spi1.spiStartMasterTransfer();
+    while(1)
+    {
+        mthread::threadDelay(500);
+        led0.reverse();
+    }
+    return 0;
+}
+#endif
+
+#if 1
+#include "mpu.hpp"
+#include "rtc.hpp"
+#include "lptimer.hpp"
+#include "isrcommon.h"
+#include "mthread.h"
+#include "mhw.h"
+#include "mtimer.h"
+#include "mmem.h"
+#include <functional>
+#include <list>
+#include <vector>
+#include <map>
+#include <string>
+#include "spi.hpp"
+const uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ********* SPI Message *********";
+#define BUFFERSIZE                       (sizeof(aTxBuffer))
+#define BUFFER_ALIGNED_SIZE (((BUFFERSIZE+31)/32)*32)
+D2_MEM_ALIGN(32) static uint8_t aRxBuffer[BUFFER_ALIGNED_SIZE];
+int main(void)
+{
+    //LED led0(GPIOE, GPIO_NUM_9, false);
+    //LED led1(GPIOA, GPIO_NUM_7, false);
+    CORTEXM7MPU::getInstance()->invalidateDCacheByAddr((void*)aRxBuffer,BUFFERSIZE);
+    LED led0(GPIOC, GPIO_NUM_13, false);
+    led0.off();
+    //led1.on();
+
+    GPIO spi1CLKpin(GPIOG,GPIO_NUM_11,GPIO_MODE_AF_PP,GPIO_SPEED_HIGH,GPIO_PUPD_PD);
+    spi1CLKpin.setAF(GPIO_NUM_11,GPIO_AF5_SPI1);
+    GPIO spi1MISOPin(GPIOG,GPIO_NUM_9, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    spi1MISOPin.setAF(GPIO_NUM_9,GPIO_AF5_SPI1);
+    GPIO spi1MOSIPin(GPIOD,GPIO_NUM_7, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    spi1MOSIPin.setAF(GPIO_NUM_7,GPIO_AF5_SPI1);
+
+    GPIO spi2CLKpin(GPIOB,GPIO_NUM_13,GPIO_MODE_AF_PP,GPIO_SPEED_HIGH,GPIO_PUPD_PD);
+    spi2CLKpin.setAF(GPIO_NUM_13,GPIO_AF5_SPI2);
+    GPIO spi2MISOPin(GPIOC,GPIO_NUM_2, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    spi2MISOPin.setAF(GPIO_NUM_2,GPIO_AF5_SPI2);
+    GPIO spi2MOSIPin(GPIOC,GPIO_NUM_3, GPIO_MODE_AF_PP, GPIO_SPEED_HIGH, GPIO_PUPD_PD);
+    spi2MOSIPin.setAF(GPIO_NUM_3,GPIO_AF5_SPI2);
+
+    COMMONSPI spi1(SPI1), spi2(SPI2);
+    spi1.spiInit(M_SPI_MODE_MASTER, M_SPI_FULL_DUPLEX, M_SPI_DATAWIDTH_8BIT, M_SPI_BAUDRATEPRESCALER_DIV8,
+                        M_SPI_NSS_SOFT,M_SPI_MSB_FIRST,M_SPI_POLARITY_LOW,M_SPI_PHASE_1EDGE);
+    DMA dmaTX(DMA2, DMA_STREAM_3);
+    DMA_InitTypeDef DMA_InitStruct;
+    DMA_InitStruct.Direction = DMA_DIRECTION_MEMORY_TO_PERIPH;
+    DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&(SPI1->TXDR);  
+    DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)aTxBuffer;             
+    DMA_InitStruct.Mode = DMA_MODE_NORMAL;                   
+    DMA_InitStruct.PeriphOrM2MSrcIncMode = DMA_PERIPH_NOINCREMENT;  
+    DMA_InitStruct.MemoryOrM2MDstIncMode = DMA_MEMORY_INCREMENT;  
+    DMA_InitStruct.PeriphOrM2MSrcDataSize = DMA_PDATAALIGN_BYTE; 
+    DMA_InitStruct.MemoryOrM2MDstDataSize = DMA_MDATAALIGN_BYTE; 
+    DMA_InitStruct.NbData = sizeof(aTxBuffer);                 
+    DMA_InitStruct.PeriphRequest = DMAMUX1_REQ_SPI1_TX;
+    DMA_InitStruct.Priority = DMA_PRIORITY_MEDIUM;               
+    DMA_InitStruct.FIFOMode = DMA_FIFOMODE_DISABLE;               
+    DMA_InitStruct.FIFOThreshold = DMA_FIFOTHRESHOLD_FULL;          
+    DMA_InitStruct.MemBurst = DMA_MBURST_INC4;               
+    DMA_InitStruct.PeriphBurst = DMA_PBURST_INC4;   
+    dmaTX.dmaDeInit();
+    dmaTX.dmaInit(&DMA_InitStruct);
+    dmaTX.dmaEnableITTransterHalf();
+    dmaTX.dmaEnableITTransferComplete();
+    dmaTX.enableDmaIsr(2,2);
+    dmaTX.registerInterruptCb([&](DMA* pdma, DMATransferIsrType type){
+        //if(DMA_TRANSFER_COMPLETE == type)
+        printf("SEND type is%u\r\n",type);
+
+    });
+
+    DMA dmaRX(DMA1, DMA_STREAM_3);
+    DMA_InitStruct.Direction = DMA_DIRECTION_PERIPH_TO_MEMORY;
+    DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&(SPI2->RXDR);  
+    DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)aRxBuffer;             
+    DMA_InitStruct.Mode = DMA_MODE_NORMAL;                   
+    DMA_InitStruct.PeriphOrM2MSrcIncMode = DMA_PERIPH_NOINCREMENT;  
+    DMA_InitStruct.MemoryOrM2MDstIncMode = DMA_MEMORY_INCREMENT;  
+    DMA_InitStruct.PeriphOrM2MSrcDataSize = DMA_PDATAALIGN_BYTE; 
+    DMA_InitStruct.MemoryOrM2MDstDataSize = DMA_MDATAALIGN_BYTE; 
+    DMA_InitStruct.NbData = sizeof(aRxBuffer);                 
+    DMA_InitStruct.PeriphRequest = DMAMUX1_REQ_SPI2_RX;
+    DMA_InitStruct.Priority = DMA_PRIORITY_MEDIUM;               
+    DMA_InitStruct.FIFOMode = DMA_FIFOMODE_DISABLE;               
+    DMA_InitStruct.FIFOThreshold = DMA_FIFOTHRESHOLD_FULL;          
+    DMA_InitStruct.MemBurst = DMA_MBURST_INC4;               
+    DMA_InitStruct.PeriphBurst = DMA_PBURST_INC4;   
+    dmaRX.dmaDeInit();
+    dmaRX.dmaInit(&DMA_InitStruct);
+    dmaRX.dmaEnableITTransterHalf();
+    dmaRX.dmaEnableITTransferComplete();
+    dmaRX.enableDmaIsr(2,2);
+    dmaRX.registerInterruptCb([&](DMA* pdma, DMATransferIsrType type){
+        //if(DMA_TRANSFER_COMPLETE == type)
+        printf("RECV type is%u\r\n",type);
+
+    });
+    spi1.spiEnableDMAReqTX();
+    spi1.spiEnableGPIOControl();
+    spi1.spiEnableMasterRxAutoSuspend();
+    //spi1.spiSetTransferSize(11);
+    spi1.spiEnable();
+    //spi1.spiEnableITTXP();
+    //spi1.spiEnableITRXP();
+    spi1.spiEnableITCRCERR();
+    spi1.spiEnableITUDR();
+    spi1.spiEnableITOVR();
+    spi1.spiEnableITEOT();
+    spi1.registerInterruptCb([&](COMMONSPI* spix, SPIisrFlags flag){
+        if(M_SPI_SR_TXP == flag)
+        {
+            //spi1.spiTransmitData8('X');
+        }
+        if(M_SPI_SR_EOT == flag)
+        {
+            //spi1.spiDisable();
+            //spi1.spiDisableITTXP();
+        }
+    });
+    spi1.enableIsr(3,0);
+    spi2.spiInit(M_SPI_MODE_SLAVE, M_SPI_FULL_DUPLEX, M_SPI_DATAWIDTH_8BIT, M_SPI_BAUDRATEPRESCALER_DIV8,
+                        M_SPI_NSS_SOFT,M_SPI_MSB_FIRST,M_SPI_POLARITY_LOW,M_SPI_PHASE_1EDGE);
+    spi2.spiEnableDMAReqRX();
+    spi2.spiDisableGPIOControl();
+    spi2.spiDisableMasterRxAutoSuspend();
+    //spi2.spiSetTransferSize(11);
+    spi2.spiEnable();
+    //spi6.spiEnableITTXP();
+    //spi2.spiEnableITRXP();
+    spi2.spiEnableITCRCERR();
+    spi2.spiEnableITUDR();
+    spi2.spiEnableITOVR();
+    //
+    uint8_t recvdata[12]={'\0'};
+    int m = 0;
+    spi2.registerInterruptCb([&](COMMONSPI* spix, SPIisrFlags flag){
+        if(M_SPI_SR_RXP == flag)
+        {
+            //recvdata[m++] = spi2.spiReceiveData8();
+            //printf("recv\r\n");
+        }
+        if(M_SPI_SR_EOT == flag)
+        {
+            //spi2.spiDisable();
+            //spi2.spiDisableITTXP();
+            //printf("recvdata = %s, m = %d\r\n",recvdata, m);
+            printf("aRxBuffer = %s\r\n",aRxBuffer);
+        }
+    });
+    spi2.spiEnableITEOT();
+    spi2.enableIsr(3,0);
+    printf("spi1 clk is %u\r\n",RCCControl::getInstance()->GetSPIClockFreq(RCC_SPI123_CLKSOURCE));
+    //mthread::threadDelay(5000);
+    dmaTX.dmaEnableStream();
+    dmaRX.dmaEnableStream();
+    spi1.spiStartMasterTransfer();
     while(1)
     {
         mthread::threadDelay(500);
